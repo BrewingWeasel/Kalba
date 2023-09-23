@@ -3,7 +3,7 @@ use std::process;
 use arboard::Clipboard;
 use dictionary::get_def;
 use eframe::{
-    egui::{self, Label, RichText, Sense, Separator, TextStyle},
+    egui::{self, Button, Label, RichText, Sense, Separator, TextStyle},
     epaint::{Color32, Vec2},
 };
 use language_parsing::{get_words, Word};
@@ -102,7 +102,18 @@ impl eframe::App for MyApp {
                     ));
                     ui.add_space(10.0);
 
-                    if ui.button("Export sentence").clicked() {
+                    if ui
+                        .add(
+                            Button::new(
+                                RichText::from("Export sentence")
+                                    .color(Color32::from_rgb(150, 250, 230))
+                                    .strong()
+                                    .text_style(egui::TextStyle::Heading),
+                            )
+                            .rounding(10.0),
+                        )
+                        .clicked()
+                    {
                         add_to_anki(&self.sentence, &self.words[i].lemma, &def)
                             .expect("Failure adding to anki");
                         println!(
