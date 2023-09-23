@@ -5,6 +5,10 @@ use eframe::{
     epaint::{Color32, Vec2},
 };
 use language_parsing::{get_words, Word};
+
+use crate::add_to_anki::add_to_anki;
+
+mod add_to_anki;
 mod dictionary;
 mod language_parsing;
 
@@ -49,6 +53,7 @@ impl eframe::App for MyApp {
             style.text_styles.get_mut(&TextStyle::Body).unwrap().size = 16.0;
             style.spacing.item_spacing = Vec2::new(0.0, 0.0);
             ctx.set_style(style);
+
             ui.horizontal_wrapped(|ui| {
                 for (i, val) in self.words.iter().enumerate() {
                     if val.clickable {
@@ -56,6 +61,7 @@ impl eframe::App for MyApp {
                         ui.add_space(5.0)
                         // TODO: also shouldn't be hardcoded, should be based on font size or smth
                     }
+
                     if ui
                         .add(
                             Label::new(
@@ -84,13 +90,19 @@ impl eframe::App for MyApp {
                             .text_style(egui::TextStyle::Heading),
                     ));
                     ui.add_space(5.0);
+
+                    let def = get_def(&self.words[i].lemma);
+
                     ui.add(Label::new(
-                        RichText::from(get_def(&self.words[i].lemma))
+                        RichText::from(&def)
                             .color(Color32::from_rgb(210, 170, 250))
                             .text_style(egui::TextStyle::Body),
                     ));
                     ui.add_space(10.0);
+
                     if ui.button("Export sentence").clicked() {
+                        add_to_anki(&self.sentence, &self.words[i].lemma, &def)
+                            .expect("Failure adding to anki");
                         println!(
                             "exported {}, focusing on {}",
                             self.sentence, self.words[i].lemma
