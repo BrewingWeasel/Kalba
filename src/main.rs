@@ -1,15 +1,17 @@
 use arboard::Clipboard;
+use dictionary::get_def;
 use eframe::{
-    egui::{self, Label, RichText, Sense, TextStyle},
+    egui::{self, Label, RichText, Sense, Separator, TextStyle},
     epaint::{Color32, Vec2},
 };
 use language_parsing::{get_words, Word};
+mod dictionary;
 mod language_parsing;
 
 fn main() -> Result<(), eframe::Error> {
     env_logger::init(); // Log to stderr (if you run with `RUST_LOG=debug`).
     let options = eframe::NativeOptions {
-        initial_window_size: Some(egui::vec2(320.0, 240.0)),
+        initial_window_size: Some(egui::vec2(380.0, 250.0)),
         decorated: false,
         always_on_top: true,
         resizable: false,
@@ -70,14 +72,31 @@ impl eframe::App for MyApp {
                     }
                 }
             });
+
             if let Some(i) = self.current {
-                ui.label(&self.words[i].lemma);
-                if ui.button("Export sentence").clicked() {
-                    println!(
-                        "exported {}, focusing on {}",
-                        self.sentence, self.words[i].lemma
-                    );
-                }
+                ui.vertical_centered(|ui| {
+                    ui.add(Separator::default().spacing(9.0));
+                    ui.add(Label::new(
+                        RichText::from(&self.words[i].lemma)
+                            .color(Color32::WHITE)
+                            .underline()
+                            .strong()
+                            .text_style(egui::TextStyle::Heading),
+                    ));
+                    ui.add_space(5.0);
+                    ui.add(Label::new(
+                        RichText::from(get_def(&self.words[i].lemma))
+                            .color(Color32::from_rgb(210, 170, 250))
+                            .text_style(egui::TextStyle::Body),
+                    ));
+                    ui.add_space(10.0);
+                    if ui.button("Export sentence").clicked() {
+                        println!(
+                            "exported {}, focusing on {}",
+                            self.sentence, self.words[i].lemma
+                        );
+                    }
+                });
             }
         });
     }
