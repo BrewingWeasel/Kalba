@@ -1,3 +1,5 @@
+use std::process;
+
 use arboard::Clipboard;
 use dictionary::get_def;
 use eframe::{
@@ -107,6 +109,7 @@ impl eframe::App for MyApp {
                             "exported {}, focusing on {}",
                             self.sentence, self.words[i].lemma
                         );
+                        process::exit(0);
                     }
                 });
             }
