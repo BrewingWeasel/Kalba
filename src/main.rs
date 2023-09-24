@@ -3,7 +3,8 @@ use std::process;
 use arboard::Clipboard;
 use dictionary::get_def;
 use eframe::{
-    egui::{self, Button, Label, RichText, Sense, Separator, TextStyle},
+    egui::{self, Button, Label, RichText, Sense, Separator, TextEdit, TextStyle},
+    emath::Align,
     epaint::{Color32, Vec2},
 };
 use language_parsing::{get_words, Word};
@@ -95,16 +96,18 @@ impl eframe::App for MyApp {
             if let Some(i) = self.current {
                 ui.vertical_centered(|ui| {
                     ui.add(Separator::default().spacing(9.0));
-                    ui.add(Label::new(
-                        RichText::from(&self.words[i].lemma)
-                            .color(Color32::WHITE)
-                            .underline()
-                            .strong()
-                            .text_style(egui::TextStyle::Heading),
-                    ));
+
+                    ui.add(
+                        TextEdit::singleline(&mut self.words[i].lemma)
+                            .text_color(Color32::WHITE)
+                            .horizontal_align(Align::Center)
+                            .frame(false)
+                            .font(TextStyle::Heading),
+                    );
+
                     ui.add_space(5.0);
 
-                    let def = get_def(&self.words[i].lemma);
+                    let mut def = get_def(&self.words[i].lemma);
 
                     ui.add(Label::new(
                         RichText::from(&def)
