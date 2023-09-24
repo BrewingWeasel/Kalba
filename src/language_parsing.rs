@@ -3,7 +3,7 @@ use pyo3::prelude::*;
 pub struct Word {
     pub text: String,
     pub lemma: String,
-    pub morph: String,
+    pub morph: Option<String>,
     pub clickable: bool,
 }
 
@@ -18,8 +18,16 @@ pub fn get_words(sent: &str) -> Vec<Word> {
             let pos: String = i.getattr(py, "pos_")?.extract(py)?;
             let clickable = pos != "PUNCT";
             let lemma: String = i.getattr(py, "lemma_")?.extract(py)?;
-            // let morph: String = i.getattr(py, "morph")?.getattr(py, "case")?.extract(py)?;
-            let morph = String::new();
+            let morph: Option<String> = match i
+                .getattr(py, "morph")
+                .and_then(|v| v.getattr(py, "get")?.call1(py, ("Case",)))
+                .and_then(|v| v.extract::<Vec<String>>(py))
+            {
+                Ok(mut s) if !s.is_empty() => Some(s.remove(0)),
+                _ => None,
+            };
+
+            println!("{:?}", morph);
             words.push(Word {
                 text,
                 lemma,

@@ -64,16 +64,27 @@ impl eframe::App for MyApp {
                         // TODO: also shouldn't be hardcoded, should be based on font size or smth
                     }
 
+                    let color = match val.morph.as_deref() {
+                        Some("Nom") => Color32::from_rgb(246, 193, 119),
+                        Some("Gen") => Color32::from_rgb(235, 111, 146),
+                        Some("Acc") => Color32::from_rgb(234, 154, 151),
+                        Some("Ins") => Color32::from_rgb(62, 143, 176),
+                        Some("Loc") => Color32::from_rgb(156, 207, 216),
+                        Some("Voc") => Color32::from_rgb(196, 167, 231),
+                        _ => Color32::from_rgb(224, 222, 244),
+                    };
+
                     if ui
                         .add(
                             Label::new(
                                 RichText::from(&val.text)
-                                    .color(Color32::from_rgb(230, 140, 210))
+                                    .color(color)
                                     .text_style(egui::TextStyle::Body),
                             )
                             .sense(Sense::click()),
                         )
                         .clicked()
+                        && val.clickable
                     {
                         println!("{}", val.lemma);
                         self.current = Some(i);
