@@ -8,12 +8,14 @@ use eframe::{
     epaint::{Color32, Vec2},
 };
 use language_parsing::{get_words, Word};
+use settings::Settings;
 
 use crate::add_to_anki::add_to_anki;
 
 mod add_to_anki;
 mod dictionary;
 mod language_parsing;
+mod settings;
 
 fn main() -> Result<(), eframe::Error> {
     env_logger::init(); // Log to stderr (if you run with `RUST_LOG=debug`).
@@ -24,11 +26,7 @@ fn main() -> Result<(), eframe::Error> {
         resizable: false,
         ..Default::default()
     };
-    eframe::run_native(
-        "My egui App",
-        options,
-        Box::new(|_cc| Box::<MyApp>::default()),
-    )
+    eframe::run_native("Sakinyje", options, Box::new(|_cc| Box::<MyApp>::default()))
 }
 
 struct MyApp {
@@ -36,28 +34,64 @@ struct MyApp {
     sentence: String,
     current: Option<usize>,
     definitions: HashMap<usize, String>,
+    settings: Settings,
+    show_settings: bool,
+    error_to_show: Option<String>,
 }
 
 impl Default for MyApp {
     fn default() -> Self {
         let mut clipboard = Clipboard::new().unwrap();
         let selected = clipboard.get_text().unwrap();
+
+        let (settings, show_settings) = Settings::load_or_generate();
+
+        let (words, error_to_show) = match get_words(&selected, &settings.model) {
+            Ok(v) => (v, None),
+            Err(e) => (Vec::new(), Some(e.to_string())),
+        };
+
         Self {
-            words: get_words(&selected),
+            words,
             sentence: selected,
             current: None,
             definitions: HashMap::new(),
+            settings,
+            show_settings,
+            error_to_show,
         }
     }
 }
 
 impl eframe::App for MyApp {
+    fn on_exit(&mut self, _gl: Option<&eframe::glow::Context>) {
+        self.settings.save();
+    }
+
     fn update(&mut self, ctx: &egui::Context, _frame: &mut eframe::Frame) {
         egui::CentralPanel::default().show(ctx, |ui| {
             let mut style = (*ctx.style()).clone();
             style.text_styles.get_mut(&TextStyle::Body).unwrap().size = 16.0;
             style.spacing.item_spacing = Vec2::new(0.0, 0.0);
             ctx.set_style(style);
+
+            if ui.button("settings").clicked() {
+                self.show_settings = true;
+            }
+
+            if self.show_settings {
+                self.settings.make_window(ctx, &mut self.show_settings);
+            } else if self.error_to_show.is_some() {
+                egui::Window::new("Settings")
+                    .collapsible(false)
+                    .resizable(false)
+                    .show(ctx, |ui| {
+                        ui.label(self.error_to_show.as_ref().unwrap());
+                        if ui.button("ok").clicked() {
+                            self.error_to_show = None;
+                        }
+                    });
+            }
 
             ui.horizontal_wrapped(|ui| {
                 for (i, val) in self.words.iter().enumerate() {
@@ -126,7 +160,8 @@ impl eframe::App for MyApp {
                             .frame(false)
                             .font(TextStyle::Body),
                     );
-                    ui.add_space(10.0);
+
+                    ui.add_space(8.0);
 
                     if ui
                         .add(
@@ -140,8 +175,10 @@ impl eframe::App for MyApp {
                         )
                         .clicked()
                     {
-                        add_to_anki(&self.sentence, &self.words[i].lemma, def)
-                            .expect("Failure adding to anki");
+                        self.settings.save();
+                        if let Err(e) = add_to_anki(&self.sentence, &self.words[i].lemma, def) {
+                            eprintln!("{}", e);
+                        }
                         println!(
                             "exported {}, focusing on {}",
                             self.sentence, self.words[i].lemma

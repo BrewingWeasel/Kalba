@@ -1,4 +1,4 @@
-use pyo3::prelude::*;
+use pyo3::{exceptions::PyEnvironmentError, prelude::*};
 
 pub struct Word {
     pub text: String,
@@ -7,11 +7,18 @@ pub struct Word {
     pub clickable: bool,
 }
 
-pub fn get_words(sent: &str) -> Vec<Word> {
-    match Python::with_gil(|py| -> PyResult<Vec<Word>> {
+pub fn get_words(sent: &str, model: &str) -> Result<Vec<Word>, PyErr> {
+    Python::with_gil(|py| -> PyResult<Vec<Word>> {
         let mut words = Vec::new();
         let spacy = PyModule::import(py, "spacy")?;
-        let morphologizer = spacy.getattr("load")?.call1(("lt_core_news_sm",))?;
+        let morphologizer = match spacy.getattr("load")?.call1((model,)) {
+            Ok(v) => v,
+            Err(_) => {
+                return Err(PyEnvironmentError::new_err(format!(
+                    "Unable to load {model}"
+                )))
+            }
+        };
         let total: Vec<PyObject> = morphologizer.call1((sent,))?.extract()?;
         for i in total {
             let text: String = i.getattr(py, "text")?.extract(py)?;
@@ -36,8 +43,5 @@ pub fn get_words(sent: &str) -> Vec<Word> {
             })
         }
         Ok(words)
-    }) {
-        Ok(v) => v,
-        Err(e) => panic!("{}", e),
-    }
+    })
 }
