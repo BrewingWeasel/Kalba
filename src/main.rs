@@ -1,4 +1,4 @@
-use std::process;
+use std::{collections::HashMap, process};
 
 use arboard::Clipboard;
 use dictionary::get_def;
@@ -35,6 +35,7 @@ struct MyApp {
     words: Vec<Word>,
     sentence: String,
     current: Option<usize>,
+    definitions: HashMap<usize, String>,
 }
 
 impl Default for MyApp {
@@ -45,6 +46,7 @@ impl Default for MyApp {
             words: get_words(&selected),
             sentence: selected,
             current: None,
+            definitions: HashMap::new(),
         }
     }
 }
@@ -95,25 +97,35 @@ impl eframe::App for MyApp {
 
             if let Some(i) = self.current {
                 ui.vertical_centered(|ui| {
+                    let def = self
+                        .definitions
+                        .entry(i)
+                        .or_insert(get_def(&self.words[i].lemma));
+
                     ui.add(Separator::default().spacing(9.0));
 
-                    ui.add(
-                        TextEdit::singleline(&mut self.words[i].lemma)
-                            .text_color(Color32::WHITE)
-                            .horizontal_align(Align::Center)
-                            .frame(false)
-                            .font(TextStyle::Heading),
-                    );
+                    if ui
+                        .add(
+                            TextEdit::singleline(&mut self.words[i].lemma)
+                                .text_color(Color32::WHITE)
+                                .horizontal_align(Align::Center)
+                                .frame(false)
+                                .font(TextStyle::Heading),
+                        )
+                        .lost_focus()
+                    {
+                        *def = get_def(&self.words[i].lemma);
+                    }
 
                     ui.add_space(5.0);
 
-                    let mut def = get_def(&self.words[i].lemma);
-
-                    ui.add(Label::new(
-                        RichText::from(&def)
-                            .color(Color32::from_rgb(210, 170, 250))
-                            .text_style(egui::TextStyle::Body),
-                    ));
+                    ui.add(
+                        TextEdit::multiline(def)
+                            .text_color(Color32::from_rgb(210, 170, 250))
+                            .horizontal_align(Align::Center)
+                            .frame(false)
+                            .font(TextStyle::Body),
+                    );
                     ui.add_space(10.0);
 
                     if ui
@@ -128,7 +140,7 @@ impl eframe::App for MyApp {
                         )
                         .clicked()
                     {
-                        add_to_anki(&self.sentence, &self.words[i].lemma, &def)
+                        add_to_anki(&self.sentence, &self.words[i].lemma, def)
                             .expect("Failure adding to anki");
                         println!(
                             "exported {}, focusing on {}",
