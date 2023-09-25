@@ -20,10 +20,10 @@ mod settings;
 fn main() -> Result<(), eframe::Error> {
     env_logger::init(); // Log to stderr (if you run with `RUST_LOG=debug`).
     let options = eframe::NativeOptions {
-        initial_window_size: Some(egui::vec2(380.0, 250.0)),
+        // initial_window_size: Some(egui::vec2(380.0, 250.0)),
         decorated: false,
         always_on_top: true,
-        resizable: false,
+        // resizable: false,
         ..Default::default()
     };
     eframe::run_native("Sakinyje", options, Box::new(|_cc| Box::<MyApp>::default()))
@@ -156,11 +156,13 @@ impl eframe::App for MyApp {
                     for def in defs.iter_mut() {
                         ui.add(
                             TextEdit::multiline(def)
+                                .desired_rows(1)
                                 .text_color(Color32::from_rgb(210, 170, 250))
                                 .horizontal_align(Align::Center)
                                 .frame(false)
                                 .font(TextStyle::Body),
                         );
+                        ui.add_space(5.0);
                     }
 
                     ui.add_space(8.0);

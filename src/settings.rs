@@ -2,7 +2,7 @@ use serde::Deserialize;
 use serde_derive::Serialize;
 use std::fs;
 
-use eframe::egui::{self, Context};
+use eframe::egui::{self, Context, TextEdit};
 
 #[derive(Deserialize, Serialize)]
 pub struct Settings {
@@ -40,12 +40,12 @@ impl Settings {
 
     pub fn make_window(&mut self, ctx: &Context, show_settings: &mut bool) {
         egui::Window::new("Settings")
+            .auto_sized()
             .collapsible(false)
-            .resizable(false)
             .show(ctx, |ui| {
                 ui.horizontal(|ui| {
                     ui.label("Current model location: ");
-                    ui.text_edit_singleline(&mut self.model);
+                    ui.add(TextEdit::singleline(&mut self.model).desired_width(400.0))
                 });
                 ui.horizontal(|ui| {
                     ui.label("Dictionaries:");
@@ -67,8 +67,12 @@ impl Settings {
                             });
                         ui.add_space(5.0);
                         match dict {
-                            Dictionary::File(file) => ui.text_edit_singleline(file),
-                            Dictionary::Url(url) => ui.text_edit_singleline(url),
+                            Dictionary::File(f) => {
+                                ui.add(TextEdit::singleline(f).desired_width(400.0))
+                            }
+                            Dictionary::Url(url) => {
+                                ui.add(TextEdit::singleline(url).desired_width(400.0))
+                            }
                         }
                     });
                 }
