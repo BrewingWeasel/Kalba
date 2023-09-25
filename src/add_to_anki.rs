@@ -1,7 +1,12 @@
 use serde_json::json;
 use std::error::Error;
 
-pub fn add_to_anki(sent: &str, word: &str, def: &str) -> Result<(), Box<dyn Error>> {
+pub fn add_to_anki(sent: &str, word: &str, defs: &Vec<String>) -> Result<(), Box<dyn Error>> {
+    let mut def = String::new();
+    for cur_def in defs {
+        def.push_str(cur_def);
+        def.push('\n');
+    }
     let args = json!({
         "action": "addNote",
         "version": 6,

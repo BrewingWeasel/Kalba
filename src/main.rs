@@ -1,7 +1,7 @@
 use std::{collections::HashMap, process};
 
 use arboard::Clipboard;
-use dictionary::get_def;
+use dictionary::get_defs;
 use eframe::{
     egui::{self, Button, Label, RichText, Sense, Separator, TextEdit, TextStyle},
     emath::Align,
@@ -33,7 +33,7 @@ struct MyApp {
     words: Vec<Word>,
     sentence: String,
     current: Option<usize>,
-    definitions: HashMap<usize, String>,
+    definitions: HashMap<usize, Vec<String>>,
     settings: Settings,
     show_settings: bool,
     error_to_show: Option<String>,
@@ -131,10 +131,10 @@ impl eframe::App for MyApp {
 
             if let Some(i) = self.current {
                 ui.vertical_centered(|ui| {
-                    let def = self
+                    let defs = self
                         .definitions
                         .entry(i)
-                        .or_insert(get_def(&self.words[i].lemma));
+                        .or_insert(get_defs(&self.words[i].lemma, &self.settings.dicts));
 
                     ui.add(Separator::default().spacing(9.0));
 
@@ -148,18 +148,20 @@ impl eframe::App for MyApp {
                         )
                         .lost_focus()
                     {
-                        *def = get_def(&self.words[i].lemma);
+                        *defs = get_defs(&self.words[i].lemma, &self.settings.dicts);
                     }
 
                     ui.add_space(5.0);
 
-                    ui.add(
-                        TextEdit::multiline(def)
-                            .text_color(Color32::from_rgb(210, 170, 250))
-                            .horizontal_align(Align::Center)
-                            .frame(false)
-                            .font(TextStyle::Body),
-                    );
+                    for def in defs.iter_mut() {
+                        ui.add(
+                            TextEdit::multiline(def)
+                                .text_color(Color32::from_rgb(210, 170, 250))
+                                .horizontal_align(Align::Center)
+                                .frame(false)
+                                .font(TextStyle::Body),
+                        );
+                    }
 
                     ui.add_space(8.0);
 
@@ -176,7 +178,7 @@ impl eframe::App for MyApp {
                         .clicked()
                     {
                         self.settings.save();
-                        if let Err(e) = add_to_anki(&self.sentence, &self.words[i].lemma, def) {
+                        if let Err(e) = add_to_anki(&self.sentence, &self.words[i].lemma, defs) {
                             eprintln!("{}", e);
                         }
                         println!(
