@@ -7,6 +7,14 @@ use eframe::egui::{self, Context};
 #[derive(Deserialize, Serialize)]
 pub struct Settings {
     pub model: String,
+    pub dicts: Vec<Dictionary>,
+}
+
+#[derive(Serialize, Deserialize, PartialEq)]
+#[serde(tag = "t", content = "c")]
+pub enum Dictionary {
+    File(String), // Eventually these will have specific things
+    Url(String),  // TODO: implement url
 }
 
 impl Settings {
@@ -17,6 +25,7 @@ impl Settings {
             Err(_) => (
                 Self {
                     model: String::new(),
+                    dicts: Vec::new(),
                 },
                 true,
             ),
@@ -38,6 +47,31 @@ impl Settings {
                     ui.label("Current model location: ");
                     ui.text_edit_singleline(&mut self.model);
                 });
+                ui.horizontal(|ui| {
+                    ui.label("Dictionaries:");
+                    if ui.button("new dict").clicked() {
+                        self.dicts.push(Dictionary::File(String::new()))
+                    }
+                });
+                for (i, dict) in self.dicts.iter_mut().enumerate() {
+                    let selected = match dict {
+                        Dictionary::File(_) => "File",
+                        Dictionary::Url(_) => "URL",
+                    };
+                    ui.horizontal(|ui| {
+                        egui::ComboBox::from_label(format!("Dict {i}"))
+                            .selected_text(selected)
+                            .show_ui(ui, |ui| {
+                                ui.selectable_value(dict, Dictionary::File(String::new()), "File");
+                                ui.selectable_value(dict, Dictionary::Url(String::new()), "URL");
+                            });
+                        ui.add_space(5.0);
+                        match dict {
+                            Dictionary::File(file) => ui.text_edit_singleline(file),
+                            Dictionary::Url(url) => ui.text_edit_singleline(url),
+                        }
+                    });
+                }
                 if ui.button("save").clicked() {
                     *show_settings = false;
                 }
