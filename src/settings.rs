@@ -8,6 +8,7 @@ use eframe::egui::{self, Context, TextEdit};
 pub struct Settings {
     pub model: String,
     pub dicts: Vec<Dictionary>,
+    pub to_remove: Option<usize>,
 }
 
 #[derive(Serialize, Deserialize, PartialEq)]
@@ -26,6 +27,7 @@ impl Settings {
                 Self {
                     model: String::new(),
                     dicts: Vec::new(),
+                    to_remove: None,
                 },
                 true,
             ),
@@ -39,6 +41,10 @@ impl Settings {
     }
 
     pub fn make_window(&mut self, ctx: &Context, show_settings: &mut bool) {
+        if let Some(i) = self.to_remove {
+            self.dicts.remove(i);
+            self.to_remove = None;
+        }
         egui::Window::new("Settings")
             .auto_sized()
             .collapsible(false)
@@ -73,6 +79,9 @@ impl Settings {
                             Dictionary::Url(url) => {
                                 ui.add(TextEdit::singleline(url).desired_width(400.0))
                             }
+                        };
+                        if ui.button("X").clicked() {
+                            self.to_remove = Some(i);
                         }
                     });
                 }
