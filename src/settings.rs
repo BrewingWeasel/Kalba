@@ -50,8 +50,13 @@ impl Settings {
             .collapsible(false)
             .show(ctx, |ui| {
                 ui.horizontal(|ui| {
-                    ui.label("Current model location: ");
-                    ui.add(TextEdit::singleline(&mut self.model).desired_width(400.0))
+                    ui.label("Current spacy model: ");
+                    ui.add(TextEdit::singleline(&mut self.model).desired_width(400.0));
+                    if ui.button("select file").clicked() {
+                        if let Some(f) = rfd::FileDialog::new().pick_folder() {
+                            self.model = f.to_str().unwrap().to_owned();
+                        }
+                    }
                 });
                 ui.horizontal(|ui| {
                     ui.label("Dictionaries:");
@@ -73,11 +78,17 @@ impl Settings {
                             });
                         ui.add_space(5.0);
                         match dict {
-                            Dictionary::File(f) => {
-                                ui.add(TextEdit::singleline(f).desired_width(400.0))
+                            Dictionary::File(file) => {
+                                ui.add(TextEdit::singleline(file).desired_width(400.0));
+                                if ui.button("select file").clicked() {
+                                    if let Some(selected_file) = rfd::FileDialog::new().pick_file()
+                                    {
+                                        *file = selected_file.to_str().unwrap().to_owned();
+                                    }
+                                }
                             }
                             Dictionary::Url(url) => {
-                                ui.add(TextEdit::singleline(url).desired_width(400.0))
+                                ui.add(TextEdit::singleline(url).desired_width(400.0));
                             }
                         };
                         if ui.button("X").clicked() {
