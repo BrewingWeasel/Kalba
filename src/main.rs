@@ -44,6 +44,7 @@ struct Sakinyje {
     settings: Settings,
     show_settings: bool,
     error_to_show: Option<String>,
+    get_def: bool,
 }
 
 impl Default for Sakinyje {
@@ -66,6 +67,7 @@ impl Default for Sakinyje {
             settings,
             show_settings,
             error_to_show,
+            get_def: true,
         }
     }
 }
@@ -81,6 +83,8 @@ impl Sakinyje {
             Ok(v) => (v, None),
             Err(e) => (Vec::new(), Some(e.to_string())),
         };
+
+        self.get_def = true;
         self.words = words;
         self.error_to_show = error_to_show;
     }
@@ -139,37 +143,25 @@ impl eframe::App for Sakinyje {
                         _ => Color32::from_rgb(224, 222, 244),
                     };
 
-                    if ui
-                        .add(
-                            Label::new(
-                                RichText::from(&val.text)
-                                    .color(color)
-                                    .text_style(egui::TextStyle::Body),
-                            )
-                            .sense(Sense::click()),
+                    let word = ui.add(
+                        Label::new(
+                            RichText::from(&val.text)
+                                .color(color)
+                                .text_style(egui::TextStyle::Body),
                         )
-                        .clicked()
-                        && val.clickable
-                    {
+                        .sense(Sense::click()),
+                    );
+
+                    if word.clicked() && val.clickable {
                         println!("{}", val.lemma);
                         self.current = Some(i);
+                        self.get_def = !ui.input(|i| i.modifiers.shift);
                     }
                 }
             });
 
             if let Some(i) = self.current {
                 ui.vertical_centered(|ui| {
-                    if let hash_map::Entry::Vacant(e) = self.definitions.entry(i) {
-                        e.insert(get_defs(&self.words[i].lemma, &self.settings.dicts));
-                    }
-                    let defs = self.definitions.get_mut(&i).unwrap();
-                    // Not sure why the below doesn't work, but it doesn't
-                    //
-                    // let defs = self
-                    //     .definitions
-                    //     .entry(i)
-                    //     .or_insert(get_defs(&self.words[i].lemma, &self.settings.dicts));
-
                     ui.add(Separator::default().spacing(9.0));
 
                     let lemma_place = ui.add(
@@ -180,21 +172,36 @@ impl eframe::App for Sakinyje {
                             .font(TextStyle::Heading),
                     );
                     if lemma_place.lost_focus() && ui.input(|i| i.key_pressed(egui::Key::Enter)) {
-                        *defs = get_defs(&self.words[i].lemma, &self.settings.dicts);
+                        self.definitions
+                            .insert(i, get_defs(&self.words[i].lemma, &self.settings.dicts));
+                        self.get_def = true;
                     }
 
                     ui.add_space(5.0);
 
-                    for def in defs.iter_mut() {
-                        ui.add(
-                            TextEdit::multiline(def)
-                                .desired_rows(1)
-                                .text_color(Color32::from_rgb(210, 170, 250))
-                                .horizontal_align(Align::Center)
-                                .frame(false)
-                                .font(TextStyle::Body),
-                        );
-                        ui.add_space(5.0);
+                    if self.get_def {
+                        if let hash_map::Entry::Vacant(e) = self.definitions.entry(i) {
+                            e.insert(get_defs(&self.words[i].lemma, &self.settings.dicts));
+                        }
+                        let defs = self.definitions.get_mut(&i).unwrap();
+                        // Not sure why the below doesn't work, but it doesn't
+                        //
+                        // let defs = self
+                        //     .definitions
+                        //     .entry(i)
+                        //     .or_insert(get_defs(&self.words[i].lemma, &self.settings.dicts));
+
+                        for def in defs.iter_mut() {
+                            ui.add(
+                                TextEdit::multiline(def)
+                                    .desired_rows(1)
+                                    .text_color(Color32::from_rgb(210, 170, 250))
+                                    .horizontal_align(Align::Center)
+                                    .frame(false)
+                                    .font(TextStyle::Body),
+                            );
+                            ui.add_space(5.0);
+                        }
                     }
 
                     ui.add_space(8.0);
@@ -212,7 +219,11 @@ impl eframe::App for Sakinyje {
                         .clicked()
                     {
                         self.settings.save();
-                        if let Err(e) = add_to_anki(&self.sentence, &self.words[i].lemma, defs) {
+                        if let Err(e) = add_to_anki(
+                            &self.sentence,
+                            &self.words[i].lemma,
+                            self.definitions.get_mut(&i).unwrap(),
+                        ) {
                             eprintln!("{}", e);
                         }
                         println!(
