@@ -29,10 +29,14 @@ fn main() -> Result<(), eframe::Error> {
         // resizable: false,
         ..Default::default()
     };
-    eframe::run_native("Sakinyje", options, Box::new(|_cc| Box::<MyApp>::default()))
+    eframe::run_native(
+        "Sakinyje",
+        options,
+        Box::new(|_cc| Box::<Sakinyje>::default()),
+    )
 }
 
-struct MyApp {
+struct Sakinyje {
     words: Vec<Word>,
     sentence: String,
     current: Option<usize>,
@@ -42,7 +46,7 @@ struct MyApp {
     error_to_show: Option<String>,
 }
 
-impl Default for MyApp {
+impl Default for Sakinyje {
     fn default() -> Self {
         let mut clipboard = Clipboard::new().unwrap();
         let selected = clipboard.get_text().unwrap();
@@ -66,7 +70,23 @@ impl Default for MyApp {
     }
 }
 
-impl eframe::App for MyApp {
+impl Sakinyje {
+    fn update(&mut self) {
+        let mut clipboard = Clipboard::new().unwrap();
+        self.sentence = clipboard.get_text().unwrap();
+        self.definitions = HashMap::new();
+        self.current = None;
+
+        let (words, error_to_show) = match get_words(&self.sentence, &self.settings.model) {
+            Ok(v) => (v, None),
+            Err(e) => (Vec::new(), Some(e.to_string())),
+        };
+        self.words = words;
+        self.error_to_show = error_to_show;
+    }
+}
+
+impl eframe::App for Sakinyje {
     fn on_exit(&mut self, _gl: Option<&eframe::glow::Context>) {
         self.settings.save();
     }
@@ -78,9 +98,14 @@ impl eframe::App for MyApp {
             style.spacing.item_spacing = Vec2::new(0.0, 0.0);
             ctx.set_style(style);
 
-            if ui.button("settings").clicked() {
-                self.show_settings = true;
-            }
+            ui.horizontal(|ui| {
+                if ui.button("settings").clicked() {
+                    self.show_settings = true;
+                }
+                if ui.button("update").clicked() {
+                    self.update();
+                }
+            });
 
             if self.show_settings {
                 self.settings.make_window(ctx, &mut self.show_settings);
