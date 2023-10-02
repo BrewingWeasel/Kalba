@@ -1,4 +1,7 @@
-use std::{collections::HashMap, process};
+use std::{
+    collections::{hash_map, HashMap},
+    process,
+};
 
 use arboard::Clipboard;
 use dictionary::get_defs;
@@ -131,23 +134,27 @@ impl eframe::App for MyApp {
 
             if let Some(i) = self.current {
                 ui.vertical_centered(|ui| {
-                    let defs = self
-                        .definitions
-                        .entry(i)
-                        .or_insert(get_defs(&self.words[i].lemma, &self.settings.dicts));
+                    if let hash_map::Entry::Vacant(e) = self.definitions.entry(i) {
+                        e.insert(get_defs(&self.words[i].lemma, &self.settings.dicts));
+                    }
+                    let defs = self.definitions.get_mut(&i).unwrap();
+                    // Not sure why the below doesn't work, but it doesn't
+                    //
+                    // let defs = self
+                    //     .definitions
+                    //     .entry(i)
+                    //     .or_insert(get_defs(&self.words[i].lemma, &self.settings.dicts));
 
                     ui.add(Separator::default().spacing(9.0));
 
-                    if ui
-                        .add(
-                            TextEdit::singleline(&mut self.words[i].lemma)
-                                .text_color(Color32::WHITE)
-                                .horizontal_align(Align::Center)
-                                .frame(false)
-                                .font(TextStyle::Heading),
-                        )
-                        .lost_focus()
-                    {
+                    let lemma_place = ui.add(
+                        TextEdit::singleline(&mut self.words[i].lemma)
+                            .text_color(Color32::WHITE)
+                            .horizontal_align(Align::Center)
+                            .frame(false)
+                            .font(TextStyle::Heading),
+                    );
+                    if lemma_place.lost_focus() && ui.input(|i| i.key_pressed(egui::Key::Enter)) {
                         *defs = get_defs(&self.words[i].lemma, &self.settings.dicts);
                     }
 
