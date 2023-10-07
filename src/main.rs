@@ -195,6 +195,7 @@ impl eframe::App for Sakinyje {
                             ui.add(
                                 TextEdit::multiline(def)
                                     .desired_rows(1)
+                                    .desired_width(f32::INFINITY)
                                     .text_color(Color32::from_rgb(210, 170, 250))
                                     .horizontal_align(Align::Center)
                                     .frame(false)
