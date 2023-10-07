@@ -1,7 +1,7 @@
 use scraper::{Html, Selector};
 use serde::Deserialize;
 use serde_derive::Serialize;
-use std::fs;
+use std::{error::Error, fs};
 
 use crate::settings::Dictionary;
 
@@ -14,27 +14,30 @@ pub enum DictFileType {
 fn get_def(lemma: &str, file: &str, dict_type: &DictFileType) -> String {
     match dict_type {
         DictFileType::StarDict => {
-            let mut dict = stardict::no_cache(file).unwrap();
+            let get_data = || -> Result<String, Box<dyn Error>> {
+                let mut dict = stardict::no_cache(file)?;
 
-            let mut def = String::new();
-            if let Ok(response) = stardict::StarDict::lookup(&mut dict, lemma) {
-                for word in &response.unwrap() {
-                    if word.word != lemma {
-                        continue;
-                    }
-                    for i in &word.segments {
-                        let fragment = Html::parse_fragment(&i.text);
-                        let selector = Selector::parse("li").unwrap();
+                let mut def = String::new();
+                if let Ok(response) = stardict::StarDict::lookup(&mut dict, lemma) {
+                    for word in &response.ok_or("")? {
+                        if word.word != lemma {
+                            continue;
+                        }
+                        for i in &word.segments {
+                            let fragment = Html::parse_fragment(&i.text);
+                            let selector = Selector::parse("li")?;
 
-                        for element in fragment.select(&selector) {
-                            assert_eq!("li", element.value().name());
-                            def.push_str(&element.text().fold(String::new(), |acc, n| acc + n));
-                            def.push('\n')
+                            for element in fragment.select(&selector) {
+                                assert_eq!("li", element.value().name());
+                                def.push_str(&element.text().fold(String::new(), |acc, n| acc + n));
+                                def.push('\n')
+                            }
                         }
                     }
                 }
-            }
-            def
+                Ok(def)
+            };
+            get_data().unwrap_or(String::from("unknown"))
         }
         DictFileType::TextSplitAt(delim) => {
             if let Ok(lines) = fs::read_to_string(file) {
