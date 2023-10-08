@@ -1,6 +1,7 @@
 #![feature(let_chains)]
 
 use std::sync::mpsc::{self, Receiver, Sender};
+use std::sync::Arc;
 use std::{collections::HashMap, process, time::Duration};
 
 use arboard::Clipboard;
@@ -57,7 +58,7 @@ struct Sakinyje {
     words: Vec<Word>,
     sentence: String,
     current: Option<usize>,
-    definitions: HashMap<usize, Vec<String>>,
+    definitions: Arc<HashMap<usize, Vec<String>>>,
     settings: Settings,
     show_settings: bool,
     error_to_show: Option<String>,
@@ -89,7 +90,7 @@ impl Default for Sakinyje {
             words,
             sentence: selected,
             current: None,
-            definitions: HashMap::new(),
+            definitions: Arc::from(HashMap::new()),
             settings,
             show_settings,
             error_to_show,
@@ -103,7 +104,7 @@ impl Sakinyje {
     fn update(&mut self) {
         let mut clipboard = Clipboard::new().unwrap();
         self.sentence = clipboard.get_text().unwrap();
-        self.definitions = HashMap::new();
+        self.definitions = Arc::from(HashMap::new());
         self.current = None;
 
         let (words, error_to_show) = match get_words(&self.sentence, &self.settings.model) {
@@ -124,7 +125,7 @@ impl eframe::App for Sakinyje {
 
     fn update(&mut self, ctx: &egui::Context, _frame: &mut eframe::Frame) {
         if let Some(cur_index) = self.current && let Ok(new) = self.rx.try_recv() {
-            self.definitions.insert(cur_index, new);
+            Arc::get_mut(&mut self.definitions).unwrap().insert(cur_index, new);
             self.loading = false;
         }
 
@@ -193,6 +194,7 @@ impl eframe::App for Sakinyje {
             });
 
             if let Some(i) = self.current {
+                let lemma: Arc<str> = Arc::from(self.words[i].lemma.as_str());
                 ui.vertical_centered(|ui| {
                     ui.add(Separator::default().spacing(9.0));
 
@@ -206,7 +208,7 @@ impl eframe::App for Sakinyje {
                     if lemma_place.lost_focus() && ui.input(|i| i.key_pressed(egui::Key::Enter)) {
                         self.get_def = true;
                         get_defs(
-                            self.words[i].lemma.clone(),
+                            lemma.clone(),
                             self.settings.dicts.clone(),
                             self.tx.clone(),
                             ctx.clone(),
@@ -223,14 +225,16 @@ impl eframe::App for Sakinyje {
                     if self.get_def {
                         if self.definitions.get(&i).is_none() && !self.loading {
                             get_defs(
-                                self.words[i].lemma.clone(),
+                                lemma.clone(),
                                 self.settings.dicts.clone(),
                                 self.tx.clone(),
                                 ctx.clone(),
                             );
                             self.loading = true;
                         }
-                        if let Some(defs) = self.definitions.get_mut(&i) {
+
+                        if let Some(defs) = Arc::get_mut(&mut self.definitions).unwrap().get_mut(&i)
+                        {
                             for def in defs.iter_mut() {
                                 ui.add(
                                     TextEdit::multiline(def)
@@ -264,7 +268,10 @@ impl eframe::App for Sakinyje {
                         if let Err(e) = add_to_anki(
                             &self.sentence,
                             &self.words[i].lemma,
-                            self.definitions.get_mut(&i).unwrap(),
+                            Arc::get_mut(&mut self.definitions)
+                                .unwrap()
+                                .get_mut(&i)
+                                .unwrap(),
                             &self.settings,
                         ) {
                             eprintln!("{}", e);

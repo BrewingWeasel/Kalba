@@ -1,18 +1,23 @@
 use eframe::egui::Context;
+use futures::future::join_all;
 use scraper::{Html, Selector};
 use serde::Deserialize;
 use serde_derive::Serialize;
-use std::{error::Error, fs, sync::mpsc::Sender};
+use std::{
+    error::Error,
+    fs,
+    sync::{mpsc::Sender, Arc},
+};
 
 use crate::settings::Dictionary;
 
-#[derive(Serialize, Deserialize, PartialEq, Clone, Eq)]
+#[derive(Serialize, Deserialize, PartialEq, Clone, Eq, Debug)]
 pub enum DictFileType {
     TextSplitAt(String),
     StarDict,
 }
 
-fn get_def(lemma: &str, file: &str, dict_type: &DictFileType) -> String {
+fn get_def_from_file(lemma: &str, file: &str, dict_type: &DictFileType) -> String {
     match dict_type {
         DictFileType::StarDict => {
             let get_data = || -> Result<String, Box<dyn Error>> {
@@ -70,17 +75,17 @@ async fn get_def_url(lemma: &str, url: &str) -> String {
         .unwrap()
 }
 
+async fn get_def(dict: &Dictionary, lemma: &str) -> String {
+    match dict {
+        Dictionary::File(f, dict_type) => get_def_from_file(lemma, f, dict_type),
+        Dictionary::Url(url) => get_def_url(lemma, url).await,
+    }
+}
+
 // TODO: REFERENCES NOT CLONES AHHH
-pub fn get_defs(lemma: String, dicts: Vec<Dictionary>, tx: Sender<Vec<String>>, ctx: Context) {
+pub fn get_defs(lemma: Arc<str>, dicts: Vec<Dictionary>, tx: Sender<Vec<String>>, ctx: Context) {
     tokio::spawn(async move {
-        let mut defs = Vec::new();
-        for dict in &dicts {
-            let def = match dict {
-                Dictionary::File(f, dict_type) => get_def(&lemma, f, dict_type),
-                Dictionary::Url(url) => get_def_url(&lemma, url).await,
-            };
-            defs.push(def);
-        }
+        let defs = join_all(dicts.iter().map(|d| get_def(d, &lemma))).await;
         let _ = tx.send(defs);
         ctx.request_repaint();
     });

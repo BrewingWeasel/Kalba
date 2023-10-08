@@ -16,7 +16,7 @@ pub struct Settings {
     pub to_remove: Option<usize>,
 }
 
-#[derive(Serialize, Deserialize, PartialEq, Eq, Clone)]
+#[derive(Serialize, Deserialize, PartialEq, Eq, Clone, Debug)]
 #[serde(tag = "t", content = "c")]
 pub enum Dictionary {
     File(String, DictFileType), // Eventually these will have specific things
