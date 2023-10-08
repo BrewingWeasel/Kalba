@@ -8,6 +8,8 @@ use crate::dictionary::DictFileType;
 
 #[derive(Deserialize, Serialize)]
 pub struct Settings {
+    pub deck: String,
+    pub note_type: String,
     pub model: String,
     pub dicts: Vec<Dictionary>,
     pub to_remove: Option<usize>,
@@ -27,6 +29,8 @@ impl Settings {
             Ok(v) => (toml::from_str(&v).unwrap(), false),
             Err(_) => (
                 Self {
+                    deck: String::from("Default"),
+                    note_type: String::from("Basic"),
                     model: String::new(),
                     dicts: Vec::new(),
                     to_remove: None,
@@ -52,7 +56,18 @@ impl Settings {
             .collapsible(false)
             .show(ctx, |ui| {
                 ui.horizontal(|ui| {
-                    ui.label("Current spacy model: ");
+                    ui.label("Anki deck to export to:");
+                    ui.add(TextEdit::singleline(&mut self.deck).desired_width(100.0));
+                });
+                ui.horizontal(|ui| {
+                    ui.label("Anki note type:");
+                    ui.add(TextEdit::singleline(&mut self.note_type).desired_width(100.0));
+                });
+
+                ui.separator();
+
+                ui.horizontal(|ui| {
+                    ui.label("Current spacy model:");
                     ui.add(TextEdit::singleline(&mut self.model).desired_width(400.0));
                     if ui.button("select file").clicked() {
                         if let Some(f) = rfd::FileDialog::new().pick_folder() {
@@ -60,6 +75,9 @@ impl Settings {
                         }
                     }
                 });
+
+                ui.separator();
+
                 ui.horizontal(|ui| {
                     ui.label("Dictionaries:");
                     if ui.button("new dict").clicked() {

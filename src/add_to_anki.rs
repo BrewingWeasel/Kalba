@@ -1,7 +1,14 @@
 use serde_json::json;
 use std::error::Error;
 
-pub fn add_to_anki(sent: &str, word: &str, defs: &Vec<String>) -> Result<(), Box<dyn Error>> {
+use crate::settings::Settings;
+
+pub fn add_to_anki(
+    sent: &str,
+    word: &str,
+    defs: &Vec<String>,
+    settings: &Settings,
+) -> Result<(), Box<dyn Error>> {
     let mut def = String::new();
     for cur_def in defs {
         def.push_str(cur_def);
@@ -12,8 +19,8 @@ pub fn add_to_anki(sent: &str, word: &str, defs: &Vec<String>) -> Result<(), Box
         "version": 6,
         "params": {
             "note": {
-                "deckName": "cool",
-                "modelName": "Basic",
+                "deckName": settings.deck,
+                "modelName": settings.note_type,
                 "fields": {
                     "Front": sent,
                     "Back": format!("{word}: {def}")

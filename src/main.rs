@@ -224,6 +224,7 @@ impl eframe::App for Sakinyje {
                             &self.sentence,
                             &self.words[i].lemma,
                             self.definitions.get_mut(&i).unwrap(),
+                            &self.settings,
                         ) {
                             eprintln!("{}", e);
                         }
