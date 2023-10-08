@@ -10,6 +10,7 @@ use crate::dictionary::DictFileType;
 pub struct Settings {
     pub deck: String,
     pub note_type: String,
+    pub note_fields: String,
     pub model: String,
     pub dicts: Vec<Dictionary>,
     pub to_remove: Option<usize>,
@@ -31,6 +32,10 @@ impl Settings {
                 Self {
                     deck: String::from("Default"),
                     note_type: String::from("Basic"),
+                    note_fields: String::from(
+                        "Front:$sent
+Back:$def",
+                    ),
                     model: String::new(),
                     dicts: Vec::new(),
                     to_remove: None,
@@ -62,6 +67,10 @@ impl Settings {
                 ui.horizontal(|ui| {
                     ui.label("Anki note type:");
                     ui.add(TextEdit::singleline(&mut self.note_type).desired_width(100.0));
+                });
+                ui.horizontal(|ui| {
+                    ui.label("Note field generation:");
+                    ui.add(TextEdit::multiline(&mut self.note_fields).desired_width(100.0));
                 });
 
                 ui.separator();

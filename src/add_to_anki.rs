@@ -1,5 +1,5 @@
 use serde_json::json;
-use std::error::Error;
+use std::{collections::HashMap, error::Error};
 
 use crate::settings::Settings;
 
@@ -14,6 +14,28 @@ pub fn add_to_anki(
         def.push_str(cur_def);
         def.push('\n');
     }
+
+    let mut replacements = HashMap::from([
+        (String::from("$sent"), sent),
+        (String::from("$word"), word),
+        (String::from("$def"), &def),
+    ]);
+
+    for (i, v) in defs.iter().enumerate() {
+        replacements.insert(format!("${}", i).to_owned(), v);
+    }
+
+    let mut fields = HashMap::new();
+
+    for i in settings.note_fields.lines() {
+        let (field_name, conts) = i.split_once(':').ok_or("error parsing fields")?;
+        let mut conts = conts.to_string();
+        for (orig, replacement) in &replacements {
+            conts = conts.replace(orig, replacement);
+        }
+        fields.insert(field_name, conts);
+    }
+
     let args = json!({
         "action": "addNote",
         "version": 6,
@@ -21,10 +43,7 @@ pub fn add_to_anki(
             "note": {
                 "deckName": settings.deck,
                 "modelName": settings.note_type,
-                "fields": {
-                    "Front": sent,
-                    "Back": format!("{word}: {def}")
-                },
+                "fields": fields,
                 "options": {
                     "allowDuplicate": false,
                     "duplicateScope": "deck",
