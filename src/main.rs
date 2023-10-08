@@ -1,7 +1,7 @@
-use std::{
-    collections::{hash_map, HashMap},
-    process,
-};
+#![feature(let_chains)]
+
+use std::sync::mpsc::{self, Receiver, Sender};
+use std::{collections::HashMap, process, time::Duration};
 
 use arboard::Clipboard;
 use dictionary::get_defs;
@@ -12,6 +12,7 @@ use eframe::{
 };
 use language_parsing::{get_words, Word};
 use settings::Settings;
+use tokio::runtime::Runtime;
 
 use crate::add_to_anki::add_to_anki;
 
@@ -21,6 +22,22 @@ mod language_parsing;
 mod settings;
 
 fn main() -> Result<(), eframe::Error> {
+    let rt = Runtime::new().expect("Unable to create Runtime");
+
+    // Enter the runtime so that `tokio::spawn` is available immediately.
+    let _enter = rt.enter();
+
+    // Execute the runtime in its own thread.
+    // The future doesn't have to do anything. In this example, it just sleeps forever.
+    std::thread::spawn(move || {
+        rt.block_on(async {
+            loop {
+                tokio::time::sleep(Duration::from_secs(3600)).await;
+            }
+        })
+    });
+
+    // Run the GUI in the main thread.
     env_logger::init(); // Log to stderr (if you run with `RUST_LOG=debug`).
     let options = eframe::NativeOptions {
         // initial_window_size: Some(egui::vec2(380.0, 250.0)),
@@ -45,10 +62,17 @@ struct Sakinyje {
     show_settings: bool,
     error_to_show: Option<String>,
     get_def: bool,
+    loading: bool,
+
+    // Sender/Receiver for getting definitions
+    tx: Sender<Vec<String>>,
+    rx: Receiver<Vec<String>>,
 }
 
 impl Default for Sakinyje {
     fn default() -> Self {
+        let (tx, rx) = mpsc::channel();
+
         let mut clipboard = Clipboard::new().unwrap();
         let selected = clipboard.get_text().unwrap();
 
@@ -60,6 +84,8 @@ impl Default for Sakinyje {
         };
 
         Self {
+            rx,
+            tx,
             words,
             sentence: selected,
             current: None,
@@ -68,6 +94,7 @@ impl Default for Sakinyje {
             show_settings,
             error_to_show,
             get_def: true,
+            loading: false,
         }
     }
 }
@@ -96,6 +123,11 @@ impl eframe::App for Sakinyje {
     }
 
     fn update(&mut self, ctx: &egui::Context, _frame: &mut eframe::Frame) {
+        if let Some(cur_index) = self.current && let Ok(new) = self.rx.try_recv() {
+            self.definitions.insert(cur_index, new);
+            self.loading = false;
+        }
+
         egui::CentralPanel::default().show(ctx, |ui| {
             let mut style = (*ctx.style()).clone();
             style.text_styles.get_mut(&TextStyle::Body).unwrap().size = 16.0;
@@ -172,36 +204,45 @@ impl eframe::App for Sakinyje {
                             .font(TextStyle::Heading),
                     );
                     if lemma_place.lost_focus() && ui.input(|i| i.key_pressed(egui::Key::Enter)) {
-                        self.definitions
-                            .insert(i, get_defs(&self.words[i].lemma, &self.settings.dicts));
                         self.get_def = true;
+                        get_defs(
+                            self.words[i].lemma.clone(),
+                            self.settings.dicts.clone(),
+                            self.tx.clone(),
+                            ctx.clone(),
+                        );
+                        self.loading = true;
                     }
 
                     ui.add_space(5.0);
 
-                    if self.get_def {
-                        if let hash_map::Entry::Vacant(e) = self.definitions.entry(i) {
-                            e.insert(get_defs(&self.words[i].lemma, &self.settings.dicts));
-                        }
-                        let defs = self.definitions.get_mut(&i).unwrap();
-                        // Not sure why the below doesn't work, but it doesn't
-                        //
-                        // let defs = self
-                        //     .definitions
-                        //     .entry(i)
-                        //     .or_insert(get_defs(&self.words[i].lemma, &self.settings.dicts));
+                    if self.loading {
+                        ui.spinner();
+                    }
 
-                        for def in defs.iter_mut() {
-                            ui.add(
-                                TextEdit::multiline(def)
-                                    .desired_rows(1)
-                                    .desired_width(f32::INFINITY)
-                                    .text_color(Color32::from_rgb(210, 170, 250))
-                                    .horizontal_align(Align::Center)
-                                    .frame(false)
-                                    .font(TextStyle::Body),
+                    if self.get_def {
+                        if self.definitions.get(&i).is_none() && !self.loading {
+                            get_defs(
+                                self.words[i].lemma.clone(),
+                                self.settings.dicts.clone(),
+                                self.tx.clone(),
+                                ctx.clone(),
                             );
-                            ui.add_space(5.0);
+                            self.loading = true;
+                        }
+                        if let Some(defs) = self.definitions.get_mut(&i) {
+                            for def in defs.iter_mut() {
+                                ui.add(
+                                    TextEdit::multiline(def)
+                                        .desired_rows(1)
+                                        .desired_width(f32::INFINITY)
+                                        .text_color(Color32::from_rgb(210, 170, 250))
+                                        .horizontal_align(Align::Center)
+                                        .frame(false)
+                                        .font(TextStyle::Body),
+                                );
+                                ui.add_space(5.0);
+                            }
                         }
                     }
 

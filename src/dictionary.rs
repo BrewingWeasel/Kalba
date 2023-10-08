@@ -1,11 +1,12 @@
+use eframe::egui::Context;
 use scraper::{Html, Selector};
 use serde::Deserialize;
 use serde_derive::Serialize;
-use std::{error::Error, fs};
+use std::{error::Error, fs, sync::mpsc::Sender};
 
 use crate::settings::Dictionary;
 
-#[derive(Serialize, Deserialize, PartialEq)]
+#[derive(Serialize, Deserialize, PartialEq, Clone, Eq)]
 pub enum DictFileType {
     TextSplitAt(String),
     StarDict,
@@ -55,22 +56,32 @@ fn get_def(lemma: &str, file: &str, dict_type: &DictFileType) -> String {
     }
 }
 
-fn get_def_url(lemma: &str, url: &str) -> String {
+async fn get_def_url(lemma: &str, url: &str) -> String {
     println!("getting definition from {url}");
     let new_url = url.replacen("{word}", lemma, 1);
-    let client = reqwest::blocking::Client::new();
-    client.get(new_url).send().unwrap().text().unwrap() // TODO: async
+    let client = reqwest::Client::new();
+    client
+        .get(new_url)
+        .send()
+        .await
+        .unwrap()
+        .text()
+        .await
+        .unwrap()
 }
 
-// TODO: allow getting from server
-pub fn get_defs(lemma: &str, dicts: &Vec<Dictionary>) -> Vec<String> {
-    let mut defs = Vec::new();
-    for dict in dicts {
-        let def = match dict {
-            Dictionary::File(f, dict_type) => get_def(lemma, f, dict_type),
-            Dictionary::Url(url) => get_def_url(lemma, url),
-        };
-        defs.push(def);
-    }
-    defs
+// TODO: REFERENCES NOT CLONES AHHH
+pub fn get_defs(lemma: String, dicts: Vec<Dictionary>, tx: Sender<Vec<String>>, ctx: Context) {
+    tokio::spawn(async move {
+        let mut defs = Vec::new();
+        for dict in &dicts {
+            let def = match dict {
+                Dictionary::File(f, dict_type) => get_def(&lemma, f, dict_type),
+                Dictionary::Url(url) => get_def_url(&lemma, url).await,
+            };
+            defs.push(def);
+        }
+        let _ = tx.send(defs);
+        ctx.request_repaint();
+    });
 }
