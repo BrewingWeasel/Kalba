@@ -1788,27 +1788,6 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "e2db585e1d738fc771bf08a151420d3ed193d9d895a36df7f6f8a9456b911ddc"
 
 [[package]]
-name = "language"
-version = "0.1.0"
-dependencies = [
- "arboard",
- "dirs",
- "eframe",
- "env_logger",
- "futures",
- "pyo3",
- "reqwest",
- "rfd",
- "scraper",
- "serde",
- "serde_derive",
- "serde_json",
- "stardict",
- "tokio",
- "toml 0.8.0",
-]
-
-[[package]]
 name = "lazy_static"
 version = "1.4.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -2861,6 +2840,27 @@ name = "ryu"
 version = "1.0.15"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "1ad4cc8da4ef723ed60bced201181d83791ad433213d8c24efffda1eec85d741"
+
+[[package]]
+name = "sakinyje"
+version = "0.1.0"
+dependencies = [
+ "arboard",
+ "dirs",
+ "eframe",
+ "env_logger",
+ "futures",
+ "pyo3",
+ "reqwest",
+ "rfd",
+ "scraper",
+ "serde",
+ "serde_derive",
+ "serde_json",
+ "stardict",
+ "tokio",
+ "toml 0.8.0",
+]
 
 [[package]]
 name = "same-file"
