@@ -20,7 +20,7 @@ pub struct Settings {
 #[serde(tag = "t", content = "c")]
 pub enum Dictionary {
     File(String, DictFileType), // Eventually these will have specific things
-    Url(String),                // TODO: implement url
+    Url(String),
 }
 
 impl Settings {
@@ -70,7 +70,7 @@ Back:$def",
                 });
                 ui.horizontal(|ui| {
                     ui.label("Note field generation:");
-                    ui.add(TextEdit::multiline(&mut self.note_fields).desired_width(100.0));
+                    ui.add(TextEdit::multiline(&mut self.note_fields));
                 });
 
                 ui.separator();

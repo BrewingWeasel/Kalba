@@ -82,7 +82,6 @@ async fn get_def(dict: &Dictionary, lemma: &str) -> String {
     }
 }
 
-// TODO: REFERENCES NOT CLONES AHHH
 pub fn get_defs(lemma: Arc<str>, dicts: Vec<Dictionary>, tx: Sender<Vec<String>>, ctx: Context) {
     tokio::spawn(async move {
         let defs = join_all(dicts.iter().map(|d| get_def(d, &lemma))).await;

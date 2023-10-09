@@ -57,6 +57,6 @@ pub fn add_to_anki(
         }
     });
     let client = reqwest::blocking::Client::new();
-    let _ = client.post("http://localhost:8765/").json(&args).send()?; // TODO: error handling
+    let _ = client.post("http://localhost:8765/").json(&args).send()?;
     Ok(())
 }
