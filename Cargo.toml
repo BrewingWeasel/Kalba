@@ -1,26 +1,4 @@
-[package]
-name = "sakinyje"
-version = "0.1.0"
-edition = "2021"
+[workspace]
+resolver = "2"
 
-# See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
-
-[dependencies]
-arboard = { version = "3.2.1", features = [
-  "wl-clipboard-rs",
-  "wayland-data-control",
-], default-features = false }
-dirs = "5.0.1"
-eframe = "0.22.0"
-env_logger = "0.10.0"
-pyo3 = { version = "0.19.2", features = ["auto-initialize"] }
-reqwest = { version = "0.11.20", features = ["json", "blocking"] }
-rfd = "0.12.0"
-scraper = "0.17.1"
-serde = "1.0.188"
-serde_derive = "1.0.188"
-serde_json = "1.0.107"
-toml = "0.8.0"
-stardict = { version = "0.2.0", default-features = false }
-tokio = { version = "1.32.0", features = ["full"] }
-futures = "0.3.28"
+members = ["src-ui", "src-tauri", "shared"]

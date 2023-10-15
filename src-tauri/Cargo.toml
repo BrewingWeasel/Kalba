@@ -21,9 +21,13 @@ tauri = { version = "1.5.2", features = [] }
 pyo3 = { version = "0.20.0", features = ["auto-initialize"] }
 stardict = "0.2.0"
 reqwest = { version = "0.11.22", features = ["json"] }
+shared = { path = "../shared" }
+toml = "0.8.2"
+dirs = "5.0.1"
+
 
 [features]
 # this feature is used for production builds or when `devPath` points to the filesystem and the built-in dev server is disabled.
 # If you use cargo directly instead of tauri's cli you can use this feature flag to switch between tauri's `dev` and `build` modes.
 # DO NOT REMOVE!!
-custom-protocol = [ "tauri/custom-protocol" ]
+custom-protocol = ["tauri/custom-protocol"]

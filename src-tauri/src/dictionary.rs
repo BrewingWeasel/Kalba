@@ -1,23 +1,10 @@
 // use eframe::egui::Context;
 // use futures::future::join_all;
 // use scraper::{Html, Selector};
-use serde::{Deserialize, Serialize};
+use shared::*;
 use std::{error::Error, fs};
 
 // use crate::settings::Dictionary;
-
-#[derive(Serialize, Deserialize, PartialEq, Clone, Eq, Debug)]
-pub enum DictFileType {
-    TextSplitAt(String),
-    StarDict,
-}
-
-#[derive(Serialize, Deserialize, PartialEq, Eq, Clone, Debug)]
-#[serde(tag = "t", content = "c")]
-pub enum Dictionary {
-    File(String, DictFileType), // Eventually these will have specific things
-    Url(String),
-}
 
 fn get_def_from_file(lemma: &str, file: &str, dict_type: &DictFileType) -> String {
     match dict_type {
@@ -73,6 +60,7 @@ async fn get_def_url(lemma: &str, url: &str) -> String {
 
 #[tauri::command]
 pub async fn get_def(dict: Dictionary, lemma: &str) -> Result<String, String> {
+    std::thread::sleep(std::time::Duration::from_secs(2));
     match dict {
         Dictionary::File(f, dict_type) => Ok(get_def_from_file(lemma, &f, &dict_type)),
         Dictionary::Url(url) => Ok(get_def_url(lemma, &url).await),

@@ -1,5 +1,8 @@
+use std::collections::HashMap;
+
 use leptos::{html::Input, *};
 use serde::Serialize;
+use shared::*;
 use tauri_sys::tauri;
 use web_sys::SubmitEvent;
 
@@ -9,51 +12,26 @@ fn main() {
 
 #[derive(Serialize)]
 struct GetDefEvent<'a> {
-    dict: Dictionary,
+    dict: &'a Dictionary,
     lemma: &'a str,
 }
 
-#[derive(Serialize, PartialEq, Clone, Eq, Debug)]
-pub enum DictFileType {
-    TextSplitAt(String),
-    StarDict,
-}
-
-#[derive(Serialize, PartialEq, Eq, Clone, Debug)]
-#[serde(tag = "t", content = "c")]
-pub enum Dictionary {
-    File(String, DictFileType), // Eventually these will have specific things
-    Url(String),
-}
-
 #[derive(Serialize)]
-struct ParsingInfo<'a> {
-    sent: &'a str,
-    model: &'a str,
+pub struct ParsingInfo<'a> {
+    pub sent: &'a str,
+    pub model: &'a str,
 }
 
-#[derive(Serialize)]
-struct SentenceEvent<'a> {
-    sent: ParsingInfo<'a>,
-}
-
-// TODO: shared crate
-#[derive(Clone, serde::Serialize, serde::Deserialize)]
-pub struct Word {
-    pub text: String,
-    pub lemma: String,
-    pub morph: Option<String>,
-    pub clickable: bool,
+async fn get_settings() -> Settings {
+    tauri::invoke("get_settings", &()).await.unwrap()
 }
 
 async fn send_sentence(sent: String) -> Vec<Word> {
     match tauri::invoke(
         "parse_text",
-        &SentenceEvent {
-            sent: ParsingInfo {
-                sent: &sent,
-                model: "lt_core_news_sm",
-            },
+        &ParsingInfo {
+            sent: &sent,
+            model: "lt_core_news_sm",
         },
     )
     .await
@@ -68,27 +46,48 @@ async fn send_sentence(sent: String) -> Vec<Word> {
     }
 }
 
-async fn get_definition(lemma_id: Option<usize>, words: Resource<String, Vec<Word>>) -> String {
+async fn get_definition<'a>(
+    lemma_id: Option<usize>,
+    words: Resource<String, Vec<Word>>,
+    defs: ReadSignal<HashMap<usize, Vec<String>>>,
+    writable_defs: WriteSignal<HashMap<usize, Vec<String>>>,
+    settings: Resource<(), Settings>,
+) -> Vec<String> {
+    // TODO: lots of clones
     if let Some(i) = lemma_id {
-        tauri::invoke(
-            "get_def",
-            &GetDefEvent {
-                lemma: &words.get().unwrap()[i].lemma,
-                dict: Dictionary::File(
-                    "/home/weasel/rust/language/dicts/lithuanian".to_string(),
-                    DictFileType::TextSplitAt(":\t".to_string()),
-                ),
-            },
-        )
-        .await
-        .unwrap()
+        let defs = defs();
+        if let Some(cached_defs) = defs.get(&i) {
+            cached_defs.to_owned()
+        } else {
+            let mut defs = Vec::new();
+            for dict in &settings.get().unwrap().dicts {
+                let def: String = tauri::invoke(
+                    "get_def",
+                    &GetDefEvent {
+                        lemma: &words.get().unwrap()[i].lemma,
+                        dict,
+                    },
+                )
+                .await
+                .unwrap();
+                defs.push(def);
+            }
+            writable_defs.update(|v| {
+                v.insert(i, defs.clone());
+            });
+            defs
+        }
     } else {
-        String::new()
+        Vec::new()
     }
 }
 
 #[component]
 fn App() -> impl IntoView {
+    let settings = create_resource(|| (), |_| async move { get_settings().await });
+
+    let (defs, change_defs) = create_signal(HashMap::new());
+
     let (sentence, set_sentence) = create_signal(String::new());
 
     let (selected_word, set_selected_word) = create_signal(None);
@@ -103,7 +102,7 @@ fn App() -> impl IntoView {
     let conts = create_local_resource(move || sentence.get(), send_sentence);
     let definition = create_resource(
         move || selected_word.get(),
-        move |v| get_definition(v, conts),
+        move |v| get_definition(v, conts, defs, change_defs, settings),
     );
 
     let selected_lemma = move || {
@@ -131,7 +130,7 @@ fn App() -> impl IntoView {
         <div class="selectedword">{selected_lemma}</div>
         <div class="definition">{move || match definition.get() {
             None => view! { <p>"Loading..."</p> }.into_view(),
-            Some(data) => view! { <p>{data}</p> }.into_view(),
+            Some(data) => data.iter().map(|d| view! { <p>{d}</p> }).collect_view(),
         }}</div>
     }
 }
