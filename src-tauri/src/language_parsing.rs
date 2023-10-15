@@ -1,5 +1,7 @@
 use pyo3::{exceptions::PyEnvironmentError, prelude::*};
+use tauri::Window;
 
+#[derive(Clone, serde::Serialize, serde::Deserialize)]
 pub struct Word {
     pub text: String,
     pub lemma: String,
@@ -7,11 +9,20 @@ pub struct Word {
     pub clickable: bool,
 }
 
-pub fn get_words(sent: &str, model: &str) -> Result<Vec<Word>, PyErr> {
+#[derive(Clone, serde::Serialize, serde::Deserialize)]
+pub struct ParsingInfo {
+    sent: String,
+    model: String,
+}
+
+#[tauri::command]
+pub async fn parse_text(_window: Window, sent: ParsingInfo) -> Result<Vec<Word>, String> {
+    let model = sent.model;
+    let sent = sent.sent;
     Python::with_gil(|py| -> PyResult<Vec<Word>> {
         let mut words = Vec::new();
         let spacy = PyModule::import(py, "spacy")?;
-        let morphologizer = match spacy.getattr("load")?.call1((model,)) {
+        let morphologizer = match spacy.getattr("load")?.call1((&model,)) {
             Ok(v) => v,
             Err(_) => {
                 return Err(PyEnvironmentError::new_err(format!(
@@ -44,4 +55,5 @@ pub fn get_words(sent: &str, model: &str) -> Result<Vec<Word>, PyErr> {
         }
         Ok(words)
     })
+    .map_err(|e| e.to_string())
 }

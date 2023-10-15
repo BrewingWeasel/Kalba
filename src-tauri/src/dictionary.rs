@@ -1,20 +1,22 @@
-use eframe::egui::Context;
-use futures::future::join_all;
-use scraper::{Html, Selector};
-use serde::Deserialize;
-use serde_derive::Serialize;
-use std::{
-    error::Error,
-    fs,
-    sync::{mpsc::Sender, Arc},
-};
+// use eframe::egui::Context;
+// use futures::future::join_all;
+// use scraper::{Html, Selector};
+use serde::{Deserialize, Serialize};
+use std::{error::Error, fs};
 
-use crate::settings::Dictionary;
+// use crate::settings::Dictionary;
 
 #[derive(Serialize, Deserialize, PartialEq, Clone, Eq, Debug)]
 pub enum DictFileType {
     TextSplitAt(String),
     StarDict,
+}
+
+#[derive(Serialize, Deserialize, PartialEq, Eq, Clone, Debug)]
+#[serde(tag = "t", content = "c")]
+pub enum Dictionary {
+    File(String, DictFileType), // Eventually these will have specific things
+    Url(String),
 }
 
 fn get_def_from_file(lemma: &str, file: &str, dict_type: &DictFileType) -> String {
@@ -30,14 +32,8 @@ fn get_def_from_file(lemma: &str, file: &str, dict_type: &DictFileType) -> Strin
                             continue;
                         }
                         for i in &word.segments {
-                            let fragment = Html::parse_fragment(&i.text);
-                            let selector = Selector::parse("li")?;
-
-                            for element in fragment.select(&selector) {
-                                assert_eq!("li", element.value().name());
-                                def.push_str(&element.text().fold(String::new(), |acc, n| acc + n));
-                                def.push('\n')
-                            }
+                            def.push_str(&i.text);
+                            def.push('\n');
                         }
                     }
                 }
@@ -75,17 +71,18 @@ async fn get_def_url(lemma: &str, url: &str) -> String {
         .unwrap()
 }
 
-async fn get_def(dict: &Dictionary, lemma: &str) -> String {
+#[tauri::command]
+pub async fn get_def(dict: Dictionary, lemma: &str) -> Result<String, String> {
     match dict {
-        Dictionary::File(f, dict_type) => get_def_from_file(lemma, f, dict_type),
-        Dictionary::Url(url) => get_def_url(lemma, url).await,
+        Dictionary::File(f, dict_type) => Ok(get_def_from_file(lemma, &f, &dict_type)),
+        Dictionary::Url(url) => Ok(get_def_url(lemma, &url).await),
     }
 }
 
-pub fn get_defs(lemma: Arc<str>, dicts: Vec<Dictionary>, tx: Sender<Vec<String>>, ctx: Context) {
-    tokio::spawn(async move {
-        let defs = join_all(dicts.iter().map(|d| get_def(d, &lemma))).await;
-        let _ = tx.send(defs);
-        ctx.request_repaint();
-    });
-}
+// pub fn get_defs(lemma: Arc<str>, dicts: Vec<Dictionary>, tx: Sender<Vec<String>>, ctx: Context) {
+//     tokio::spawn(async move {
+//         let defs = join_all(dicts.iter().map(|d| get_def(d, &lemma))).await;
+//         let _ = tx.send(defs);
+//         ctx.request_repaint();
+//     });
+// }
