@@ -45,8 +45,8 @@ fn get_def_from_file(lemma: &str, file: &str, dict_type: &DictFileType) -> Strin
 }
 
 async fn get_def_url(lemma: &str, url: &str) -> String {
-    println!("getting definition from {url}");
     let new_url = url.replacen("{word}", lemma, 1);
+    println!("getting definition from {new_url}");
     let client = reqwest::Client::new();
     client
         .get(new_url)
@@ -60,7 +60,6 @@ async fn get_def_url(lemma: &str, url: &str) -> String {
 
 #[tauri::command]
 pub async fn get_def(dict: Dictionary, lemma: &str) -> Result<String, String> {
-    std::thread::sleep(std::time::Duration::from_secs(2));
     match dict {
         Dictionary::File(f, dict_type) => Ok(get_def_from_file(lemma, &f, &dict_type)),
         Dictionary::Url(url) => Ok(get_def_url(lemma, &url).await),

@@ -53,7 +53,6 @@ async fn get_definition<'a>(
     writable_defs: WriteSignal<HashMap<String, Vec<String>>>,
     settings: Resource<(), Settings>,
 ) -> Vec<String> {
-    console_log("lol");
     console_log(&format!("{:#?}", words.get()));
     // TODO: lots of clones
     if let Some(i) = lemma_id {
@@ -118,7 +117,6 @@ fn App() -> impl IntoView {
             conts.update(|v| {
                 v.as_mut().unwrap().get_mut(selected_word().unwrap()).unwrap().lemma = event_target_value(&ev);
             });
-            console_log(&format!("{:#?}", conts.get().unwrap()));
             definition.refetch();
         } prop:value={move || {
         selected_word
@@ -129,11 +127,9 @@ fn App() -> impl IntoView {
             })
             .map(|v| v.lemma)
     }}></input>
-        // <div class="selectedword">{move || selected_lemma}</div>
-        <div class="definition">{move || match definition.get() {
-            None => view! { <p>"Loading..."</p> }.into_view(),
-            Some(data) => data.iter().map(|d| view! { <p>{d}</p> }).collect_view(),
-        }}</div>
+        <Suspense fallback=move || view! { <p>"Loading..."</p> }>
+            {definition.get().map(|data| data.iter().map(|d| view! { <p>{d}</p> }).collect_view())}
+        </Suspense>
     }
 }
 
