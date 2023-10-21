@@ -1,6 +1,6 @@
 use std::collections::HashMap;
 
-use leptos::{html::Input, *};
+use leptos::{html::Input, leptos_dom::logging::console_log, *};
 use serde::Serialize;
 use shared::*;
 use tauri_sys::tauri;
@@ -49,31 +49,28 @@ async fn send_sentence(sent: String) -> Vec<Word> {
 async fn get_definition<'a>(
     lemma_id: Option<usize>,
     words: Resource<String, Vec<Word>>,
-    defs: ReadSignal<HashMap<usize, Vec<String>>>,
-    writable_defs: WriteSignal<HashMap<usize, Vec<String>>>,
+    defs: ReadSignal<HashMap<String, Vec<String>>>,
+    writable_defs: WriteSignal<HashMap<String, Vec<String>>>,
     settings: Resource<(), Settings>,
 ) -> Vec<String> {
+    console_log("lol");
+    console_log(&format!("{:#?}", words.get()));
     // TODO: lots of clones
     if let Some(i) = lemma_id {
-        let defs = defs();
-        if let Some(cached_defs) = defs.get(&i) {
+        let lemma = &words().unwrap()[i].lemma;
+        let defs = move || defs.get();
+        if let Some(cached_defs) = defs().get(lemma) {
             cached_defs.to_owned()
         } else {
             let mut defs = Vec::new();
             for dict in &settings.get().unwrap().dicts {
-                let def: String = tauri::invoke(
-                    "get_def",
-                    &GetDefEvent {
-                        lemma: &words.get().unwrap()[i].lemma,
-                        dict,
-                    },
-                )
-                .await
-                .unwrap();
+                let def: String = tauri::invoke("get_def", &GetDefEvent { lemma, dict })
+                    .await
+                    .unwrap();
                 defs.push(def);
             }
             writable_defs.update(|v| {
-                v.insert(i, defs.clone());
+                v.insert(lemma.clone(), defs.clone());
             });
             defs
         }
@@ -105,16 +102,6 @@ fn App() -> impl IntoView {
         move |v| get_definition(v, conts, defs, change_defs, settings),
     );
 
-    let selected_lemma = move || {
-        selected_word
-            .get()
-            .and_then(|i| {
-                let words = conts.get().unwrap();
-                words.get(i).cloned()
-            })
-            .map(|v| v.lemma)
-    };
-
     view! {
         <form on:submit=on_submit>
             <input type="text"
@@ -127,7 +114,22 @@ fn App() -> impl IntoView {
             None => view! { <p>"Loading..."</p> }.into_view(),
             Some(data) => data.into_iter().enumerate().map(|(i, d)| view! { <Word word={d} i=i word_selector=set_selected_word /> }).collect::<Vec<_>>().into_view(),
         }}</div>
-        <div class="selectedword">{selected_lemma}</div>
+        <input type="text" on:change=move |ev| {
+            conts.update(|v| {
+                v.as_mut().unwrap().get_mut(selected_word().unwrap()).unwrap().lemma = event_target_value(&ev);
+            });
+            console_log(&format!("{:#?}", conts.get().unwrap()));
+            definition.refetch();
+        } prop:value={move || {
+        selected_word
+            .get()
+            .and_then(|i| {
+                let words = conts.get().unwrap();
+                words.get(i).cloned()
+            })
+            .map(|v| v.lemma)
+    }}></input>
+        // <div class="selectedword">{move || selected_lemma}</div>
         <div class="definition">{move || match definition.get() {
             None => view! { <p>"Loading..."</p> }.into_view(),
             Some(data) => data.iter().map(|d| view! { <p>{d}</p> }).collect_view(),
