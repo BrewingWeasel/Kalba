@@ -142,33 +142,38 @@ fn App() -> impl IntoView {
             None => view! { <p>"Loading..."</p> }.into_view(),
             Some(data) => data.into_iter().enumerate().map(|(i, d)| view! { <Word word={d} i=i word_selector=set_selected_word /> }).collect::<Vec<_>>().into_view(),
         }}</div>
-        <input type="text" on:change=move |ev| {
-            conts.update(|v| {
-                v.as_mut().unwrap().get_mut(selected_word().unwrap()).unwrap().lemma = event_target_value(&ev);
-            });
-            definition.refetch();
-        } prop:value={move || {
-        selected_word
-            .get()
-            .and_then(|i| {
-                let words = conts.get().unwrap();
-                words.get(i).cloned()
-            })
-            .map(|v| v.lemma)
-    }}></input>
+        { move || if selected_word().is_some() {
+            view! {<input type="text" on:change=move |ev| {
+                conts.update(|v| {
+                    v.as_mut().unwrap().get_mut(selected_word().unwrap()).unwrap().lemma = event_target_value(&ev);
+                });
+                definition.refetch();
+            } prop:value={move || {
+            selected_word
+                .get()
+                .and_then(|i| {
+                    let words = conts.get().unwrap();
+                    words.get(i).cloned()
+                })
+                .map(|v| v.lemma)
+        }}></input>}.into_view()} else {
+        view! {}.into_view()
+        }
+        }
         <Suspense fallback=move || view! { <p>"Loading..."</p> }>
             {definition.get().map(|data| data.iter().map(|d| view! { <p>{d}</p> }).collect_view())}
+            {move || selected_word().map(|i| view !{
+             <button
+                on:click=move |_| {
+                let cur_conts = conts().unwrap();
+                let lemma = cur_conts[i].lemma.clone();
+                console_log(&lemma);
+                spawn_local(async move {
+                        export_card(&sentence(), &lemma, defs().get(&lemma).unwrap(), &settings().unwrap()).await;
+                });
+                console_log(&format!("{:#?}", &defs()));
+            }>export to anki</button>})}
         </Suspense>
-         <button
-            on:click=move |_| {
-            let cur_conts = conts().unwrap();
-            let lemma = cur_conts[selected_word().unwrap()].lemma.clone();
-            console_log(&lemma);
-            spawn_local(async move {
-                    export_card(&sentence(), &lemma, defs().get(&lemma).unwrap(), &settings().unwrap()).await;
-            });
-            console_log(&format!("{:#?}", &defs()));
-        }>export to anki</button>
     }
 }
 
