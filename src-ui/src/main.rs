@@ -1,6 +1,10 @@
 use std::collections::HashMap;
 
-use leptos::{html::Input, leptos_dom::logging::console_log, *};
+use leptos::{
+    html::Input,
+    leptos_dom::logging::{console_error, console_log},
+    *,
+};
 use serde::Serialize;
 use shared::*;
 use tauri_sys::tauri;
@@ -22,8 +26,33 @@ pub struct ParsingInfo<'a> {
     pub model: &'a str,
 }
 
+#[derive(Serialize)]
+pub struct AddToAnki<'a> {
+    pub sent: &'a str,
+    pub word: &'a str,
+    pub defs: &'a Vec<String>,
+    pub settings: &'a Settings,
+}
+
 async fn get_settings() -> Settings {
     tauri::invoke("get_settings", &()).await.unwrap()
+}
+
+async fn export_card(sent: &str, word: &str, defs: &Vec<String>, settings: &Settings) {
+    match tauri::invoke(
+        "add_to_anki",
+        &AddToAnki {
+            sent,
+            word,
+            defs,
+            settings,
+        },
+    )
+    .await
+    {
+        Err(e) => console_error(&e.to_string()),
+        Ok(()) => (),
+    }
 }
 
 async fn send_sentence(sent: String) -> Vec<Word> {
@@ -130,6 +159,16 @@ fn App() -> impl IntoView {
         <Suspense fallback=move || view! { <p>"Loading..."</p> }>
             {definition.get().map(|data| data.iter().map(|d| view! { <p>{d}</p> }).collect_view())}
         </Suspense>
+         <button
+            on:click=move |_| {
+            let cur_conts = conts().unwrap();
+            let lemma = cur_conts[selected_word().unwrap()].lemma.clone();
+            console_log(&lemma);
+            spawn_local(async move {
+                    export_card(&sentence(), &lemma, defs().get(&lemma).unwrap(), &settings().unwrap()).await;
+            });
+            console_log(&format!("{:#?}", &defs()));
+        }>export to anki</button>
     }
 }
 

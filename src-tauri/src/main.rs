@@ -1,18 +1,24 @@
 // Prevents additional console window on Windows in release, DO NOT REMOVE!!
 #![cfg_attr(not(debug_assertions), windows_subsystem = "windows")]
 
-use crate::{dictionary::get_def, language_parsing::parse_text};
+use crate::{add_to_anki::add_to_anki, dictionary::get_def, language_parsing::parse_text};
 use shared::Settings;
 use std::fs;
 use tauri::Window;
 
 // use tauri::Window;
+mod add_to_anki;
 mod dictionary;
 mod language_parsing;
 
 fn main() {
     tauri::Builder::default()
-        .invoke_handler(tauri::generate_handler![parse_text, get_def, get_settings])
+        .invoke_handler(tauri::generate_handler![
+            parse_text,
+            get_def,
+            get_settings,
+            add_to_anki
+        ])
         .run(tauri::generate_context!())
         .expect("error while running tauri application");
 }

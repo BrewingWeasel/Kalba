@@ -1,16 +1,20 @@
+use reqwest::Client;
 use serde_json::json;
-use std::{collections::HashMap, error::Error};
+use std::collections::HashMap;
+use tauri::Window;
 
-use crate::settings::Settings;
+use shared::Settings;
 
-pub fn add_to_anki(
+#[tauri::command]
+pub async fn add_to_anki(
+    _window: Window,
     sent: &str,
     word: &str,
-    defs: &Vec<String>,
-    settings: &Settings,
-) -> Result<(), Box<dyn Error>> {
+    defs: Vec<String>,
+    settings: Settings,
+) -> Result<(), String> {
     let mut def = String::new();
-    for cur_def in defs {
+    for cur_def in &defs {
         def.push_str(cur_def);
         def.push('\n');
     }
@@ -56,7 +60,12 @@ pub fn add_to_anki(
             }
         }
     });
-    let client = reqwest::blocking::Client::new();
-    let _ = client.post("http://localhost:8765/").json(&args).send()?;
+    let client = Client::new();
+    let _ = client
+        .post("http://localhost:8765/")
+        .json(&args)
+        .send()
+        .await
+        .map_err(|e| e.to_string());
     Ok(())
 }
