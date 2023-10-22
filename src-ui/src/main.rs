@@ -131,10 +131,12 @@ fn App() -> impl IntoView {
     );
 
     view! {
-        <form on:submit=on_submit>
-            <input type="text" value=sentence node_ref=input_element/>
-            <input type="submit" value="Parse"/>
-        </form>
+        <div class="input">
+            <form on:submit=on_submit>
+                <input type="textarea" class="sentsubmit" value=sentence node_ref=input_element/>
+                <input class="parsebutton" type="submit" value="Parse"/>
+            </form>
+        </div>
         <div class="sentence">
             {move || match conts.get() {
                 None => view! { <p>"Loading..."</p> }.into_view(),
@@ -146,67 +148,94 @@ fn App() -> impl IntoView {
                         .into_view()
                 }
             }}
+
         </div>
-        {move || {
-            if selected_word().is_some() {
-                view! {
-                    <input
-                        type="text"
-                        on:change=move |ev| {
-                            conts
-                                .update(|v| {
-                                    v
-                                        .as_mut()
-                                        .unwrap()
-                                        .get_mut(selected_word().unwrap())
-                                        .unwrap()
-                                        .lemma = event_target_value(&ev);
-                                });
-                            definition.refetch();
-                        }
-                        prop:value=move || {
-                            selected_word
-                                .get()
-                                .and_then(|i| {
-                                    let words = conts.get().unwrap();
-                                    words.get(i).cloned()
-                                })
-                                .map(|v| v.lemma)
-                        }
-                    />
+        <br/>
+        <div class="wordinfo">
+            {move || {
+                if selected_word().is_some() {
+                    view! {
+                        <input
+                            class="selectedword"
+                            type="text"
+                            on:change=move |ev| {
+                                conts
+                                    .update(|v| {
+                                        v
+                                            .as_mut()
+                                            .unwrap()
+                                            .get_mut(selected_word().unwrap())
+                                            .unwrap()
+                                            .lemma = event_target_value(&ev);
+                                    });
+                                definition.refetch();
+                            }
+
+                            prop:value=move || {
+                                selected_word
+                                    .get()
+                                    .and_then(|i| {
+                                        let words = conts.get().unwrap();
+                                        words.get(i).cloned()
+                                    })
+                                    .map(|v| v.lemma)
+                            }
+                        />
+                    }
+                        .into_view()
+                } else {
+                    view! {}.into_view()
                 }
-                    .into_view()
-            } else {
-                view! {}.into_view()
-            }
-        }}
+            }}
+
+        </div>
 
         <Suspense fallback=move || {
             view! { <p>"Loading..."</p> }
         }>
-            {definition.get().map(|data| data.iter().map(|d| view! { <p>{d}</p> }).collect_view())}
+            {definition
+                .get()
+                .map(|data| {
+                    data
+                        .iter()
+                        .map(|d| {
+                            view! {
+                                <div class="definition" inner_html=d></div>
+                                <br/>
+                            }
+                        })
+                        .collect_view()
+                })}
             {move || {
                 selected_word()
                     .map(|i| {
                         view! {
-                            <button on:click=move |_| {
-                                let cur_conts = conts().unwrap();
-                                let lemma = cur_conts[i].lemma.clone();
-                                console_log(&lemma);
-                                spawn_local(async move {
-                                    export_card(
-                                            &sentence(),
-                                            &lemma,
-                                            defs().get(&lemma).unwrap(),
-                                            &settings().unwrap(),
-                                        )
-                                        .await;
-                                });
-                                console_log(&format!("{:#?}", &defs()));
-                            }>export to anki</button>
+                            <div class="export">
+                                <button
+                                    on:click=move |_| {
+                                        let cur_conts = conts().unwrap();
+                                        let lemma = cur_conts[i].lemma.clone();
+                                        console_log(&lemma);
+                                        spawn_local(async move {
+                                            export_card(
+                                                    &sentence(),
+                                                    &lemma,
+                                                    defs().get(&lemma).unwrap(),
+                                                    &settings().unwrap(),
+                                                )
+                                                .await;
+                                        });
+                                        console_log(&format!("{:#?}", &defs()));
+                                    }
+                                    class="exportbutton"
+                                >
+                                    export to anki
+                                </button>
+                            </div>
                         }
                     })
             }}
+
         </Suspense>
     }
 }
@@ -228,6 +257,7 @@ fn Word(word: Word, i: usize, word_selector: WriteSignal<Option<usize>>) -> impl
                 word_selector.set(Some(i));
             }
         >
+
             {&word.text}
         </span>
     }

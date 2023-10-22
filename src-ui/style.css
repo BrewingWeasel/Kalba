@@ -1,7 +1,74 @@
 body {
-  background-color: #191724;
+  background-color: #232136;
   color: #e0def4;
-  font-family: Pier Sans,ui-sans-serif,system-ui,-apple-system,BlinkMacSystemFont,Segoe UI,Roboto,Helvetica Neue,Arial,Noto Sans,sans-serif,"Apple Color Emoji","Segoe UI Emoji",Segoe UI Symbol,"Noto Color Emoji"
+  font-family: Pier Sans,ui-sans-serif,system-ui,-apple-system,BlinkMacSystemFont,Segoe UI,Roboto,Helvetica Neue,Arial,Noto Sans,sans-serif,"Apple Color Emoji","Segoe UI Emoji",Segoe UI Symbol,"Noto Color Emoji";
+}
+
+.sentence, .wordinfo, .definition, .export {
+  display: flex;
+  justify-content: center;
+}
+
+.sentsubmit {
+  width: 80%;
+  height: 3em;
+  padding: 12px 20px;
+  background-color: #2a273f;
+  border-radius: 15px;
+  margin: 5px;
+  font-size: 16px;
+  color: inherit;
+  border: none;
+}
+
+.parsebutton {
+  background-color: #393552;
+  color: #e0def4;
+  font-size: 14px;
+  border: none;
+  text-align: center;
+  text-decoration: none;
+  transition-duration: .2s;
+  padding: 10px;
+  border-radius: 4px;
+  border-width: 0;
+}
+
+.parsebutton:hover {
+  border-radius: 8px;
+}
+
+.exportbutton {
+  background-color: #393552;
+  color: #e0def4;
+  font-size: 18px;
+  border: none;
+  text-align: center;
+  text-decoration: none;
+  width: 15%;
+  transition-duration: .2s;
+  padding: 10px;
+  border-radius: 6px;
+  border-width: 0;
+  display: flex;
+  justify-content: center;
+}
+
+.exportbutton:hover {
+  transform: scale(1.05);
+  border-radius: 12px;
+}
+
+.selectedword {
+  width: 50%;
+  text-align: center;
+  padding: 12px 20px;
+  background-color: inherit;
+  font-size: 20px;
+  color: inherit;
+  border: none;
+  display: flex;
+  justify-content: center;
 }
 
 .word {
@@ -11,6 +78,8 @@ body {
 .punctuation {
   padding-left: 0px;
 }
+
+/* BELOW HERE IS SPECIFIC TO DICT IM USING TODO: ADD SETTING FOR CUSTOM CSS */
 
 .Gen {
   color: #eb6f92; 
@@ -43,3 +112,41 @@ body {
 .Ill {
   color: #31748f; 
 }
+
+.dzRecord {
+  text-align: center;
+}
+.dz_homonym {
+  color: #eb6f92; 
+  display: inline-block;
+}
+
+.dz_valnumber {
+  color: #e0def4; 
+  font-weight: bold;
+  padding: 0px;
+  display: inline-block;
+}
+
+.dz_forms, .dz_tags, .dz_tag {
+  color: #c4a7e7; 
+  font-style: italic;
+  display: inline-block;
+}
+
+.dz_grammar {
+  color: #6e6a86; 
+  display: inline-block;
+}
+
+.dz_example {
+  color: #e0def4; 
+  display: inline-block;
+}
+
+.dz_antraste {
+  font-weight: bold;
+  color: #f6c177; 
+  display: inline-block;
+}
+
