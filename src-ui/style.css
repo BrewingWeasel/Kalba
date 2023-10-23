@@ -4,6 +4,10 @@ body {
   font-family: Pier Sans,ui-sans-serif,system-ui,-apple-system,BlinkMacSystemFont,Segoe UI,Roboto,Helvetica Neue,Arial,Noto Sans,sans-serif,"Apple Color Emoji","Segoe UI Emoji",Segoe UI Symbol,"Noto Color Emoji";
 }
 
+main {
+  margin-top: 50px;
+}
+
 .sentence, .wordinfo, .definition, .export {
   display: flex;
   justify-content: center;
@@ -77,6 +81,30 @@ body {
 
 .punctuation {
   padding-left: 0px;
+}
+
+.navbar {
+  overflow: hidden;
+  background-color: #2a273f;
+  position: fixed;
+  top: 0;
+  text-align: center;
+  left: 50%;
+  transform: translateX(-50%);
+  border-radius: 0px 0px 18px 18px;
+}
+
+.navbar a {
+  float: left;
+  display: block;
+  text-align: center;
+  padding: 14px 16px;
+  text-decoration: none;
+  color: #908caa;
+}
+
+.navbar a:hover {
+  background: #44415a;
 }
 
 /* BELOW HERE IS SPECIFIC TO DICT IM USING TODO: ADD SETTING FOR CUSTOM CSS */

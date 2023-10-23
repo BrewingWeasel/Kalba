@@ -5,6 +5,7 @@ use leptos::{
     leptos_dom::logging::{console_error, console_log},
     *,
 };
+use leptos_router::*;
 use serde::Serialize;
 use shared::*;
 use tauri_sys::tauri;
@@ -110,7 +111,42 @@ async fn get_definition<'a>(
 #[component]
 fn App() -> impl IntoView {
     let settings = create_resource(|| (), |_| async move { get_settings().await });
+    view! {
+        <Router>
+            <nav><NavBar/></nav>
+            <main>
+                <Routes>
+                    <Route path="/" view=move || ReaderView( ReaderViewProps { settings }) />
+                    <Route path="/reader" view=move || ReaderView( ReaderViewProps { settings }) />
+                    <Route path="/settings" view=Todo />
+                    <Route path="/dictionary" view=Todo />
+                    <Route path="/corpus" view=Todo />
+                </Routes>
+            </main>
+        </Router>
+    }
+}
 
+#[component]
+fn NavBar() -> impl IntoView {
+    view! {
+        <div class="navbar">
+              <A href="settings">Settings</A>
+              <A href="/reader">Reader</A>
+              <A href="dictionary">Dictionary</A>
+        </div>
+    }
+}
+
+#[component]
+fn Todo() -> impl IntoView {
+    view! {
+        <p>Coming soon!</p>
+    }
+}
+
+#[component]
+fn ReaderView(settings: Resource<(), Settings>) -> impl IntoView {
     let (defs, change_defs) = create_signal(HashMap::new());
 
     let (sentence, set_sentence) = create_signal(String::new());
@@ -129,7 +165,6 @@ fn App() -> impl IntoView {
         move || selected_word.get(),
         move |v| get_definition(v, conts, defs, change_defs, settings),
     );
-
     view! {
         <div class="input">
             <form on:submit=on_submit>
