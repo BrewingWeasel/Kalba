@@ -188,9 +188,21 @@ fn SettingsChanger(settings: Resource<(), Settings>) -> impl IntoView {
     } else {
         return view! { <p>Unable to load settings</p> }.into_view();
     };
+
     let (model, set_model) = create_signal(old_settings.model);
     let (deck, set_deck) = create_signal(old_settings.deck);
     let (note, set_note) = create_signal(old_settings.note_type);
+
+    let new_dicts = old_settings
+        .dicts
+        .clone()
+        .into_iter()
+        .map(|d| create_signal(d))
+        .enumerate()
+        .collect::<Vec<_>>();
+
+    let (dicts, set_dicts) = create_signal(new_dicts);
+
     view! {
         <SimpleTextSetting readsig=model writesig=set_model name="model" desc="SpaCy Model"/>
         <button on:click=move |_| {
@@ -202,14 +214,19 @@ fn SettingsChanger(settings: Resource<(), Settings>) -> impl IntoView {
         <SimpleTextSetting readsig=note writesig=set_note name="note" desc="Note type"/>
 
         <hr/>
-        <DictionaryList initial_dicts=old_settings.dicts/>
+        <DictionaryList dicts=dicts set_dicts=set_dicts/>
 
         <hr/>
 
         <button on:click=move |_| {
             settings
                 .update(|v| {
-                    v.as_mut().unwrap().model = model();
+                    let updater = v.as_mut().unwrap();
+                    // TODO: maybe make a macro for this
+                    updater.model = model();
+                    updater.deck = deck();
+                    updater.note_type = note();
+                    updater.dicts = dicts().iter().map(|(_, (r, _))| r()).collect();
                 });
         }>save</button>
     }
@@ -369,22 +386,15 @@ fn Word(word: Word, i: usize, word_selector: WriteSignal<Option<usize>>) -> impl
     }
 }
 
+type DictList = Vec<(usize, (ReadSignal<Dictionary>, WriteSignal<Dictionary>))>;
+
 #[component]
-fn DictionaryList(initial_dicts: Vec<Dictionary>) -> impl IntoView {
-    let mut next_counter_id = initial_dicts.len();
-
-    let new_dicts = initial_dicts
-        .into_iter()
-        .map(|d| create_signal(d))
-        .enumerate()
-        .collect::<Vec<_>>();
-
-    let (dicts, set_dicts) = create_signal(new_dicts);
-
+fn DictionaryList(dicts: ReadSignal<DictList>, set_dicts: WriteSignal<DictList>) -> impl IntoView {
+    let mut next_dict_id = dicts().len();
     let add_dict = move |_| {
         let dict = Dictionary::Url(String::new());
-        set_dicts.update(move |counters| counters.push((next_counter_id, create_signal(dict))));
-        next_counter_id += 1;
+        set_dicts.update(move |new_dicts| new_dicts.push((next_dict_id, create_signal(dict))));
+        next_dict_id += 1;
     };
 
     view! {
@@ -452,7 +462,20 @@ fn DictionaryRepresentation(
             Dictionary::Url(url) => {
                 let (read_sig, write_sig) = create_signal(url);
                 view! {
-                    <SimpleTextSetting readsig=read_sig writesig=write_sig desc="url" name="url"/>
+                    <label for="url">Url</label> // TODO: make generic function for this
+                    <input
+                        id="url"
+                        type="text"
+                        on:input=move |ev| {
+                            write_sig(event_target_value(&ev));
+                        }
+                        on:change=move |_| {
+                            wdict.update(|v| {
+                                *v = Dictionary::Url(read_sig())
+                            })
+                        }
+                        prop:value=read_sig
+                    />
                 }
                     .into_view()
             }
@@ -460,12 +483,24 @@ fn DictionaryRepresentation(
                 let (read_filename, write_filename) = create_signal(filename);
                 let is_stardict = matches!(dict_type, DictFileType::StarDict);
                 view! {
-                    <SimpleTextSetting
-                        readsig=read_filename
-                        writesig=write_filename
-                        desc="File location"
-                        name="file"
+                    <label for="filename">File location</label> // TODO: make generic function for this
+                    <input
+                        id="filename"
+                        type="text"
+                        on:input=move |ev| {
+                            write_filename(event_target_value(&ev));
+                        }
+                        on:change=move |_| {
+                            wdict.update(|v| {
+                                if let Dictionary::File(_, file_type) = v {
+                                    *v = Dictionary::File(read_filename(), file_type.clone()); // TODO:
+                                    // no clone here
+                                }
+                            });
+                        }
+                        prop:value=read_filename
                     />
+
                     <button on:click=move |_| {
                         get_folder(write_filename);
                     }>open</button>
@@ -514,11 +549,22 @@ fn DictionaryRepresentation(
                         let (read_delim, write_delim) = create_signal(delim);
                         Some(
                             view! {
-                                <SimpleTextSetting
-                                    readsig=read_delim
-                                    writesig=write_delim
-                                    desc="Custom Delimiter"
-                                    name="delim"
+                                <label for="delim">Custom Delimiter</label> // TODO: make generic function for this
+                                <input
+                                    id="delim"
+                                    type="text"
+                                    on:input=move |ev| {
+                                        write_delim(event_target_value(&ev));
+                                    }
+                                    on:change=move |_| {
+                                        wdict.update(|v| {
+                                            if let Dictionary::File(file_name, _) = v {
+                                                *v = Dictionary::File(file_name.clone(), DictFileType::TextSplitAt(read_delim())); // TODO:
+                                                // no clone here
+                                            }
+                                        });
+                                    }
+                                    prop:value=read_delim
                                 />
                             },
                         )
