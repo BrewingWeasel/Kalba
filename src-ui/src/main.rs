@@ -8,7 +8,7 @@ use leptos::{
 use leptos_router::*;
 use serde::Serialize;
 use shared::*;
-use tauri_sys::tauri;
+use tauri_sys::{dialog::FileDialogBuilder, tauri};
 use web_sys::SubmitEvent;
 
 fn main() {
@@ -76,6 +76,16 @@ async fn send_sentence(sent: String) -> Vec<Word> {
     }
 }
 
+fn get_folder(writer: WriteSignal<String>) {
+    wasm_bindgen_futures::spawn_local(async move {
+        console_log("getting file");
+        if let Ok(Some(v)) = FileDialogBuilder::new().pick_folder().await {
+            console_log(&format!("{:?}", v));
+            writer(v.to_string_lossy().to_string());
+        }
+    })
+}
+
 async fn get_definition<'a>(
     lemma_id: Option<usize>,
     words: Resource<String, Vec<Word>>,
@@ -113,14 +123,21 @@ fn App() -> impl IntoView {
     let settings = create_resource(|| (), |_| async move { get_settings().await });
     view! {
         <Router>
-            <nav><NavBar/></nav>
+            <nav>
+                <NavBar/>
+            </nav>
             <main>
                 <Routes>
-                    <Route path="/" view=move || ReaderView( ReaderViewProps { settings }) />
-                    <Route path="/reader" view=move || ReaderView( ReaderViewProps { settings }) />
-                    <Route path="/settings" view=Todo />
-                    <Route path="/dictionary" view=Todo />
-                    <Route path="/corpus" view=Todo />
+                    <Route path="/" view=move || ReaderView(ReaderViewProps { settings })/>
+                    <Route path="/reader" view=move || ReaderView(ReaderViewProps { settings })/>
+                    <Route
+                        path="/settings"
+                        view=move || SettingsChanger(SettingsChangerProps {
+                            settings: settings,
+                        })
+                    />
+                    <Route path="/dictionary" view=Todo/>
+                    <Route path="/corpus" view=Todo/>
                 </Routes>
             </main>
         </Router>
@@ -131,17 +148,66 @@ fn App() -> impl IntoView {
 fn NavBar() -> impl IntoView {
     view! {
         <div class="navbar">
-              <A href="settings">Settings</A>
-              <A href="/reader">Reader</A>
-              <A href="dictionary">Dictionary</A>
+            <A href="settings">Settings</A>
+            <A href="/reader">Reader</A>
+            <A href="dictionary">Dictionary</A>
         </div>
     }
 }
 
 #[component]
 fn Todo() -> impl IntoView {
+    view! { <p>Coming soon!</p> }
+}
+
+#[component]
+fn SimpleTextSetting(
+    readsig: ReadSignal<String>,
+    writesig: WriteSignal<String>,
+    name: &'static str,
+    desc: &'static str,
+) -> impl IntoView {
     view! {
-        <p>Coming soon!</p>
+        <label for=name>{desc}</label>
+        <input
+            id=name
+            type="text"
+            on:input=move |ev| {
+                writesig(event_target_value(&ev));
+            }
+
+            prop:value=readsig
+        />
+    }
+}
+
+#[component]
+fn SettingsChanger(settings: Resource<(), Settings>) -> impl IntoView {
+    let old_settings = settings().unwrap();
+    let (model, set_model) = create_signal(old_settings.model);
+    let (deck, set_deck) = create_signal(old_settings.deck);
+    let (note, set_note) = create_signal(old_settings.note_type);
+    view! {
+        <SimpleTextSetting readsig=model writesig=set_model name="model" desc="SpaCy Model"/>
+        <button on:click=move |_| {
+            console_log("pirmas");
+            get_folder(set_model);
+        }>open</button>
+        <hr/>
+        <SimpleTextSetting readsig=deck writesig=set_deck name="deck" desc="Anki Deck"/>
+        <SimpleTextSetting readsig=note writesig=set_note name="note" desc="Note type"/>
+
+        <hr/>
+        <DictionaryList initial_dicts=old_settings.dicts/>
+
+        <hr/>
+
+        <button on:click=move |_| {
+            settings
+                .update(|v| {
+                    v.as_mut().unwrap().model = model();
+                });
+        }>save</button>
     }
 }
 
@@ -231,8 +297,7 @@ fn ReaderView(settings: Resource<(), Settings>) -> impl IntoView {
             {definition
                 .get()
                 .map(|data| {
-                    data
-                        .iter()
+                    data.iter()
                         .map(|d| {
                             view! {
                                 <div class="definition" inner_html=d></div>
@@ -262,6 +327,7 @@ fn ReaderView(settings: Resource<(), Settings>) -> impl IntoView {
                                         });
                                         console_log(&format!("{:#?}", &defs()));
                                     }
+
                                     class="exportbutton"
                                 >
                                     export to anki
@@ -295,5 +361,168 @@ fn Word(word: Word, i: usize, word_selector: WriteSignal<Option<usize>>) -> impl
 
             {&word.text}
         </span>
+    }
+}
+
+#[component]
+fn DictionaryList(initial_dicts: Vec<Dictionary>) -> impl IntoView {
+    let mut next_counter_id = initial_dicts.len();
+
+    let new_dicts = initial_dicts
+        .into_iter()
+        .map(|d| create_signal(d))
+        .enumerate()
+        .collect::<Vec<_>>();
+
+    let (dicts, set_dicts) = create_signal(new_dicts);
+
+    let add_dict = move |_| {
+        let dict = Dictionary::Url(String::new());
+        set_dicts.update(move |counters| counters.push((next_counter_id, create_signal(dict))));
+        next_counter_id += 1;
+    };
+
+    view! {
+        <div>
+            <button on:click=add_dict>"New Dictionary"</button>
+            <br/>
+            <For
+                each=dicts
+                key=|dict| dict.0
+                children=move |(id, (rdict, wdict))| {
+                    view! {
+                        <div class="dictionary_entry" style="display: inline-block">
+                            <DictionaryRepresentation rdict=rdict wdict=wdict/>
+                            <button class="remove" on:click=move |_| {
+                                set_dicts
+                                    .update(|dicts| {
+                                        dicts.retain(|(dict_id, _)| dict_id != &id)
+                                    });
+                            }>
+                                "X"
+                            </button>
+                        </div>
+                        <br/>
+                    }
+                }
+            />
+
+        </div>
+    }
+}
+
+#[component]
+fn DictionaryRepresentation(
+    rdict: ReadSignal<Dictionary>,
+    wdict: WriteSignal<Dictionary>,
+) -> impl IntoView {
+    let is_file = move || matches!(rdict(), Dictionary::File(_, _));
+    view! {
+        <select
+            id="dict_type"
+            on:input=move |e| {
+                match event_target_value(&e).as_str() {
+                    "file" => {
+                        if !is_file() {
+                            wdict(Dictionary::File(String::new(), DictFileType::StarDict));
+                        }
+                    }
+                    "url" => {
+                        if is_file() {
+                            wdict(Dictionary::Url(String::new()));
+                        }
+                    }
+                    _ => unreachable!(),
+                }
+            }
+        >
+            <option value="file" selected=is_file()>
+                From file
+            </option>
+            <option value="url" selected=!is_file()>
+                From server
+            </option>
+        </select>
+        {move || match rdict() {
+            Dictionary::Url(url) => {
+                let (read_sig, write_sig) = create_signal(url);
+                view! {
+                    <SimpleTextSetting readsig=read_sig writesig=write_sig desc="url" name="url"/>
+                }
+                    .into_view()
+            }
+            Dictionary::File(filename, dict_type) => {
+                let (read_filename, write_filename) = create_signal(filename);
+                let is_stardict = matches!(dict_type, DictFileType::StarDict);
+                view! {
+                    <SimpleTextSetting
+                        readsig=read_filename
+                        writesig=write_filename
+                        desc="File location"
+                        name="file"
+                    />
+                    <button on:click=move |_| {
+                        get_folder(write_filename);
+                    }>open</button>
+                    <select
+                        id="file_type"
+                        on:input=move |e| {
+                            match event_target_value(&e).as_str() {
+                                "stardict" => {
+                                    if !is_stardict {
+                                        wdict
+                                            .update(|v| {
+                                                if let Dictionary::File(fname, _) = v {
+                                                    *v = Dictionary::File(
+                                                        fname.to_string(),
+                                                        DictFileType::StarDict,
+                                                    );
+                                                }
+                                            })
+                                    }
+                                }
+                                "delimiter" => {
+                                    if is_stardict {
+                                        wdict
+                                            .update(|v| {
+                                                if let Dictionary::File(fname, _) = v {
+                                                    *v = Dictionary::File(
+                                                        fname.to_string(),
+                                                        DictFileType::TextSplitAt(String::from(":")),
+                                                    );
+                                                }
+                                            })
+                                    }
+                                }
+                                _ => unreachable!(),
+                            }
+                        }
+                    >
+                        <option value="stardict" selected=is_stardict>
+                            Stardict
+                        </option>
+                        <option value="delimiter" selected=!is_stardict>
+                            Delimiter
+                        </option>
+                    </select>
+                    {if let DictFileType::TextSplitAt(delim) = dict_type {
+                        let (read_delim, write_delim) = create_signal(delim);
+                        Some(
+                            view! {
+                                <SimpleTextSetting
+                                    readsig=read_delim
+                                    writesig=write_delim
+                                    desc="Custom Delimiter"
+                                    name="delim"
+                                />
+                            },
+                        )
+                    } else {
+                        None
+                    }}
+                }
+                    .into_view()
+            }
+        }}
     }
 }

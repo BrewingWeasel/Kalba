@@ -14,3 +14,4 @@ shared = { path = "../shared" }
 tauri-sys = { git = "https://github.com/JonasKruckenberg/tauri-sys", features = [
   "all",
 ] }
+wasm-bindgen-futures = "0.4.37"
