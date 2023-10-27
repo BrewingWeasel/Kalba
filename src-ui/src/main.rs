@@ -183,7 +183,11 @@ fn SimpleTextSetting(
 
 #[component]
 fn SettingsChanger(settings: Resource<(), Settings>) -> impl IntoView {
-    let old_settings = settings().unwrap();
+    let old_settings = if let Some(s) = settings() {
+        s
+    } else {
+        return view! { <p>Unable to load settings</p> }.into_view();
+    };
     let (model, set_model) = create_signal(old_settings.model);
     let (deck, set_deck) = create_signal(old_settings.deck);
     let (note, set_note) = create_signal(old_settings.note_type);
@@ -209,6 +213,7 @@ fn SettingsChanger(settings: Resource<(), Settings>) -> impl IntoView {
                 });
         }>save</button>
     }
+    .into_view()
 }
 
 #[component]
