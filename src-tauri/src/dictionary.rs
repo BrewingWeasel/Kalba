@@ -1,10 +1,5 @@
-// use eframe::egui::Context;
-// use futures::future::join_all;
-// use scraper::{Html, Selector};
 use shared::*;
 use std::{error::Error, fs};
-
-// use crate::settings::Dictionary;
 
 fn get_def_from_file(lemma: &str, file: &str, dict_type: &DictFileType) -> String {
     match dict_type {
@@ -65,11 +60,3 @@ pub async fn get_def(dict: Dictionary, lemma: &str) -> Result<String, String> {
         Dictionary::Url(url) => Ok(get_def_url(lemma, &url).await),
     }
 }
-
-// pub fn get_defs(lemma: Arc<str>, dicts: Vec<Dictionary>, tx: Sender<Vec<String>>, ctx: Context) {
-//     tokio::spawn(async move {
-//         let defs = join_all(dicts.iter().map(|d| get_def(d, &lemma))).await;
-//         let _ = tx.send(defs);
-//         ctx.request_repaint();
-//     });
-// }

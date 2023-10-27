@@ -28,6 +28,11 @@ pub struct ParsingInfo<'a> {
 }
 
 #[derive(Serialize)]
+pub struct SettingsSaver {
+    pub settings: Settings,
+}
+
+#[derive(Serialize)]
 pub struct AddToAnki<'a> {
     pub sent: &'a str,
     pub word: &'a str,
@@ -82,6 +87,16 @@ fn get_folder(writer: WriteSignal<String>) {
         if let Ok(Some(v)) = FileDialogBuilder::new().pick_folder().await {
             console_log(&format!("{:?}", v));
             writer(v.to_string_lossy().to_string());
+        }
+    })
+}
+
+fn save_settings(settings: Settings) {
+    wasm_bindgen_futures::spawn_local(async move {
+        console_log("saving settings");
+        match tauri::invoke("write_settings", &SettingsSaver { settings }).await {
+            Err(e) => console_error(&e.to_string()),
+            Ok(()) => (),
         }
     })
 }
@@ -228,6 +243,7 @@ fn SettingsChanger(settings: Resource<(), Settings>) -> impl IntoView {
                     updater.note_type = note();
                     updater.dicts = dicts().iter().map(|(_, (r, _))| r()).collect();
                 });
+            save_settings(settings().unwrap());
         }>save</button>
     }
     .into_view()
