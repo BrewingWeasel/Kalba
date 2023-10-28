@@ -41,7 +41,7 @@ pub fn SettingsChanger(settings: Resource<(), Settings>) -> impl IntoView {
         .dicts
         .clone()
         .into_iter()
-        .map(|d| create_signal(d))
+        .map(create_signal)
         .enumerate()
         .collect::<Vec<_>>();
 

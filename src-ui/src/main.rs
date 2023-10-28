@@ -48,7 +48,7 @@ fn App() -> impl IntoView {
                     <Route
                         path="/settings"
                         view=move || SettingsChanger(SettingsChangerProps {
-                            settings: settings,
+                            settings,
                         })
                     />
                     <Route path="/dictionary" view=Todo/>
