@@ -81,10 +81,16 @@ async fn send_sentence(sent: String) -> Vec<Word> {
     }
 }
 
-fn get_folder(writer: WriteSignal<String>) {
+fn get_file(writer: WriteSignal<String>, folder: bool) {
     wasm_bindgen_futures::spawn_local(async move {
         console_log("getting file");
-        if let Ok(Some(v)) = FileDialogBuilder::new().pick_folder().await {
+        let mut builder = FileDialogBuilder::new();
+        let picker = if folder {
+            builder.pick_folder().await
+        } else {
+            builder.pick_file().await
+        };
+        if let Ok(Some(v)) = picker {
             console_log(&format!("{:?}", v));
             writer(v.to_string_lossy().to_string());
         }
@@ -222,7 +228,7 @@ fn SettingsChanger(settings: Resource<(), Settings>) -> impl IntoView {
         <SimpleTextSetting readsig=model writesig=set_model name="model" desc="SpaCy Model"/>
         <button on:click=move |_| {
             console_log("pirmas");
-            get_folder(set_model);
+            get_file(set_model, true);
         }>open</button>
         <hr/>
         <SimpleTextSetting readsig=deck writesig=set_deck name="deck" desc="Anki Deck"/>
@@ -518,7 +524,7 @@ fn DictionaryRepresentation(
                     />
 
                     <button on:click=move |_| {
-                        get_folder(write_filename);
+                        get_file(write_filename, false);
                     }>open</button>
                     <select
                         id="file_type"
