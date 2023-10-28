@@ -8,6 +8,144 @@ main {
   margin-top: 50px;
 }
 
+hr {
+  border: 1px solid #56526e;
+  width: 93%;
+}
+
+/* # SETTINGS AREA */
+
+.settings label {
+  display: block;
+  font-size: 12px;
+  color: #908caa;
+}
+
+.settings input {
+  outline: none;
+  border: none;
+  display: block;
+  line-height: 1.2em;
+  font-size: 13pt;
+  background-color: inherit;
+  color: #e0def4;
+}
+
+.dicts_title {
+  display: inline-block;
+  margin: 5px;
+}
+
+.newdict {
+  display: inline-block;
+  background-color: #393552;
+  color: #e0def4;
+  font-size: 15px;
+  border: none;
+  text-align: center;
+  text-decoration: none;
+  transition-duration: .2s;
+  padding: 4px 7px;
+  border-radius: 6px;
+  border-width: 0;
+}
+
+.newdict:hover {
+  transform: scale(1.18);
+  color: #3e8fb0;
+  border-radius: 8px;
+}
+
+.remove {
+  background-color: #44415a;
+  color: #eb6f92;
+  font-size: 15px;
+  border: none;
+  text-align: center;
+  text-decoration: none;
+  transition-duration: .2s;
+  padding: 4px 7px;
+  border-radius: 6px;
+  border-width: 0;
+}
+
+.remove:hover {
+  background-color: #eb6f92;
+  color: #e0def4;
+  transform: scale(1.05);
+  border-radius: 8px;
+}
+
+#model, #filename, #url {
+  width: 30em;
+}
+
+#delim {
+  width: 4em;
+}
+
+.labeledinput {
+  display: inline-block;
+  padding: 7px;
+  border-radius: 7px;
+  margin: 5px;
+  background-color: #393552;
+}
+
+.selectfile {
+  background-color: #393552;
+  color: #9ccfd8;
+  border: none;
+  text-align: center;
+  text-decoration: none;
+  transition-duration: .2s;
+  font-size: 13pt;
+  margin: 5px;
+  border-radius: 7px;
+  padding: 8px;
+  border-width: 0;
+}
+
+.selectfile:hover {
+  border-radius: 10px;
+}
+
+
+select {
+  appearance: none;
+  font-size: 1.15rem;
+  padding: 0.5em 2em 0.5em 1em;
+  border-width: 0px;
+  color: #908caa;
+  cursor: pointer;
+  background-color: #2a273f;
+  font-size: 16px;
+}
+
+.dropdown {
+  position: relative;
+  margin: 5px;
+  display: inline;
+}
+
+.dropdown::after {
+  --size: 0.3rem;
+  position: absolute;
+  content: "";
+  right: 1rem;
+  pointer-events: none;
+}
+
+.dropdown::after {
+  border-left: var(--size) solid transparent;
+  border-right: var(--size) solid transparent;
+  border-top: var(--size) solid #908caa;
+  top: 50%;
+}
+
+/* GENERAL STUFF */
+
+
 .sentence, .wordinfo, .definition, .export {
   display: flex;
   justify-content: center;

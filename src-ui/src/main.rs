@@ -1,7 +1,7 @@
 use std::collections::HashMap;
 
 use leptos::{
-    html::Input,
+    html::{input, Input},
     leptos_dom::logging::{console_error, console_log},
     *,
 };
@@ -189,6 +189,7 @@ fn SimpleTextSetting(
     desc: &'static str,
 ) -> impl IntoView {
     view! {
+        <div class="labeledinput">
         <label for=name>{desc}</label>
         <input
             id=name
@@ -198,7 +199,7 @@ fn SimpleTextSetting(
             }
 
             prop:value=readsig
-        />
+        /></div>
     }
 }
 
@@ -225,13 +226,18 @@ fn SettingsChanger(settings: Resource<(), Settings>) -> impl IntoView {
     let (dicts, set_dicts) = create_signal(new_dicts);
 
     view! {
-        <SimpleTextSetting readsig=model writesig=set_model name="model" desc="SpaCy Model"/>
-        <button on:click=move |_| {
-            console_log("pirmas");
-            get_file(set_model, true);
-        }>open</button>
+        <div class="settings">
+        <h2>Grammatical parsing</h2>
+        <div class="model_selection">
+            <SimpleTextSetting readsig=model writesig=set_model name="model" desc="SpaCy Model"/>
+            <button class="selectfile" on:click=move |_| {
+                get_file(set_model, true);
+            }>browse</button>
+        </div>
         <hr/>
+        <h2>Anki Settings</h2>
         <SimpleTextSetting readsig=deck writesig=set_deck name="deck" desc="Anki Deck"/>
+        <br/>
         <SimpleTextSetting readsig=note writesig=set_note name="note" desc="Note type"/>
 
         <hr/>
@@ -239,7 +245,7 @@ fn SettingsChanger(settings: Resource<(), Settings>) -> impl IntoView {
 
         <hr/>
 
-        <button on:click=move |_| {
+        <button class="parsebutton" on:click=move |_| {
             settings
                 .update(|v| {
                     let updater = v.as_mut().unwrap();
@@ -251,6 +257,7 @@ fn SettingsChanger(settings: Resource<(), Settings>) -> impl IntoView {
                 });
             save_settings(settings().unwrap());
         }>save</button>
+        </div>
     }
     .into_view()
 }
@@ -420,9 +427,11 @@ fn DictionaryList(dicts: ReadSignal<DictList>, set_dicts: WriteSignal<DictList>)
     };
 
     view! {
+        <div class="dicts">
+            <h2 class="dicts_title">Dictionaries</h2>
+            <button class="newdict" on:click=add_dict>"+"</button>
+        </div>
         <div>
-            <button on:click=add_dict>"New Dictionary"</button>
-            <br/>
             <For
                 each=dicts
                 key=|dict| dict.0
@@ -436,7 +445,7 @@ fn DictionaryList(dicts: ReadSignal<DictList>, set_dicts: WriteSignal<DictList>)
                                         dicts.retain(|(dict_id, _)| dict_id != &id)
                                     });
                             }>
-                                "X"
+                                "x"
                             </button>
                         </div>
                         <br/>
@@ -455,6 +464,7 @@ fn DictionaryRepresentation(
 ) -> impl IntoView {
     let is_file = move || matches!(rdict(), Dictionary::File(_, _));
     view! {
+        <div class="dropdown">
         <select
             id="dict_type"
             on:input=move |e| {
@@ -480,10 +490,12 @@ fn DictionaryRepresentation(
                 From server
             </option>
         </select>
+        </div>
         {move || match rdict() {
             Dictionary::Url(url) => {
                 let (read_sig, write_sig) = create_signal(url);
                 view! {
+                    <div class="labeledinput">
                     <label for="url">Url</label> // TODO: make generic function for this
                     <input
                         id="url"
@@ -498,6 +510,7 @@ fn DictionaryRepresentation(
                         }
                         prop:value=read_sig
                     />
+                    </div>
                 }
                     .into_view()
             }
@@ -505,6 +518,7 @@ fn DictionaryRepresentation(
                 let (read_filename, write_filename) = create_signal(filename);
                 let is_stardict = matches!(dict_type, DictFileType::StarDict);
                 view! {
+                    <div class="labeledinput">
                     <label for="filename">File location</label> // TODO: make generic function for this
                     <input
                         id="filename"
@@ -522,10 +536,12 @@ fn DictionaryRepresentation(
                         }
                         prop:value=read_filename
                     />
+                    </div>
 
-                    <button on:click=move |_| {
+                    <button class="selectfile" on:click=move |_| {
                         get_file(write_filename, false);
-                    }>open</button>
+                    }>browse</button>
+                    <div class="dropdown">
                     <select
                         id="file_type"
                         on:input=move |e| {
@@ -567,11 +583,13 @@ fn DictionaryRepresentation(
                             Delimiter
                         </option>
                     </select>
+                    </div>
                     {if let DictFileType::TextSplitAt(delim) = dict_type {
                         let (read_delim, write_delim) = create_signal(delim);
                         Some(
                             view! {
-                                <label for="delim">Custom Delimiter</label> // TODO: make generic function for this
+                                <div class="labeledinput">
+                                <label for="delim">Delimiter</label> // TODO: make generic function for this
                                 <input
                                     id="delim"
                                     type="text"
@@ -587,7 +605,7 @@ fn DictionaryRepresentation(
                                         });
                                     }
                                     prop:value=read_delim
-                                />
+                                /></div>
                             },
                         )
                     } else {
