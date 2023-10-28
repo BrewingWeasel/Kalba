@@ -36,6 +36,7 @@ pub fn SettingsChanger(settings: Resource<(), Settings>) -> impl IntoView {
     let (model, set_model) = create_signal(old_settings.model);
     let (deck, set_deck) = create_signal(old_settings.deck);
     let (note, set_note) = create_signal(old_settings.note_type);
+    let (note_fields, set_note_fields) = create_signal(old_settings.note_fields);
 
     let new_dicts = old_settings
         .dicts
@@ -61,6 +62,8 @@ pub fn SettingsChanger(settings: Resource<(), Settings>) -> impl IntoView {
         <SimpleTextSetting readsig=deck writesig=set_deck name="deck" desc="Anki Deck"/>
         <br/>
         <SimpleTextSetting readsig=note writesig=set_note name="note" desc="Note type"/>
+        <br/>
+        <SimpleTextAreaSetting readsig=note_fields writesig=set_note_fields name="notefield" desc="Note Fields"/>
 
         <hr/>
         <DictionaryList dicts=dicts set_dicts=set_dicts/>
@@ -75,6 +78,7 @@ pub fn SettingsChanger(settings: Resource<(), Settings>) -> impl IntoView {
                     updater.model = model();
                     updater.deck = deck();
                     updater.note_type = note();
+                    updater.note_fields = note_fields();
                     updater.dicts = dicts().iter().map(|(_, (r, _))| r()).collect();
                 });
             save_settings(settings().unwrap());
@@ -95,6 +99,28 @@ fn SimpleTextSetting(
         <div class="labeledinput">
         <label for=name>{desc}</label>
         <input
+            id=name
+            type="text"
+            on:input=move |ev| {
+                writesig(event_target_value(&ev));
+            }
+
+            prop:value=readsig
+        /></div>
+    }
+}
+
+#[component]
+fn SimpleTextAreaSetting(
+    readsig: ReadSignal<String>,
+    writesig: WriteSignal<String>,
+    name: &'static str,
+    desc: &'static str,
+) -> impl IntoView {
+    view! {
+        <div class="labeledinput">
+        <label for=name>{desc}</label>
+        <textarea
             id=name
             type="text"
             on:input=move |ev| {

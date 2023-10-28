@@ -21,7 +21,7 @@ hr {
   color: #908caa;
 }
 
-.settings input {
+.settings input, textarea {
   outline: none;
   border: none;
   display: block;
@@ -29,6 +29,11 @@ hr {
   font-size: 13pt;
   background-color: inherit;
   color: #e0def4;
+}
+
+.settings textarea {
+  line-height: 1em;
+  height: 4em;
 }
 
 .dicts_title {
