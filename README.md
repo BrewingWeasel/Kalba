@@ -43,17 +43,14 @@ Sakinyje is a tool for language learning based on the idea of [sentence mining](
   - training custom models for other languages or improving the models of existing languages (see https://spacy.io/usage/training for training instructions and https://universaldependencies.org/ for source data)
 
 ## Future plans: 
-- support for images as definitions
+- support for images as definitions (already kind of works with custom html, but it would be nice if it had a custom image picker)
 - show grammatical information of words (case, participle type, conjugation etc)
 - support for audio definitions
-- custom grammatical coloring for different languages + changing the theme
-- coloring in the definition itself
 - exporting specific definitions to specific fields for Anki
 - Non SpaCy based lemmatizer
-- Nonblocking definition loading
 - Being able to import large files and read by sentence/chunk
 
-## Usage:
+## Usage (WIP):
 ### First time setup:
 Add a spacy model (either download one from https://spacy.io/models or train one)
 Add a dictionary. Here are some suggestions:
@@ -62,12 +59,9 @@ Add a dictionary. Here are some suggestions:
 - https://github.com/Vuizur/Wiktionary-Dictionaries has a ton of dictionaries based on old wiktionary data. Be sure to download the stardict version though.
 
 ### Normal usage:
-Copy text and click update
-After a second or two, the sentence you selected should appear. 
-Now click on any word to get the definition for it. (May take a moment)
-If you want to click on a word to see the lemma without getting the definition, you can shift click it.
-To export, click the "export sentence" button.
-
+Copy or write a sentence into the reader tab, then press parse.
+Click on any word to get its definition.
+Click on the export button to export to Anki
 
 ## Installation
 ```sh
