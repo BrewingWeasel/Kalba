@@ -25,9 +25,9 @@ fn main() {
 #[tauri::command]
 fn get_settings() -> Settings {
     let config_file = dirs::config_dir().unwrap().join("sakinyje.toml");
-    match fs::read_to_string(config_file) {
-        Ok(v) => toml::from_str(&v).unwrap(),
-        Err(_) => Settings {
+
+    fs::read_to_string(config_file).map_or_else(
+        |_| Settings {
             deck: String::from("Default"),
             note_type: String::from("Basic"),
             note_fields: String::from(
@@ -39,7 +39,8 @@ Back:$def",
             to_remove: None,
             css: None,
         },
-    }
+        |v| toml::from_str(&v).unwrap(),
+    )
 }
 
 #[tauri::command]

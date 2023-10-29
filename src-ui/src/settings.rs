@@ -18,6 +18,7 @@ pub struct SettingsSaver {
 fn save_settings(settings: Settings) {
     wasm_bindgen_futures::spawn_local(async move {
         console_log("saving settings");
+        #[allow(clippy::single_match)]
         match tauri::invoke("write_settings", &SettingsSaver { settings }).await {
             Err(e) => console_error(&e.to_string()),
             Ok(()) => (),
@@ -42,7 +43,6 @@ pub fn SettingsChanger(settings: Resource<(), Settings>) -> impl IntoView {
 
     let new_dicts = old_settings
         .dicts
-        .clone()
         .into_iter()
         .map(create_signal)
         .enumerate()
@@ -101,7 +101,7 @@ pub fn SettingsChanger(settings: Resource<(), Settings>) -> impl IntoView {
                             updater.deck = deck();
                             updater.note_type = note();
                             updater.note_fields = note_fields();
-                            updater.css = if css() == "" { None } else { Some(css()) };
+                            updater.css = if css().is_empty() { None } else { Some(css()) };
                             updater.dicts = dicts().iter().map(|(_, (r, _))| r()).collect();
                         });
                     save_settings(settings().unwrap());

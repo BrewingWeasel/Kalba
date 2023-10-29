@@ -31,6 +31,7 @@ pub struct AddToAnki<'a> {
 }
 
 async fn export_card(sent: &str, word: &str, defs: &Vec<String>, settings: &Settings) {
+    #[allow(clippy::single_match)]
     match tauri::invoke(
         "add_to_anki",
         &AddToAnki {
@@ -127,17 +128,11 @@ pub fn ReaderView(settings: Resource<(), Settings>) -> impl IntoView {
             </form>
         </div>
         <div class="sentence">
-            {move || match conts.get() {
-                None => view! { <p>"Loading..."</p> }.into_view(),
-                Some(data) => {
-                    data.into_iter()
-                        .enumerate()
-                        .map(|(i, d)| view! { <Word word=d i=i word_selector=set_selected_word/> })
-                        .collect::<Vec<_>>()
-                        .into_view()
-                }
-            }}
-
+             {move || conts.get().map_or_else(|| view! { <p>"Loading..."</p> }.into_view(), |data| data.into_iter()
+                         .enumerate()
+                         .map(|(i, d)| view! { <Word word=d i=i word_selector=set_selected_word/> })
+                         .collect::<Vec<_>>()
+                         .into_view())}
         </div>
         <br/>
         <div class="wordinfo">

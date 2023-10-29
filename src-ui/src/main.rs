@@ -39,7 +39,7 @@ fn App() -> impl IntoView {
     view! {
         <Router>
             <style type="text/css">
-                {move || settings().map(|s| s.css).flatten().unwrap_or_default()}
+                {move || settings().and_then(|s| s.css).unwrap_or_default()}
             </style>
             <nav>
                 <NavBar/>

@@ -21,7 +21,7 @@ fn get_def_from_file(lemma: &str, file: &str, dict_type: &DictFileType) -> Strin
                 }
                 Ok(def)
             };
-            get_data().unwrap_or(String::from("unknown"))
+            get_data().unwrap_or_else(|_| String::from("unknown"))
         }
         DictFileType::TextSplitAt(delim) => {
             if let Ok(lines) = fs::read_to_string(file) {
