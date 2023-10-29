@@ -1,3 +1,5 @@
+use std::error::Error;
+
 use serde::{Deserialize, Serialize};
 
 #[derive(Clone, Serialize, Deserialize, Debug)]
@@ -19,6 +21,31 @@ pub enum DictFileType {
 pub enum Dictionary {
     File(String, DictFileType),
     Url(String),
+}
+
+#[derive(Serialize, Deserialize, PartialEq, Eq, Clone, Debug)]
+#[serde(tag = "t", content = "conts")]
+pub enum SakinyjeResult<T> {
+    Ok(T),
+    Err(String),
+}
+
+impl<T> From<Result<T, Box<dyn Error>>> for SakinyjeResult<T> {
+    fn from(value: Result<T, Box<dyn Error>>) -> Self {
+        match value {
+            Ok(v) => Self::Ok(v),
+            Err(e) => Self::Err(e.to_string()),
+        }
+    }
+}
+
+impl<T> From<SakinyjeResult<T>> for Result<T, String> {
+    fn from(value: SakinyjeResult<T>) -> Self {
+        match value {
+            SakinyjeResult::Ok(v) => Self::Ok(v),
+            SakinyjeResult::Err(e) => Self::Err(e),
+        }
+    }
 }
 
 #[derive(Deserialize, Serialize, Clone)]

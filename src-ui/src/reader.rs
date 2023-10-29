@@ -85,10 +85,13 @@ async fn get_definition<'a>(
         } else {
             let mut defs = Vec::new();
             for dict in &settings.get().unwrap().dicts {
-                let def: String = tauri::invoke("get_def", &GetDefEvent { lemma, dict })
-                    .await
-                    .unwrap();
-                defs.push(def);
+                let def: SakinyjeResult<String> =
+                    tauri::invoke("get_def", &GetDefEvent { lemma, dict })
+                        .await
+                        .unwrap();
+                // defs.push(def)
+                let def: Result<String, String> = def.into();
+                defs.push(def.unwrap_or_else(|e| format!("Error: {e}")));
             }
             writable_defs.update(|v| {
                 v.insert(lemma.clone(), defs.clone());
