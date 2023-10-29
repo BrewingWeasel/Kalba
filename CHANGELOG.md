@@ -1,3 +1,14 @@
+## [0.1.0] - 2023-10-28
+
+### Added
+
+- Support for custom styles
+- Support for any html
+
+### Changed
+
+- Switched to tauri + leptos, so the entire UI is different
+
 ## [0.1.0] - 2023-10-08
 
 ### Added
