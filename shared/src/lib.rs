@@ -29,4 +29,5 @@ pub struct Settings {
     pub model: String,
     pub dicts: Vec<Dictionary>,
     pub to_remove: Option<usize>,
+    pub css: Option<String>,
 }

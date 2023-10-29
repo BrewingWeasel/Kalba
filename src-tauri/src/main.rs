@@ -37,6 +37,7 @@ Back:$def",
             model: String::new(),
             dicts: Vec::new(),
             to_remove: None,
+            css: None,
         },
     }
 }

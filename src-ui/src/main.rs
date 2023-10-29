@@ -38,6 +38,9 @@ fn App() -> impl IntoView {
     let settings = create_resource(|| (), |_| async move { get_settings().await });
     view! {
         <Router>
+            <style type="text/css">
+                {move || settings().map(|s| s.css).flatten().unwrap_or_default()}
+            </style>
             <nav>
                 <NavBar/>
             </nav>
@@ -47,10 +50,9 @@ fn App() -> impl IntoView {
                     <Route path="/reader" view=move || ReaderView(ReaderViewProps { settings })/>
                     <Route
                         path="/settings"
-                        view=move || SettingsChanger(SettingsChangerProps {
-                            settings,
-                        })
+                        view=move || SettingsChanger(SettingsChangerProps { settings })
                     />
+
                     <Route path="/dictionary" view=Todo/>
                     <Route path="/corpus" view=Todo/>
                 </Routes>
