@@ -11,8 +11,8 @@ fn get_def_from_file(
             let mut dict = stardict::no_cache(file)?;
 
             let mut def = String::new();
-            if let Ok(response) = stardict::StarDict::lookup(&mut dict, lemma) {
-                for word in &response.ok_or("")? {
+            if let Some(response) = stardict::StarDict::lookup(&mut dict, lemma)? {
+                for word in &response {
                     if word.word != lemma {
                         continue;
                     }
@@ -48,5 +48,107 @@ pub async fn get_def(dict: Dictionary, lemma: &str) -> Result<SakinyjeResult<Str
     match dict {
         Dictionary::File(f, dict_type) => Ok(get_def_from_file(lemma, &f, &dict_type).into()),
         Dictionary::Url(url) => Ok(get_def_url(lemma, &url).await.into()),
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use std::path::PathBuf;
+
+    use super::*;
+
+    fn get_delim_file() -> PathBuf {
+        [
+            env!("CARGO_MANIFEST_DIR"),
+            "resources",
+            "test",
+            "sample_delim_dictionary",
+        ]
+        .iter()
+        .collect()
+    }
+
+    fn get_stardict_file() -> PathBuf {
+        [
+            env!("CARGO_MANIFEST_DIR"),
+            "resources",
+            "test",
+            "stardict",
+            "Lithuanian-English Wiktionary dictionary.ifo",
+        ]
+        .iter()
+        .collect()
+    }
+
+    #[test]
+    fn read_from_delimiter_file_key_exists() {
+        let f = get_delim_file();
+        let dict_type = DictFileType::TextSplitAt(String::from(":"));
+        assert_eq!(
+            get_def_from_file("geras", f.to_str().unwrap(), &dict_type).unwrap(),
+            String::from("good")
+        );
+    }
+
+    #[test]
+    fn read_from_delimiter_file_key_doesnt_exist() {
+        let f = get_delim_file();
+        let dict_type = DictFileType::TextSplitAt(String::from(":"));
+        assert_eq!(
+            get_def_from_file("", f.to_str().unwrap(), &dict_type).unwrap(),
+            String::new()
+        );
+    }
+
+    #[test]
+    fn read_from_delimiter_file_definition_has_delim() {
+        let f = get_delim_file();
+        let dict_type = DictFileType::TextSplitAt(String::from(":"));
+        assert_eq!(
+            get_def_from_file("blogas", f.to_str().unwrap(), &dict_type).unwrap(),
+            String::from("bad:extra")
+        );
+    }
+
+    #[test]
+    fn read_from_delimiter_file_file_doesnt_exist() {
+        let dict_type = DictFileType::TextSplitAt(String::from(":"));
+        assert_eq!(
+            get_def_from_file("blogas", "ee", &dict_type)
+                .unwrap_err()
+                .to_string(),
+            String::from("No such file or directory (os error 2)")
+        );
+    }
+
+    #[test]
+    fn read_from_stardict_key_exists() {
+        let f = get_stardict_file();
+        let dict_type = DictFileType::StarDict;
+        assert_eq!(
+            get_def_from_file("blogas", f.to_str().unwrap(), &dict_type).unwrap(),
+            String::from("<i>adj</i><br><ol><li>bad, wrong</li></ol><br><i>noun</i><br><ol><li>(Internet) blog</li></ol>\n")
+        );
+    }
+
+    #[test]
+    fn read_from_stardict_key_doesnt_exist() {
+        let f = get_stardict_file();
+        let dict_type = DictFileType::StarDict;
+        assert_eq!(
+            get_def_from_file("this key doesnt exist", f.to_str().unwrap(), &dict_type).unwrap(),
+            String::new(),
+        );
+    }
+
+    #[test]
+    fn read_from_stardict_file_doesnt_exist() {
+        let dict_type = DictFileType::StarDict;
+        assert_eq!(
+            get_def_from_file("", "this file doesnt exist", &dict_type)
+                .unwrap_err()
+                .to_string(),
+            String::from("Dict path is not invalid") // TODO: actual error message is wrong
+        );
     }
 }
