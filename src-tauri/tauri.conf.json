@@ -7,7 +7,7 @@
   },
   "package": {
     "productName": "sakinyje",
-    "version": "0.1.0"
+    "version": "0.2.0"
   },
   "tauri": {
     "allowlist": {
@@ -30,7 +30,7 @@
         "icons/icon.icns",
         "icons/icon.ico"
       ],
-      "identifier": "com.tauri.dev",
+      "identifier": "com.sakinyje",
       "longDescription": "",
       "macOS": {
         "entitlements": null,
