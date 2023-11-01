@@ -1,18 +1,15 @@
 use reqwest::Client;
 use serde_json::json;
 use std::collections::HashMap;
-use tauri::Window;
 
 use shared::Settings;
 
-#[tauri::command]
-pub async fn add_to_anki(
-    _window: Window,
+fn get_json(
     sent: &str,
     word: &str,
     defs: Vec<String>,
     settings: Settings,
-) -> Result<(), String> {
+) -> Result<serde_json::Value, String> {
     let mut def = String::new();
     for cur_def in &defs {
         def.push_str(cur_def);
@@ -40,7 +37,7 @@ pub async fn add_to_anki(
         fields.insert(field_name, conts);
     }
 
-    let args = json!({
+    Ok(json!({
         "action": "addNote",
         "version": 6,
         "params": {
@@ -59,13 +56,23 @@ pub async fn add_to_anki(
                 },
             }
         }
-    });
+    }))
+}
+
+#[tauri::command]
+pub async fn add_to_anki(
+    sent: &str,
+    word: &str,
+    defs: Vec<String>,
+    settings: Settings,
+) -> Result<(), String> {
+    let args = get_json(sent, word, defs, settings).map_err(|e| e.to_string())?;
     let client = Client::new();
-    let _ = client
+    client
         .post("http://localhost:8765/")
         .json(&args)
         .send()
         .await
-        .map_err(|e| e.to_string());
+        .map_err(|e| e.to_string())?;
     Ok(())
 }
