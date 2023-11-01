@@ -26,21 +26,10 @@ fn main() {
 fn get_settings() -> Settings {
     let config_file = dirs::config_dir().unwrap().join("sakinyje.toml");
 
-    fs::read_to_string(config_file).map_or_else(
-        |_| Settings {
-            deck: String::from("Default"),
-            note_type: String::from("Basic"),
-            note_fields: String::from(
-                "Front:$sent
-Back:$def",
-            ),
-            model: String::new(),
-            dicts: Vec::new(),
-            to_remove: None,
-            css: None,
-        },
-        |v| toml::from_str(&v).unwrap(),
-    )
+    fs::read_to_string(config_file)
+        .map(|v| toml::from_str(&v).unwrap()) // TODO: some sort of error handling when invalid
+        // toml is used
+        .unwrap_or_default()
 }
 
 #[tauri::command]

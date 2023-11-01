@@ -58,3 +58,20 @@ pub struct Settings {
     pub to_remove: Option<usize>,
     pub css: Option<String>,
 }
+
+impl Default for Settings {
+    fn default() -> Self {
+        Self {
+            deck: String::from("Default"),
+            note_type: String::from("Basic"),
+            note_fields: String::from(
+                "Front:$sent
+Back:$def",
+            ),
+            model: String::new(),
+            dicts: Vec::new(),
+            to_remove: None,
+            css: None,
+        }
+    }
+}
