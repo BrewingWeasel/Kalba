@@ -66,7 +66,7 @@ impl Default for Settings {
             note_type: String::from("Basic"),
             note_fields: String::from(
                 "Front:$sent
-Back:$def",
+Back:$word:$def",
             ),
             model: String::new(),
             dicts: Vec::new(),
