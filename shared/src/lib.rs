@@ -6,6 +6,7 @@ use serde::{Deserialize, Serialize};
 pub struct Word {
     pub text: String,
     pub lemma: String,
+    pub rating: u8,
     pub morph: Option<String>,
     pub clickable: bool,
 }

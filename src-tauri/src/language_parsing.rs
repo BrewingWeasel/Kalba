@@ -1,9 +1,15 @@
 use pyo3::{exceptions::PyEnvironmentError, prelude::*};
 use shared::*;
-use tauri::Window;
+use tauri::State;
+
+use crate::SakinyjeState;
 
 #[tauri::command]
-pub async fn parse_text(_window: Window, sent: &str, model: &str) -> Result<Vec<Word>, String> {
+pub fn parse_text(
+    state: State<'_, SakinyjeState>,
+    sent: &str,
+    model: &str,
+) -> Result<Vec<Word>, String> {
     Python::with_gil(|py| -> PyResult<Vec<Word>> {
         let mut words = Vec::new();
         let spacy = PyModule::import(py, "spacy")?;
@@ -16,6 +22,7 @@ pub async fn parse_text(_window: Window, sent: &str, model: &str) -> Result<Vec<
             }
         };
         let total: Vec<PyObject> = morphologizer.call1((sent,))?.extract()?;
+        let mut state = state.0.lock().unwrap();
         for i in total {
             let text: String = i.getattr(py, "text")?.extract(py)?;
             let pos: String = i.getattr(py, "pos_")?.extract(py)?;
@@ -30,10 +37,20 @@ pub async fn parse_text(_window: Window, sent: &str, model: &str) -> Result<Vec<
                 _ => None,
             };
 
+            let rating = state
+                .words
+                .entry(lemma.clone())
+                .or_insert(crate::WordInfo {
+                    rating: 0,
+                    can_modify: true,
+                })
+                .rating;
+
             println!("{:?}", morph);
             words.push(Word {
                 text,
                 lemma,
+                rating,
                 morph,
                 clickable,
             })

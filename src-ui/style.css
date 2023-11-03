@@ -249,3 +249,25 @@ select {
 .navbar a:hover {
   background: #44415a;
 }
+
+/* RATINGS */
+
+.rating-0 {
+  color: red;
+}
+
+.rating-1 {
+  color: orange;
+}
+
+.rating-2 {
+  color: yellow;
+}
+
+.rating-3 {
+  color: pink;
+}
+
+.rating-4 {
+  color: white;
+}

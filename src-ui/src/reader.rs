@@ -62,6 +62,7 @@ async fn send_sentence(sent: String) -> Vec<Word> {
         Err(e) => vec![Word {
             text: e.to_string(),
             lemma: e.to_string(),
+            rating: 0,
             morph: None,
             clickable: false,
         }],
@@ -237,6 +238,8 @@ fn Word(word: Word, i: usize, word_selector: WriteSignal<Option<usize>>) -> impl
         class.push(' ');
         class.push_str(&morph);
     }
+    class.push_str(" rating-");
+    class.push_str(&word.rating.to_string());
     view! {
         <span
             class=class
