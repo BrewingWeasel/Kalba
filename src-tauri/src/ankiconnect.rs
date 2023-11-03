@@ -3,14 +3,9 @@ use std::collections::HashMap;
 use reqwest::Response;
 use serde::Deserialize;
 use serde_json::{json, value::Value};
+use shared::NoteToWordHandling;
 
 use crate::WordInfo;
-
-pub struct NoteToWordHandling {
-    pub field_to_use: String,
-    pub remove_everything_in_parens: bool,
-    pub only_first_word_or_line: bool,
-}
 
 #[derive(Deserialize, Debug)]
 struct AnkiResult<T> {
@@ -30,7 +25,7 @@ impl<T> Into<Result<T, String>> for AnkiResult<T> {
 
 pub async fn get_anki_card_statuses(
     deck: &str,
-    note_handling: HashMap<String, NoteToWordHandling>,
+    note_handling: &HashMap<String, NoteToWordHandling>,
     original_words: &mut HashMap<String, WordInfo>,
 ) -> Result<(), String> {
     let find_cards_query = format!("deck:{deck}"); // TODO: only check cards reviewed since last
@@ -107,7 +102,7 @@ async fn get_card_or_note_vals(action: &str, data: Value) -> Result<Vec<usize>, 
 
 async fn get_words_from_notes(
     notes: Vec<usize>,
-    templates: HashMap<String, NoteToWordHandling>,
+    templates: &HashMap<String, NoteToWordHandling>,
 ) -> Result<Vec<String>, String> {
     let res = generic_anki_connect_action("notesInfo", json!({ "notes": notes })).await;
     let notes = Into::<Result<Vec<NoteInfo>, String>>::into(

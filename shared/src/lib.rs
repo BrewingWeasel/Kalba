@@ -1,4 +1,4 @@
-use std::error::Error;
+use std::{collections::HashMap, error::Error};
 
 use serde::{Deserialize, Serialize};
 
@@ -50,6 +50,13 @@ impl<T> From<SakinyjeResult<T>> for Result<T, String> {
 }
 
 #[derive(Deserialize, Serialize, Clone)]
+pub struct NoteToWordHandling {
+    pub field_to_use: String,
+    pub remove_everything_in_parens: bool,
+    pub only_first_word_or_line: bool,
+}
+
+#[derive(Deserialize, Serialize, Clone)]
 pub struct Settings {
     pub deck: String,
     pub note_type: String,
@@ -58,6 +65,7 @@ pub struct Settings {
     pub dicts: Vec<Dictionary>,
     pub to_remove: Option<usize>,
     pub css: Option<String>,
+    pub anki_parser: Option<HashMap<String, HashMap<String, NoteToWordHandling>>>,
 }
 
 impl Default for Settings {
@@ -73,6 +81,7 @@ Back:$word:$def",
             dicts: Vec::new(),
             to_remove: None,
             css: None,
+            anki_parser: None,
         }
     }
 }
