@@ -5,11 +5,12 @@ use tauri::State;
 use crate::SakinyjeState;
 
 #[tauri::command]
-pub fn parse_text(
+pub async fn parse_text(
     state: State<'_, SakinyjeState>,
     sent: &str,
     model: &str,
 ) -> Result<Vec<Word>, String> {
+    let mut state = state.0.lock().await;
     Python::with_gil(|py| -> PyResult<Vec<Word>> {
         let mut words = Vec::new();
         let spacy = PyModule::import(py, "spacy")?;
@@ -22,7 +23,6 @@ pub fn parse_text(
             }
         };
         let total: Vec<PyObject> = morphologizer.call1((sent,))?.extract()?;
-        let mut state = state.0.lock().unwrap();
         for i in total {
             let text: String = i.getattr(py, "text")?.extract(py)?;
             let pos: String = i.getattr(py, "pos_")?.extract(py)?;

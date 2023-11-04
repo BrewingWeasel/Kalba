@@ -1,18 +1,17 @@
 use reqwest::Client;
 use serde_json::json;
-use std::{collections::HashMap, sync::Mutex};
+use shared::Settings;
+use std::collections::HashMap;
 use tauri::State;
 
-use crate::{SakinyjeState, SharedInfo};
+use crate::SakinyjeState;
 
 fn get_json(
     sent: &str,
     word: &str,
     defs: Vec<String>,
-    state: &Mutex<SharedInfo>,
+    settings: &Settings,
 ) -> Result<serde_json::Value, String> {
-    let new_state = state.lock().unwrap();
-    let settings = &new_state.settings;
     let mut def = String::new();
     for cur_def in &defs {
         def.push('\n');
@@ -69,7 +68,8 @@ pub async fn add_to_anki(
     defs: Vec<String>,
     state: State<'_, SakinyjeState>,
 ) -> Result<(), String> {
-    let args = get_json(sent, word, defs, &state.0).map_err(|e| e.to_string())?;
+    let settings = &state.0.lock().await.settings;
+    let args = get_json(sent, word, defs, settings).map_err(|e| e.to_string())?;
     let client = Client::new();
     client
         .post("http://localhost:8765/")
@@ -86,18 +86,10 @@ mod test {
     use serde_json::Value;
     use shared::Settings;
 
-    fn get_shared_info(settings: Settings) -> Mutex<SharedInfo> {
-        Mutex::new(crate::SharedInfo {
-            words: HashMap::new(),
-            cached_defs: HashMap::new(),
-            settings,
-        })
-    }
-
     #[test]
     fn default_settings_no_defs() {
         let settings = Settings::default();
-        let args = get_json("mmm", "word", Vec::new(), &get_shared_info(settings)).unwrap();
+        let args = get_json("mmm", "word", Vec::new(), &settings).unwrap();
         let params = args.get("params").unwrap();
         let note = params.get("note").unwrap();
         assert_eq!(
@@ -125,7 +117,7 @@ mod test {
                 String::from("def2"),
                 String::from("def3"),
             ],
-            &get_shared_info(settings),
+            &settings,
         )
         .unwrap();
         let params = args.get("params").unwrap();
@@ -159,13 +151,7 @@ def:$def",
             ),
             ..Default::default()
         };
-        let args = get_json(
-            "sent",
-            "word",
-            vec![String::from("def1")],
-            &get_shared_info(settings),
-        )
-        .unwrap();
+        let args = get_json("sent", "word", vec![String::from("def1")], &settings).unwrap();
         let params = args.get("params").unwrap();
         let note = params.get("note").unwrap();
         assert_eq!(
@@ -193,7 +179,7 @@ sentence:$word",
             ),
             ..Default::default()
         };
-        let args = get_json("sent", "word", Vec::new(), &get_shared_info(settings)).unwrap();
+        let args = get_json("sent", "word", Vec::new(), &settings).unwrap();
         let params = args.get("params").unwrap();
         let note = params.get("note").unwrap();
         assert_eq!(note.get("fields").unwrap(), &json!({"sentence": "word"}));
