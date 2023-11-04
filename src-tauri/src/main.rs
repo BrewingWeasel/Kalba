@@ -3,7 +3,7 @@
 
 use crate::{add_to_anki::add_to_anki, dictionary::get_def, language_parsing::parse_text};
 use ankiconnect::get_anki_card_statuses;
-use shared::{NoteToWordHandling, Settings};
+use shared::Settings;
 use std::{collections::HashMap, fs, sync::Mutex};
 use tauri::{async_runtime::block_on, State};
 
@@ -71,8 +71,12 @@ fn get_settings(state: State<SakinyjeState>) -> Settings {
 }
 
 #[tauri::command]
-fn write_settings(settings: Settings) -> Result<(), String> {
+fn write_settings(state: State<SakinyjeState>, settings: Settings) -> Result<(), String> {
     let config_file = dirs::config_dir().unwrap().join("sakinyje.toml");
     let conts = toml::to_string_pretty(&settings).unwrap();
+
+    let mut state = state.0.lock().unwrap();
+    state.settings = settings;
+
     fs::write(config_file, conts).map_err(|e| e.to_string())
 }

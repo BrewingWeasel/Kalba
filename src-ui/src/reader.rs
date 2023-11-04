@@ -27,22 +27,11 @@ pub struct AddToAnki<'a> {
     pub sent: &'a str,
     pub word: &'a str,
     pub defs: &'a Vec<String>,
-    pub settings: &'a Settings,
 }
 
-async fn export_card(sent: &str, word: &str, defs: &Vec<String>, settings: &Settings) {
+async fn export_card(sent: &str, word: &str, defs: &Vec<String>) {
     #[allow(clippy::single_match)]
-    match tauri::invoke(
-        "add_to_anki",
-        &AddToAnki {
-            sent,
-            word,
-            defs,
-            settings,
-        },
-    )
-    .await
-    {
+    match tauri::invoke("add_to_anki", &AddToAnki { sent, word, defs }).await {
         Err(e) => console_error(&e.to_string()),
         Ok(()) => (),
     }
@@ -208,7 +197,6 @@ pub fn ReaderView(settings: Resource<(), Settings>) -> impl IntoView {
                                                     &sentence(),
                                                     &lemma,
                                                     defs().get(&lemma).unwrap(),
-                                                    &settings().unwrap(),
                                                 )
                                                 .await;
                                         });
