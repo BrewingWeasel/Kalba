@@ -52,7 +52,7 @@ pub async fn get_defs(
     lemma: String,
 ) -> Result<Vec<SakinyjeResult<String>>, String> {
     let mut state = state.0.lock().await;
-    if let Some(v) = state.cached_defs.get(&lemma) {
+    if let Some(v) = state.to_save.cached_defs.get(&lemma) {
         Ok(v.clone())
     } else {
         let mut defs = Vec::new();
@@ -60,7 +60,7 @@ pub async fn get_defs(
             let def = get_def(dict, &lemma).await.into();
             defs.push(def);
         }
-        state.cached_defs.insert(lemma, defs.clone());
+        state.to_save.cached_defs.insert(lemma, defs.clone());
         Ok(defs)
     }
 }

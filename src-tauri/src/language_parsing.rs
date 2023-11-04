@@ -38,6 +38,7 @@ pub async fn parse_text(
             };
 
             let rating = state
+                .to_save
                 .words
                 .entry(lemma.clone())
                 .or_insert(crate::WordInfo {
