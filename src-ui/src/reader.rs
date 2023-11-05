@@ -240,7 +240,9 @@ fn Word(word: Word, i: usize, word_selector: WriteSignal<Option<usize>>) -> impl
         <span
             class=class
             on:click=move |_| {
-                word_selector.set(Some(i));
+                if word.clickable {
+                    word_selector.set(Some(i));
+                }
             }
         >
 
