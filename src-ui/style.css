@@ -151,7 +151,7 @@ select {
 /* GENERAL STUFF */
 
 
-.sentence, .wordinfo, .definition, .export {
+.sentence, .wordinfo, .definition, .export, .grammarinfo {
   display: flex;
   justify-content: center;
 }

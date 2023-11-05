@@ -131,17 +131,29 @@ pub fn ReaderView(settings: Resource<(), Settings>) -> impl IntoView {
             </form>
         </div>
         <div class="sentence">
-             {move || conts.get().map_or_else(|| view! { <p>"Loading..."</p> }.into_view(), |data| data.into_iter()
-                         .enumerate()
-                         .map(|(i, d)| view! { <Word word=d i=i word_selector=set_selected_word/> })
-                         .collect::<Vec<_>>()
-                         .into_view())}
+            {move || {
+                conts
+                    .get()
+                    .map_or_else(
+                        || view! { <p>"Loading..."</p> }.into_view(),
+                        |data| {
+                            data.into_iter()
+                                .enumerate()
+                                .map(|(i, d)| {
+                                    view! { <Word word=d i=i word_selector=set_selected_word/> }
+                                })
+                                .collect::<Vec<_>>()
+                                .into_view()
+                        },
+                    )
+            }}
+
         </div>
         <br/>
-        <div class="wordinfo">
-            {move || {
-                if selected_word().is_some() {
-                    view! {
+        {move || {
+            if selected_word().is_some() {
+                view! {
+                    <div class="wordinfo">
                         <input
                             class="selectedword"
                             type="text"
@@ -168,14 +180,30 @@ pub fn ReaderView(settings: Resource<(), Settings>) -> impl IntoView {
                                     .map(|v| v.lemma)
                             }
                         />
-                    }
-                        .into_view()
-                } else {
-                    view! {}.into_view()
-                }
-            }}
+                    </div>
 
-        </div>
+                    <br/>
+
+                    <div class="grammarinfo">
+                        {move || {
+                            conts
+                                .get()
+                                .unwrap()[selected_word().unwrap()]
+                                .morph
+                                .iter()
+                                .map(|(k, v)| {
+                                    view! { <span class=k>{k}</span><span>: </span><span class=v>{v}</span> }
+                                })
+                                .collect_view()
+                        }}
+
+                    </div>
+                }
+                    .into_view()
+            } else {
+                view! {}.into_view()
+            }
+        }}
 
         <Suspense fallback=move || {
             view! { <p>"Loading..."</p> }
