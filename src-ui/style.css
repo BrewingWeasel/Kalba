@@ -156,6 +156,20 @@ select {
   justify-content: center;
 }
 
+.grammarinfo {
+  font-size: 18px;
+  font-style: italic;
+  color: #908caa;
+}
+
+.seperator {
+  padding-right: 0.3em;
+}
+
+.grammarfeature {
+  padding: 0em 0.4em;
+}
+
 .sentsubmit {
   width: 80%;
   height: 3em;

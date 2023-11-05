@@ -182,8 +182,6 @@ pub fn ReaderView(settings: Resource<(), Settings>) -> impl IntoView {
                         />
                     </div>
 
-                    <br/>
-
                     <div class="grammarinfo">
                         {move || {
                             conts
@@ -192,12 +190,13 @@ pub fn ReaderView(settings: Resource<(), Settings>) -> impl IntoView {
                                 .morph
                                 .iter()
                                 .map(|(k, v)| {
-                                    view! { <span class=k>{k}</span><span>: </span><span class=v>{v}</span> }
+                                    view! { <div class="grammarfeature"><span class=k>{k}</span><span class="seperator">:</span><span class=v>{v}</span></div> }
                                 })
                                 .collect_view()
                         }}
 
                     </div>
+                    <hr/>
                 }
                     .into_view()
             } else {
