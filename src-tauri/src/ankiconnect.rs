@@ -27,9 +27,10 @@ pub async fn get_anki_card_statuses(
     deck: &str,
     note_handling: &HashMap<String, NoteToWordHandling>,
     original_words: &mut HashMap<String, WordInfo>,
+    days_passed: i64,
 ) -> Result<(), String> {
-    let find_cards_query = format!("deck:{deck}"); // TODO: only check cards reviewed since last
-                                                   // check
+    let find_cards_query = format!("deck:{deck} rated:{days_passed}"); // TODO: only check cards reviewed since last
+                                                                       // check
 
     let cards = get_card_or_note_vals("findCards", json!({ "query": find_cards_query })).await?;
     let intervals = get_card_or_note_vals("getIntervals", json!({ "cards": &cards })).await?;

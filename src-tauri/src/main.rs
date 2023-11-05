@@ -3,6 +3,7 @@
 
 use crate::{add_to_anki::add_to_anki, dictionary::get_defs, language_parsing::parse_text};
 use ankiconnect::get_anki_card_statuses;
+use chrono::{DateTime, Utc};
 use serde::{Deserialize, Serialize};
 use shared::{SakinyjeResult, Settings};
 use std::{collections::HashMap, fs};
@@ -24,6 +25,7 @@ struct SharedInfo {
 struct ToSave {
     words: HashMap<String, WordInfo>,
     cached_defs: HashMap<String, Vec<SakinyjeResult<String>>>,
+    last_launched: DateTime<Utc>,
 }
 
 impl Default for SharedInfo {
@@ -40,17 +42,25 @@ impl Default for SharedInfo {
             // toml is used
             .unwrap_or_default();
 
+        let new_time = Utc::now();
+        let days_passed = new_time
+            .signed_duration_since(to_save.last_launched)
+            .num_days()
+            + 1;
+
         if let Some(ankiparsers) = &settings.anki_parser {
             for (deck, note_parser) in ankiparsers {
                 block_on(get_anki_card_statuses(
                     &deck,
                     note_parser,
                     &mut to_save.words,
+                    days_passed,
                 ))
                 .unwrap();
                 // TODO: handle error
             }
         }
+        to_save.last_launched = new_time;
         Self { to_save, settings }
     }
 }
