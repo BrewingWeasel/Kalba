@@ -4,6 +4,9 @@ use spacy_parsing::{get_spacy_info, PartOfSpeech};
 #[tauri::command]
 pub async fn parse_text(sent: &str, model: &str) -> Result<Vec<Word>, String> {
     let mut words = Vec::new();
+    if sent.is_empty() {
+        return Ok(words);
+    }
     let parsed_words = get_spacy_info(sent, model)?;
     for word in parsed_words {
         let clickable = !matches!(
