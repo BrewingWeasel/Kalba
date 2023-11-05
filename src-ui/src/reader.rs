@@ -62,7 +62,7 @@ async fn send_sentence(sent: String) -> Vec<Word> {
         Err(e) => vec![Word {
             text: e.to_string(),
             lemma: e.to_string(),
-            morph: None,
+            morph: HashMap::new(),
             clickable: false,
         }],
     }
@@ -231,11 +231,10 @@ pub fn ReaderView(settings: Resource<(), Settings>) -> impl IntoView {
 fn Word(word: Word, i: usize, word_selector: WriteSignal<Option<usize>>) -> impl IntoView {
     let mut class = String::from("word");
     if !word.clickable {
-        class.push_str(" punctuation");
+        class.push_str(" punctuation ");
     }
-    if let Some(morph) = word.morph {
-        class.push(' ');
-        class.push_str(&morph);
+    for (feat, value) in &word.morph {
+        class.push_str(&format!(" {feat}-{value}"));
     }
     view! {
         <span

@@ -101,11 +101,11 @@ name = "app"
 version = "0.1.0"
 dependencies = [
  "dirs",
- "pyo3",
  "reqwest",
  "serde",
  "serde_json",
  "shared",
+ "spacy-parsing",
  "stardict",
  "tauri",
  "tauri-build",
@@ -3842,6 +3842,14 @@ dependencies = [
  "gobject-sys",
  "libc",
  "system-deps 5.0.0",
+]
+
+[[package]]
+name = "spacy-parsing"
+version = "0.1.0"
+dependencies = [
+ "pyo3",
+ "shared",
 ]
 
 [[package]]

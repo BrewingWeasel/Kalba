@@ -1,4 +1,4 @@
-use std::error::Error;
+use std::collections::HashMap;
 
 use serde::{Deserialize, Serialize};
 
@@ -6,7 +6,7 @@ use serde::{Deserialize, Serialize};
 pub struct Word {
     pub text: String,
     pub lemma: String,
-    pub morph: Option<String>,
+    pub morph: HashMap<String, String>,
     pub clickable: bool,
 }
 
@@ -30,8 +30,11 @@ pub enum SakinyjeResult<T> {
     Err(String),
 }
 
-impl<T> From<Result<T, Box<dyn Error>>> for SakinyjeResult<T> {
-    fn from(value: Result<T, Box<dyn Error>>) -> Self {
+impl<T, E> From<Result<T, E>> for SakinyjeResult<T>
+where
+    E: ToString,
+{
+    fn from(value: Result<T, E>) -> Self {
         match value {
             Ok(v) => Self::Ok(v),
             Err(e) => Self::Err(e.to_string()),
