@@ -203,7 +203,7 @@ fn WordKnowledgeList(
     view! {
         <div class="dicts">
             <h2 class="dicts_title">Word Knowledge</h2>
-            <button class="newdict" on:click=add_template>
+            <button class="smallernewbutton" on:click=add_template>
                 "connect new deck"
             </button>
         </div>
@@ -261,7 +261,7 @@ fn IndividualDeckRepresentation(
                 prop:value=move || rtempl().0
             />
         </div>
-        <button class="newdict" on:click=add_note_template>
+        <button class="smallernewbutton" on:click=add_note_template>
             "new note type"
         </button>
         <For
@@ -308,14 +308,29 @@ fn AnkiNoteParsing(
                 />
             </div>
 
-            <div class="labeledinput">
+            <div class="labeledcheckbox">
             <label for="firstword">Only take first word/line</label>
-            // TODO: make this actually work
             <input
                 id="firstword"
                 type="checkbox"
+                on:change=move |ev| {
+                    wnote.update(|v| v.1.only_first_word_or_line = event_target_checked(&ev))
+                }
                 prop:value=move || rnote().1.only_first_word_or_line
             />
+            </div>
+
+            <div class="labeledcheckbox">
+                <label class="checkboxlabel" for="removeparens">Remove everything in parentheses</label>
+                <input
+                    id="removeparens"
+                    class="checkbox"
+                    type="checkbox"
+                    on:change=move |ev| {
+                        wnote.update(|v| v.1.remove_everything_in_parens = event_target_checked(&ev))
+                    }
+                    prop:value=move || rnote().1.remove_everything_in_parens
+                />
             </div>
         </div>
     }
