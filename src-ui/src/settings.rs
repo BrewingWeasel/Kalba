@@ -1,3 +1,5 @@
+use std::collections::HashMap;
+
 use leptos::{
     leptos_dom::logging::{console_error, console_log},
     *,
@@ -130,6 +132,17 @@ pub fn SettingsChanger(settings: Resource<(), Settings>) -> impl IntoView {
                             updater.note_fields = note_fields();
                             updater.css = if css().is_empty() { None } else { Some(css()) };
                             updater.dicts = dicts().iter().map(|(_, (r, _))| r()).collect();
+
+                            let mut updated_templates = HashMap::new();
+                            for (_, (readdeck, _)) in templates() {
+                                let deckname = readdeck().0;
+                                let mut notes = Vec::new();
+                                for (readnote, _) in readdeck().1 {
+                                    notes.push(readnote())
+                                }
+                                updated_templates.insert(deckname, notes.into_iter().collect());
+                            }
+                            updater.anki_parser = Some(updated_templates);
                         });
                     save_settings(settings().unwrap());
                 }
