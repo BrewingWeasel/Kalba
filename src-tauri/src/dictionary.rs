@@ -67,8 +67,8 @@ pub async fn get_defs(
 
 async fn get_def(dict: &Dictionary, lemma: &str) -> Result<String, Box<dyn Error>> {
     match dict {
-        Dictionary::File(f, dict_type) => get_def_from_file(lemma, &f, &dict_type),
-        Dictionary::Url(url) => get_def_url(lemma, &url).await,
+        Dictionary::File(f, dict_type) => get_def_from_file(lemma, f, dict_type),
+        Dictionary::Url(url) => get_def_url(lemma, url).await,
     }
 }
 

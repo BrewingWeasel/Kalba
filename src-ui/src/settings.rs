@@ -66,7 +66,7 @@ pub fn SettingsChanger(settings: Resource<(), Settings>) -> impl IntoView {
             create_signal((
                 v.0,
                 v.1.into_iter()
-                    .map(|x| create_signal(x))
+                    .map(create_signal)
                     .collect::<Vec<_>>(),
             ))
         })

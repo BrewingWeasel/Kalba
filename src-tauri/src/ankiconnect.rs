@@ -13,12 +13,12 @@ struct AnkiResult<T> {
     error: Option<String>,
 }
 
-impl<T> Into<Result<T, String>> for AnkiResult<T> {
-    fn into(self) -> Result<T, String> {
-        if let Some(r) = self.result {
+impl<T> From<AnkiResult<T>> for Result<T, String> {
+    fn from(val: AnkiResult<T>) -> Self {
+        if let Some(r) = val.result {
             Ok(r)
         } else {
-            Err(self.error.unwrap())
+            Err(val.error.unwrap())
         }
     }
 }

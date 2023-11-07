@@ -51,7 +51,7 @@ impl Default for SharedInfo {
         if let Some(ankiparsers) = &settings.anki_parser {
             for (deck, note_parser) in ankiparsers {
                 block_on(get_anki_card_statuses(
-                    &deck,
+                    deck,
                     note_parser,
                     &mut to_save.words,
                     days_passed,
