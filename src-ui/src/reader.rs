@@ -97,11 +97,23 @@ pub fn ReaderView() -> impl IntoView {
             </form>
         </div>
         <div class="sentence">
-             {move || conts.get().map_or_else(|| view! { <p>"Loading..."</p> }.into_view(), |data| data.into_iter()
-                         .enumerate()
-                         .map(|(i, d)| view! { <Word word=d i=i word_selector=set_selected_word/> })
-                         .collect::<Vec<_>>()
-                         .into_view())}
+            {move || {
+                conts
+                    .get()
+                    .map_or_else(
+                        || view! { <p>"Loading..."</p> }.into_view(),
+                        |data| {
+                            data.into_iter()
+                                .enumerate()
+                                .map(|(i, d)| {
+                                    view! { <Word word=d i=i word_selector=set_selected_word/> }
+                                })
+                                .collect::<Vec<_>>()
+                                .into_view()
+                        },
+                    )
+            }}
+
         </div>
         <br/>
         <div class="wordinfo">
@@ -152,14 +164,20 @@ pub fn ReaderView() -> impl IntoView {
                     data.iter()
                         .map(|d| {
                             match d {
-                                SakinyjeResult::Ok(s) => view! {
-                                    <div class="definition" inner_html=s></div>
-                                    <br/>
-                                }.into_view(),
-                                SakinyjeResult::Err(v) => view! {
-                                    <div class="error">Err: {v}</div>
-                                    <br/>
-                                }.into_view()
+                                SakinyjeResult::Ok(s) => {
+                                    view! {
+                                        <div class="definition" inner_html=s></div>
+                                        <br/>
+                                    }
+                                        .into_view()
+                                }
+                                SakinyjeResult::Err(v) => {
+                                    view! {
+                                        <div class="error">Err: {v}</div>
+                                        <br/>
+                                    }
+                                        .into_view()
+                                }
                             }
                         })
                         .collect_view()
@@ -179,10 +197,12 @@ pub fn ReaderView() -> impl IntoView {
                                                     &sentence(),
                                                     &lemma,
                                                     &definition()
-                                                            .unwrap()
-                                                            .into_iter()
-                                                            .filter_map(|d| Into::<Result<String, String>>::into(d).ok())
-                                                            .collect()
+                                                        .unwrap()
+                                                        .into_iter()
+                                                        .filter_map(|d| {
+                                                            Into::<Result<String, String>>::into(d).ok()
+                                                        })
+                                                        .collect(),
                                                 )
                                                 .await;
                                         });

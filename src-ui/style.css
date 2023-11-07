@@ -250,6 +250,13 @@ select {
   background: #44415a;
 }
 
+
+.individualnote {
+  background: #2a273f;
+  margin-left: 15px;
+  border-radius: 5px;
+}
+
 /* RATINGS */
 
 .rating-0 {
