@@ -145,9 +145,9 @@ def3"})
             deck: String::from("deck"),
             note_type: String::from("note"),
             note_fields: String::from(
-                "sentence:$sent[$word]
-word:$word
-def:$def",
+                "sentence:{sent}[{word}]
+word:{word}
+def:{def}",
             ),
             ..Default::default()
         };
@@ -174,8 +174,8 @@ def:$def",
             deck: String::from("deck"),
             note_type: String::from("note"),
             note_fields: String::from(
-                "sentence:$sent
-sentence:$word",
+                "sentence:{sent}
+sentence:{word}",
             ),
             ..Default::default()
         };

@@ -79,8 +79,8 @@ impl Default for Settings {
             deck: String::from("Default"),
             note_type: String::from("Basic"),
             note_fields: String::from(
-                "Front:$sent
-Back:$word:$def",
+                "Front:{sent}
+Back:{word}:{def}",
             ),
             model: String::new(),
             dicts: Vec::new(),
