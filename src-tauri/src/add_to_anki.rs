@@ -19,9 +19,9 @@ fn get_json(
     }
 
     let mut replacements = HashMap::from([
-        (String::from("$sent"), sent),
-        (String::from("$word"), word),
-        (String::from("$def"), &def),
+        (String::from("{sent}"), sent),
+        (String::from("{word}"), word),
+        (String::from("{def}"), &def),
     ]);
 
     for (i, v) in defs.iter().enumerate() {

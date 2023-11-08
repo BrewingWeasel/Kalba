@@ -22,6 +22,7 @@ pub enum DictFileType {
 pub enum Dictionary {
     File(String, DictFileType),
     Url(String),
+    Command(String),
 }
 
 #[derive(Serialize, Deserialize, PartialEq, Eq, Clone, Debug)]
