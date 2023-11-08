@@ -62,14 +62,7 @@ pub fn SettingsChanger(settings: Resource<(), Settings>) -> impl IntoView {
         .anki_parser
         .unwrap_or_default()
         .into_iter()
-        .map(|v| {
-            create_signal((
-                v.0,
-                v.1.into_iter()
-                    .map(create_signal)
-                    .collect::<Vec<_>>(),
-            ))
-        })
+        .map(|v| create_signal((v.0, v.1.into_iter().map(create_signal).collect::<Vec<_>>())))
         .enumerate()
         .collect::<Vec<_>>();
 
@@ -132,7 +125,6 @@ pub fn SettingsChanger(settings: Resource<(), Settings>) -> impl IntoView {
                             updater.note_fields = note_fields();
                             updater.css = if css().is_empty() { None } else { Some(css()) };
                             updater.dicts = dicts().iter().map(|(_, (r, _))| r()).collect();
-
                             let mut updated_templates = HashMap::new();
                             for (_, (readdeck, _)) in templates() {
                                 let deckname = readdeck().0;
@@ -236,6 +228,7 @@ fn WordKnowledgeList(
                                         });
                                 }
                             >
+
                                 "x"
                             </button>
                             <IndividualDeckRepresentation rtempl=rtempl wtempl=wtempl/>
@@ -244,6 +237,7 @@ fn WordKnowledgeList(
                     }
                 }
             />
+
         </div>
     }
 }
@@ -322,26 +316,31 @@ fn AnkiNoteParsing(
             </div>
 
             <div class="labeledcheckbox">
-            <label for="firstword">Only take first word/line</label>
-            <input
-                id="firstword"
-                type="checkbox"
-                on:change=move |ev| {
-                    wnote.update(|v| v.1.only_first_word_or_line = event_target_checked(&ev))
-                }
-                prop:value=move || rnote().1.only_first_word_or_line
-            />
+                <label for="firstword">Only take first word/line</label>
+                <input
+                    id="firstword"
+                    type="checkbox"
+                    on:change=move |ev| {
+                        wnote.update(|v| v.1.only_first_word_or_line = event_target_checked(&ev))
+                    }
+
+                    prop:value=move || rnote().1.only_first_word_or_line
+                />
             </div>
 
             <div class="labeledcheckbox">
-                <label class="checkboxlabel" for="removeparens">Remove everything in parentheses</label>
+                <label class="checkboxlabel" for="removeparens">
+                    Remove everything in parentheses
+                </label>
                 <input
                     id="removeparens"
                     class="checkbox"
                     type="checkbox"
                     on:change=move |ev| {
-                        wnote.update(|v| v.1.remove_everything_in_parens = event_target_checked(&ev))
+                        wnote
+                            .update(|v| v.1.remove_everything_in_parens = event_target_checked(&ev))
                     }
+
                     prop:value=move || rnote().1.remove_everything_in_parens
                 />
             </div>
@@ -395,12 +394,23 @@ fn DictionaryList(dicts: ReadSignal<DictList>, set_dicts: WriteSignal<DictList>)
     }
 }
 
+#[derive(PartialEq, Eq)]
+enum DictType {
+    File,
+    Command,
+    Url,
+}
+
 #[component]
 fn DictionaryRepresentation(
     rdict: ReadSignal<Dictionary>,
     wdict: WriteSignal<Dictionary>,
 ) -> impl IntoView {
-    let is_file = move || matches!(rdict(), Dictionary::File(_, _));
+    let current_dict_type = move || match rdict() {
+        Dictionary::Command(_) => DictType::Command,
+        Dictionary::Url(_) => DictType::Url,
+        Dictionary::File(_, _) => DictType::File,
+    };
     view! {
         <div class="dropdown">
             <select
@@ -408,13 +418,18 @@ fn DictionaryRepresentation(
                 on:input=move |e| {
                     match event_target_value(&e).as_str() {
                         "file" => {
-                            if !is_file() {
+                            if current_dict_type() != DictType::File {
                                 wdict(Dictionary::File(String::new(), DictFileType::StarDict));
                             }
                         }
                         "url" => {
-                            if is_file() {
+                            if current_dict_type() != DictType::Url {
                                 wdict(Dictionary::Url(String::new()));
+                            }
+                        }
+                        "command" => {
+                            if current_dict_type() != DictType::Command {
+                                wdict(Dictionary::Command(String::new()));
                             }
                         }
                         _ => unreachable!(),
@@ -422,11 +437,14 @@ fn DictionaryRepresentation(
                 }
             >
 
-                <option value="file" selected=is_file()>
+                <option value="file" selected=current_dict_type() == DictType::File>
                     From file
                 </option>
-                <option value="url" selected=!is_file()>
+                <option value="url" selected=current_dict_type() == DictType::Url>
                     From server
+                </option>
+                <option value="command" selected=current_dict_type() == DictType::Command>
+                    From command
                 </option>
             </select>
         </div>
@@ -454,12 +472,37 @@ fn DictionaryRepresentation(
                 }
                     .into_view()
             }
+            Dictionary::Command(url) => {
+                let (read_sig, write_sig) = create_signal(url);
+                view! {
+                    // TODO: make generic function for this
+
+                    // TODO: make generic function for this
+
+                    <div class="labeledinput">
+                        // TODO: make generic function for this
+                        <label for="command">Command</label>
+                        <input
+                            id="command"
+                            type="text"
+                            on:input=move |ev| {
+                                write_sig(event_target_value(&ev));
+                            }
+
+                            on:change=move |_| {
+                                wdict.update(|v| { *v = Dictionary::Command(read_sig()) })
+                            }
+
+                            prop:value=read_sig
+                        />
+                    </div>
+                }
+                    .into_view()
+            }
             Dictionary::File(filename, dict_type) => {
                 let (read_filename, write_filename) = create_signal(filename);
                 let is_stardict = matches!(dict_type, DictFileType::StarDict);
                 view! {
-                    // TODO: make generic function for this
-
                     // TODO: make generic function for this
 
                     // TODO: make generic function for this

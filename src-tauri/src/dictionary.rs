@@ -1,5 +1,5 @@
 use shared::*;
-use std::{error::Error, fs};
+use std::{error::Error, fs, process::Command};
 use tauri::State;
 
 use crate::SakinyjeState;
@@ -41,9 +41,21 @@ fn get_def_from_file(
 
 async fn get_def_url(lemma: &str, url: &str) -> Result<String, Box<dyn Error>> {
     let new_url = url.replacen("{word}", lemma, 1);
-    println!("getting definition from {new_url}");
     let client = reqwest::Client::new();
     Ok(client.get(new_url).send().await?.text().await?)
+}
+
+async fn get_def_command(lemma: &str, cmd: &str) -> Result<String, Box<dyn Error>> {
+    let real_command = cmd.replacen("{word}", lemma, 1);
+    let output = if cfg!(target_os = "windows") {
+        Command::new("cmd").args(["/C", &real_command]).output()?
+    } else {
+        Command::new("sh")
+            .args(["-c", &real_command])
+            .output()
+            .expect("failed to execute process")
+    };
+    Ok(String::from_utf8(output.stdout)?)
 }
 
 #[tauri::command]
@@ -69,6 +81,7 @@ async fn get_def(dict: &Dictionary, lemma: &str) -> Result<String, Box<dyn Error
     match dict {
         Dictionary::File(f, dict_type) => get_def_from_file(lemma, f, dict_type),
         Dictionary::Url(url) => get_def_url(lemma, url).await,
+        Dictionary::Command(cmd) => get_def_command(lemma, cmd).await,
     }
 }
 

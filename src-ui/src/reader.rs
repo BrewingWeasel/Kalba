@@ -147,6 +147,7 @@ pub fn ReaderView() -> impl IntoView {
                                     .map(|v| v.lemma)
                             }
                         />
+
                     </div>
 
                     <div class="grammarinfo">
@@ -157,7 +158,13 @@ pub fn ReaderView() -> impl IntoView {
                                 .morph
                                 .iter()
                                 .map(|(k, v)| {
-                                    view! { <div class="grammarfeature"><span class=k>{k}</span><span class="seperator">:</span><span class=v>{v}</span></div> }
+                                    view! {
+                                        <div class="grammarfeature">
+                                            <span class=k>{k}</span>
+                                            <span class="seperator">:</span>
+                                            <span class=v>{v}</span>
+                                        </div>
+                                    }
                                 })
                                 .collect_view()
                         }}
