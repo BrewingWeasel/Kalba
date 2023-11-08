@@ -50,6 +50,8 @@ pub fn SettingsChanger(settings: Resource<(), Settings>) -> impl IntoView {
     let (note_fields, set_note_fields) = create_signal(old_settings.note_fields);
 
     let (css, set_css) = create_signal(old_settings.css.unwrap_or_default());
+    let (commands, set_commands) =
+        create_signal(old_settings.to_run.unwrap_or_default().join("\n"));
 
     let new_dicts = old_settings
         .dicts
@@ -113,6 +115,12 @@ pub fn SettingsChanger(settings: Resource<(), Settings>) -> impl IntoView {
             <SimpleTextAreaSetting readsig=css writesig=set_css name="css" desc="Css Styling"/>
             <hr/>
 
+            <hr/>
+            <h2>Automatically run commands</h2>
+            <p>Be very very careful with what you put in here</p>
+            <SimpleTextAreaSetting readsig=commands writesig=set_commands name="commands" desc="Commands to run on launch"/>
+            <hr/>
+
             <button
                 class="parsebutton"
                 on:click=move |_| {
@@ -124,6 +132,7 @@ pub fn SettingsChanger(settings: Resource<(), Settings>) -> impl IntoView {
                             updater.note_type = note();
                             updater.note_fields = note_fields();
                             updater.css = if css().is_empty() { None } else { Some(css()) };
+                            updater.to_run = if commands().is_empty() { None } else { Some(commands().split('\n').map(|v| v.to_string()).collect()) };
                             updater.dicts = dicts().iter().map(|(_, (r, _))| r()).collect();
                             let mut updated_templates = HashMap::new();
                             for (_, (readdeck, _)) in templates() {
