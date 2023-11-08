@@ -1,0 +1,6 @@
+[hooks]
+pre-commit = "cargo check && leptosfmt ./src-ui/src/ && cargo fmt"
+post-commit = "echo commited!"
+
+[logging]
+verbose = true

@@ -118,7 +118,12 @@ pub fn SettingsChanger(settings: Resource<(), Settings>) -> impl IntoView {
             <hr/>
             <h2>Automatically run commands</h2>
             <p>Be very very careful with what you put in here</p>
-            <SimpleTextAreaSetting readsig=commands writesig=set_commands name="commands" desc="Commands to run on launch"/>
+            <SimpleTextAreaSetting
+                readsig=commands
+                writesig=set_commands
+                name="commands"
+                desc="Commands to run on launch"
+            />
             <hr/>
 
             <button
@@ -132,7 +137,12 @@ pub fn SettingsChanger(settings: Resource<(), Settings>) -> impl IntoView {
                             updater.note_type = note();
                             updater.note_fields = note_fields();
                             updater.css = if css().is_empty() { None } else { Some(css()) };
-                            updater.to_run = if commands().is_empty() { None } else { Some(commands().split('\n').map(|v| v.to_string()).collect()) };
+                            updater
+                                .to_run = if commands().is_empty() {
+                                None
+                            } else {
+                                Some(commands().split('\n').map(|v| v.to_string()).collect())
+                            };
                             updater.dicts = dicts().iter().map(|(_, (r, _))| r()).collect();
                             let mut updated_templates = HashMap::new();
                             for (_, (readdeck, _)) in templates() {
@@ -488,6 +498,8 @@ fn DictionaryRepresentation(
 
                     // TODO: make generic function for this
 
+                    // TODO: make generic function for this
+
                     <div class="labeledinput">
                         // TODO: make generic function for this
                         <label for="command">Command</label>
@@ -512,6 +524,14 @@ fn DictionaryRepresentation(
                 let (read_filename, write_filename) = create_signal(filename);
                 let is_stardict = matches!(dict_type, DictFileType::StarDict);
                 view! {
+                    // TODO: make generic function for this
+
+                    // TODO: make generic function for this
+
+                    // TODO: make generic function for this
+
+                    // TODO: make generic function for this
+
                     // TODO: make generic function for this
 
                     // TODO: make generic function for this

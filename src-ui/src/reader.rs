@@ -1,4 +1,3 @@
-use std::collections::HashMap;
 use leptos::{
     html::Input,
     leptos_dom::logging::{console_error, console_log},
@@ -6,6 +5,7 @@ use leptos::{
 };
 use serde::Serialize;
 use shared::*;
+use std::collections::HashMap;
 use tauri_sys::tauri;
 use web_sys::SubmitEvent;
 
