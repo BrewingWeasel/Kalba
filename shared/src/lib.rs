@@ -70,6 +70,7 @@ pub struct Settings {
     pub to_remove: Option<usize>,
     pub css: Option<String>,
     pub anki_parser: Option<HashMap<String, HashMap<String, NoteToWordHandling>>>,
+    pub to_run: Option<Vec<String>>,
 }
 
 impl Default for Settings {
@@ -86,6 +87,7 @@ Back:$word:$def",
             to_remove: None,
             css: None,
             anki_parser: None,
+            to_run: None,
         }
     }
 }

@@ -1,8 +1,8 @@
 use shared::*;
-use std::{error::Error, fs, process::Command};
+use std::{error::Error, fs};
 use tauri::State;
 
-use crate::SakinyjeState;
+use crate::{commands::run_command, SakinyjeState};
 
 fn get_def_from_file(
     lemma: &str,
@@ -47,14 +47,7 @@ async fn get_def_url(lemma: &str, url: &str) -> Result<String, Box<dyn Error>> {
 
 async fn get_def_command(lemma: &str, cmd: &str) -> Result<String, Box<dyn Error>> {
     let real_command = cmd.replacen("{word}", lemma, 1);
-    let output = if cfg!(target_os = "windows") {
-        Command::new("cmd").args(["/C", &real_command]).output()?
-    } else {
-        Command::new("sh")
-            .args(["-c", &real_command])
-            .output()
-            .expect("failed to execute process")
-    };
+    let output = run_command(&real_command)?;
     Ok(String::from_utf8(output.stdout)?)
 }
 

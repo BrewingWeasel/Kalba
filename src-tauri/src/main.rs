@@ -4,6 +4,7 @@
 use crate::{add_to_anki::add_to_anki, dictionary::get_defs, language_parsing::parse_text};
 use ankiconnect::get_anki_card_statuses;
 use chrono::{DateTime, Utc};
+use commands::run_command;
 use serde::{Deserialize, Serialize};
 use shared::{SakinyjeResult, Settings};
 use std::{collections::HashMap, fs};
@@ -11,6 +12,7 @@ use tauri::{async_runtime::block_on, GlobalWindowEvent, Manager, State, WindowEv
 
 mod add_to_anki;
 mod ankiconnect;
+mod commands;
 mod dictionary;
 mod language_parsing;
 
@@ -60,6 +62,13 @@ impl Default for SharedInfo {
                 // TODO: handle error
             }
         }
+
+        if let Some(cmds) = &settings.to_run {
+            for cmd in cmds {
+                _ = run_command(cmd);
+            }
+        }
+
         to_save.last_launched = new_time;
         Self { to_save, settings }
     }
