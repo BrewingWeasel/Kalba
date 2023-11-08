@@ -88,6 +88,7 @@ fn main() {
 
 fn handle_window_event(event: GlobalWindowEvent) {
     block_on(async move {
+        #[allow(clippy::single_match)] // Will probably be expanded in the future
         match event.event() {
             &WindowEvent::Destroyed => {
                 let saved_state_file = dirs::data_dir().unwrap().join("sakinyje_saved_data.toml");
