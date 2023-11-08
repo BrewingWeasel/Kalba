@@ -19,7 +19,7 @@ pub async fn parse_text(sent: &str, model: &str, state: State<'_, SakinyjeState>
         let rating = state
             .to_save
             .words
-            .entry(lemma.clone())
+            .entry(word.lemma.clone())
             .or_insert(crate::WordInfo {
                 rating: 0,
                 can_modify: true,
