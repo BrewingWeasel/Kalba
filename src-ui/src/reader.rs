@@ -1,3 +1,4 @@
+use std::collections::HashMap;
 use leptos::{
     html::Input,
     leptos_dom::logging::{console_error, console_log},
