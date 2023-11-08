@@ -1,5 +1,8 @@
 use shared::*;
 use std::{error::Error, fs};
+use tauri::State;
+
+use crate::SakinyjeState;
 
 fn get_def_from_file(
     lemma: &str,
@@ -44,10 +47,28 @@ async fn get_def_url(lemma: &str, url: &str) -> Result<String, Box<dyn Error>> {
 }
 
 #[tauri::command]
-pub async fn get_def(dict: Dictionary, lemma: &str) -> Result<SakinyjeResult<String>, String> {
+pub async fn get_defs(
+    state: State<'_, SakinyjeState>,
+    lemma: String,
+) -> Result<Vec<SakinyjeResult<String>>, String> {
+    let mut state = state.0.lock().await;
+    if let Some(v) = state.to_save.cached_defs.get(&lemma) {
+        Ok(v.clone())
+    } else {
+        let mut defs = Vec::new();
+        for dict in &state.settings.dicts {
+            let def = get_def(dict, &lemma).await.into();
+            defs.push(def);
+        }
+        state.to_save.cached_defs.insert(lemma, defs.clone());
+        Ok(defs)
+    }
+}
+
+async fn get_def(dict: &Dictionary, lemma: &str) -> Result<String, Box<dyn Error>> {
     match dict {
-        Dictionary::File(f, dict_type) => Ok(get_def_from_file(lemma, &f, &dict_type).into()),
-        Dictionary::Url(url) => Ok(get_def_url(lemma, &url).await.into()),
+        Dictionary::File(f, dict_type) => get_def_from_file(lemma, f, dict_type),
+        Dictionary::Url(url) => get_def_url(lemma, url).await,
     }
 }
 

@@ -41,7 +41,7 @@ hr {
   margin: 5px;
 }
 
-.newdict {
+.newdict, .smallernewbutton {
   display: inline-block;
   background-color: #393552;
   color: #e0def4;
@@ -57,6 +57,12 @@ hr {
 
 .newdict:hover {
   transform: scale(1.18);
+  color: #3e8fb0;
+  border-radius: 8px;
+}
+
+.smallernewbutton:hover {
+  transform: scale(1.05);
   color: #3e8fb0;
   border-radius: 8px;
 }
@@ -262,4 +268,41 @@ select {
 
 .navbar a:hover {
   background: #44415a;
+}
+
+
+.individualnote {
+  background: #2a273f;
+  margin-left: 15px;
+  border-radius: 5px;
+}
+
+.labeledcheckbox {
+  display: flex;
+}
+
+.checkbox .checkboxlabel {
+  display: inline;
+}
+
+/* RATINGS */
+
+.rating-0 {
+  color: red;
+}
+
+.rating-1 {
+  color: orange;
+}
+
+.rating-2 {
+  color: yellow;
+}
+
+.rating-3 {
+  color: pink;
+}
+
+.rating-4 {
+  color: white;
 }

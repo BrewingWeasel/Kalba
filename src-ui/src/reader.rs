@@ -1,5 +1,4 @@
 use std::collections::HashMap;
-
 use leptos::{
     html::Input,
     leptos_dom::logging::{console_error, console_log},
@@ -12,7 +11,6 @@ use web_sys::SubmitEvent;
 
 #[derive(Serialize)]
 struct GetDefEvent<'a> {
-    dict: &'a Dictionary,
     lemma: &'a str,
 }
 
@@ -27,22 +25,11 @@ pub struct AddToAnki<'a> {
     pub sent: &'a str,
     pub word: &'a str,
     pub defs: &'a Vec<String>,
-    pub settings: &'a Settings,
 }
 
-async fn export_card(sent: &str, word: &str, defs: &Vec<String>, settings: &Settings) {
+async fn export_card(sent: &str, word: &str, defs: &Vec<String>) {
     #[allow(clippy::single_match)]
-    match tauri::invoke(
-        "add_to_anki",
-        &AddToAnki {
-            sent,
-            word,
-            defs,
-            settings,
-        },
-    )
-    .await
-    {
+    match tauri::invoke("add_to_anki", &AddToAnki { sent, word, defs }).await {
         Err(e) => console_error(&e.to_string()),
         Ok(()) => (),
     }
@@ -62,6 +49,7 @@ async fn send_sentence(sent: String) -> Vec<Word> {
         Err(e) => vec![Word {
             text: e.to_string(),
             lemma: e.to_string(),
+            rating: 0,
             morph: HashMap::new(),
             clickable: false,
         }],
@@ -71,42 +59,20 @@ async fn send_sentence(sent: String) -> Vec<Word> {
 async fn get_definition<'a>(
     lemma_id: Option<usize>,
     words: Resource<String, Vec<Word>>,
-    defs: ReadSignal<HashMap<String, Vec<String>>>,
-    writable_defs: WriteSignal<HashMap<String, Vec<String>>>,
-    settings: Resource<(), Settings>,
-) -> Vec<String> {
+) -> Vec<SakinyjeResult<String>> {
     console_log(&format!("{:#?}", words.get()));
-    // TODO: lots of clones
     if let Some(i) = lemma_id {
         let lemma = &words().unwrap()[i].lemma;
-        let defs = move || defs.get();
-        if let Some(cached_defs) = defs().get(lemma) {
-            cached_defs.to_owned()
-        } else {
-            let mut defs = Vec::new();
-            for dict in &settings.get().unwrap().dicts {
-                let def: SakinyjeResult<String> =
-                    tauri::invoke("get_def", &GetDefEvent { lemma, dict })
-                        .await
-                        .unwrap();
-                // defs.push(def)
-                let def: Result<String, String> = def.into();
-                defs.push(def.unwrap_or_else(|e| format!("Error: {e}")));
-            }
-            writable_defs.update(|v| {
-                v.insert(lemma.clone(), defs.clone());
-            });
-            defs
-        }
+        tauri::invoke("get_defs", &GetDefEvent { lemma })
+            .await
+            .unwrap()
     } else {
         Vec::new()
     }
 }
 
 #[component]
-pub fn ReaderView(settings: Resource<(), Settings>) -> impl IntoView {
-    let (defs, change_defs) = create_signal(HashMap::new());
-
+pub fn ReaderView() -> impl IntoView {
     let (sentence, set_sentence) = create_signal(String::new());
 
     let (selected_word, set_selected_word) = create_signal(None);
@@ -121,8 +87,9 @@ pub fn ReaderView(settings: Resource<(), Settings>) -> impl IntoView {
     let conts = create_local_resource(move || sentence.get(), send_sentence);
     let definition = create_resource(
         move || selected_word.get(),
-        move |v| get_definition(v, conts, defs, change_defs, settings),
+        move |v| get_definition(v, conts),
     );
+
     view! {
         <div class="input">
             <form on:submit=on_submit>
@@ -212,9 +179,21 @@ pub fn ReaderView(settings: Resource<(), Settings>) -> impl IntoView {
                 .map(|data| {
                     data.iter()
                         .map(|d| {
-                            view! {
-                                <div class="definition" inner_html=d></div>
-                                <br/>
+                            match d {
+                                SakinyjeResult::Ok(s) => {
+                                    view! {
+                                        <div class="definition" inner_html=s></div>
+                                        <br/>
+                                    }
+                                        .into_view()
+                                }
+                                SakinyjeResult::Err(v) => {
+                                    view! {
+                                        <div class="error">Err: {v}</div>
+                                        <br/>
+                                    }
+                                        .into_view()
+                                }
                             }
                         })
                         .collect_view()
@@ -233,12 +212,16 @@ pub fn ReaderView(settings: Resource<(), Settings>) -> impl IntoView {
                                             export_card(
                                                     &sentence(),
                                                     &lemma,
-                                                    defs().get(&lemma).unwrap(),
-                                                    &settings().unwrap(),
+                                                    &definition()
+                                                        .unwrap()
+                                                        .into_iter()
+                                                        .filter_map(|d| {
+                                                            Into::<Result<String, String>>::into(d).ok()
+                                                        })
+                                                        .collect(),
                                                 )
                                                 .await;
                                         });
-                                        console_log(&format!("{:#?}", &defs()));
                                     }
 
                                     class="exportbutton"
@@ -258,11 +241,13 @@ pub fn ReaderView(settings: Resource<(), Settings>) -> impl IntoView {
 fn Word(word: Word, i: usize, word_selector: WriteSignal<Option<usize>>) -> impl IntoView {
     let mut class = String::from("word");
     if !word.clickable {
-        class.push_str(" punctuation ");
+        class.push_str(" punctuation");
     }
     for (feat, value) in &word.morph {
         class.push_str(&format!(" {feat}-{value}"));
     }
+    class.push_str(" rating-");
+    class.push_str(&word.rating.to_string());
     view! {
         <span
             class=class

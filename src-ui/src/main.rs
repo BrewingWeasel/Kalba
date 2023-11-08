@@ -3,7 +3,7 @@ use leptos_router::*;
 use shared::*;
 use tauri_sys::{dialog::FileDialogBuilder, tauri};
 
-use crate::reader::{ReaderView, ReaderViewProps};
+use crate::reader::ReaderView;
 use crate::settings::{SettingsChanger, SettingsChangerProps};
 
 mod reader;
@@ -46,8 +46,8 @@ fn App() -> impl IntoView {
             </nav>
             <main>
                 <Routes>
-                    <Route path="/" view=move || ReaderView(ReaderViewProps { settings })/>
-                    <Route path="/reader" view=move || ReaderView(ReaderViewProps { settings })/>
+                    <Route path="/" view=ReaderView/>
+                    <Route path="/reader" view=ReaderView/>
                     <Route
                         path="/settings"
                         view=move || SettingsChanger(SettingsChangerProps { settings })

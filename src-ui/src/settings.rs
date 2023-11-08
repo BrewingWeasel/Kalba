@@ -1,3 +1,5 @@
+use std::collections::HashMap;
+
 use leptos::{
     leptos_dom::logging::{console_error, console_log},
     *,
@@ -9,6 +11,14 @@ use tauri_sys::tauri;
 use crate::get_file;
 
 type DictList = Vec<(usize, (ReadSignal<Dictionary>, WriteSignal<Dictionary>))>;
+type AnkiDeck = (
+    String,
+    Vec<(
+        ReadSignal<(String, NoteToWordHandling)>,
+        WriteSignal<(String, NoteToWordHandling)>,
+    )>,
+);
+type TemplateList = Vec<(usize, (ReadSignal<AnkiDeck>, WriteSignal<AnkiDeck>))>;
 
 #[derive(Serialize)]
 pub struct SettingsSaver {
@@ -48,7 +58,23 @@ pub fn SettingsChanger(settings: Resource<(), Settings>) -> impl IntoView {
         .enumerate()
         .collect::<Vec<_>>();
 
+    let new_templates: TemplateList = old_settings
+        .anki_parser
+        .unwrap_or_default()
+        .into_iter()
+        .map(|v| {
+            create_signal((
+                v.0,
+                v.1.into_iter()
+                    .map(create_signal)
+                    .collect::<Vec<_>>(),
+            ))
+        })
+        .enumerate()
+        .collect::<Vec<_>>();
+
     let (dicts, set_dicts) = create_signal(new_dicts);
+    let (templates, set_templates) = create_signal(new_templates);
 
     view! {
         <div class="settings">
@@ -87,6 +113,9 @@ pub fn SettingsChanger(settings: Resource<(), Settings>) -> impl IntoView {
             <DictionaryList dicts=dicts set_dicts=set_dicts/>
 
             <hr/>
+            <WordKnowledgeList templates=templates set_templates=set_templates/>
+
+            <hr/>
             <h2>Styling</h2>
             <SimpleTextAreaSetting readsig=css writesig=set_css name="css" desc="Css Styling"/>
             <hr/>
@@ -103,6 +132,17 @@ pub fn SettingsChanger(settings: Resource<(), Settings>) -> impl IntoView {
                             updater.note_fields = note_fields();
                             updater.css = if css().is_empty() { None } else { Some(css()) };
                             updater.dicts = dicts().iter().map(|(_, (r, _))| r()).collect();
+
+                            let mut updated_templates = HashMap::new();
+                            for (_, (readdeck, _)) in templates() {
+                                let deckname = readdeck().0;
+                                let mut notes = Vec::new();
+                                for (readnote, _) in readdeck().1 {
+                                    notes.push(readnote())
+                                }
+                                updated_templates.insert(deckname, notes.into_iter().collect());
+                            }
+                            updater.anki_parser = Some(updated_templates);
                         });
                     save_settings(settings().unwrap());
                 }
@@ -157,6 +197,154 @@ fn SimpleTextAreaSetting(
 
                 prop:value=readsig
             ></textarea>
+        </div>
+    }
+}
+
+#[component]
+fn WordKnowledgeList(
+    templates: ReadSignal<TemplateList>,
+    set_templates: WriteSignal<TemplateList>,
+) -> impl IntoView {
+    let mut next_templ_id = templates().len();
+    let add_template = move |_| {
+        let new_template = (String::new(), Vec::new());
+        set_templates
+            .update(move |templs| templs.push((next_templ_id, create_signal(new_template))));
+        next_templ_id += 1;
+    };
+    view! {
+        <div class="dicts">
+            <h2 class="dicts_title">Word Knowledge</h2>
+            <button class="smallernewbutton" on:click=add_template>
+                "connect new deck"
+            </button>
+        </div>
+        <div class="all_templates">
+            <For
+                each=templates
+                key=|templ| templ.0
+                children=move |(id, (rtempl, wtempl))| {
+                    view! {
+                        <div class="deck_templates">
+                            <button
+                                class="remove"
+                                on:click=move |_| {
+                                    set_templates
+                                        .update(|templ| {
+                                            templ.retain(|(templ_id, _)| templ_id != &id)
+                                        });
+                                }
+                            >
+                                "x"
+                            </button>
+                            <IndividualDeckRepresentation rtempl=rtempl wtempl=wtempl/>
+                            <hr/>
+                        </div>
+                    }
+                }
+            />
+        </div>
+    }
+}
+
+#[component]
+fn IndividualDeckRepresentation(
+    rtempl: ReadSignal<AnkiDeck>,
+    wtempl: WriteSignal<AnkiDeck>,
+) -> impl IntoView {
+    let add_note_template = move |_| {
+        let new_template = NoteToWordHandling {
+            field_to_use: String::new(),
+            only_first_word_or_line: false,
+            remove_everything_in_parens: false,
+        };
+        wtempl.update(move |templs| templs.1.push(create_signal((String::new(), new_template))));
+    };
+    view! {
+        <div class="labeledinput">
+            <label for="deckname">Anki deck name</label>
+            <input
+                id="deckname"
+                type="text"
+                on:input=move |ev| {
+                    wtempl.update(|v| v.0 = event_target_value(&ev));
+                }
+
+                prop:value=move || rtempl().0
+            />
+        </div>
+        <button class="smallernewbutton" on:click=add_note_template>
+            "new note type"
+        </button>
+        <For
+            each=move || rtempl().1
+            key=|templ| templ.0
+            children=move |(rnote, wnote)| {
+                view! { <AnkiNoteParsing rnote=rnote wnote=wnote/> }
+            }
+        />
+    }
+}
+
+#[component]
+fn AnkiNoteParsing(
+    rnote: ReadSignal<(String, NoteToWordHandling)>,
+    wnote: WriteSignal<(String, NoteToWordHandling)>,
+) -> impl IntoView {
+    view! {
+        <hr/>
+        <div class="individualnote">
+            <div class="labeledinput">
+                <label for="notename">Name of note</label>
+                <input
+                    id="notename"
+                    type="text"
+                    on:input=move |ev| {
+                        wnote.update(|v| v.0 = event_target_value(&ev));
+                    }
+
+                    prop:value=move || rnote().0
+                />
+            </div>
+
+            <div class="labeledinput">
+                <label for="fieldname">Note field to use</label>
+                <input
+                    id="fieldname"
+                    type="text"
+                    on:input=move |ev| {
+                        wnote.update(|v| v.1.field_to_use = event_target_value(&ev));
+                    }
+
+                    prop:value=move || rnote().1.field_to_use
+                />
+            </div>
+
+            <div class="labeledcheckbox">
+            <label for="firstword">Only take first word/line</label>
+            <input
+                id="firstword"
+                type="checkbox"
+                on:change=move |ev| {
+                    wnote.update(|v| v.1.only_first_word_or_line = event_target_checked(&ev))
+                }
+                prop:value=move || rnote().1.only_first_word_or_line
+            />
+            </div>
+
+            <div class="labeledcheckbox">
+                <label class="checkboxlabel" for="removeparens">Remove everything in parentheses</label>
+                <input
+                    id="removeparens"
+                    class="checkbox"
+                    type="checkbox"
+                    on:change=move |ev| {
+                        wnote.update(|v| v.1.remove_everything_in_parens = event_target_checked(&ev))
+                    }
+                    prop:value=move || rnote().1.remove_everything_in_parens
+                />
+            </div>
         </div>
     }
 }
@@ -270,6 +458,10 @@ fn DictionaryRepresentation(
                 let (read_filename, write_filename) = create_signal(filename);
                 let is_stardict = matches!(dict_type, DictFileType::StarDict);
                 view! {
+                    // TODO: make generic function for this
+
+                    // TODO: make generic function for this
+
                     // TODO: make generic function for this
 
                     // TODO: make generic function for this
