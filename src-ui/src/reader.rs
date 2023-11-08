@@ -49,7 +49,7 @@ async fn send_sentence(sent: String) -> Vec<Word> {
             text: e.to_string(),
             lemma: e.to_string(),
             rating: 0,
-            morph: None,
+            morph: HashMap::new(),
             clickable: false,
         }],
     }
@@ -116,10 +116,10 @@ pub fn ReaderView() -> impl IntoView {
 
         </div>
         <br/>
-        <div class="wordinfo">
-            {move || {
-                if selected_word().is_some() {
-                    view! {
+        {move || {
+            if selected_word().is_some() {
+                view! {
+                    <div class="wordinfo">
                         <input
                             class="selectedword"
                             type="text"
@@ -146,14 +146,29 @@ pub fn ReaderView() -> impl IntoView {
                                     .map(|v| v.lemma)
                             }
                         />
-                    }
-                        .into_view()
-                } else {
-                    view! {}.into_view()
-                }
-            }}
+                    </div>
 
-        </div>
+                    <div class="grammarinfo">
+                        {move || {
+                            conts
+                                .get()
+                                .unwrap()[selected_word().unwrap()]
+                                .morph
+                                .iter()
+                                .map(|(k, v)| {
+                                    view! { <div class="grammarfeature"><span class=k>{k}</span><span class="seperator">:</span><span class=v>{v}</span></div> }
+                                })
+                                .collect_view()
+                        }}
+
+                    </div>
+                    <hr/>
+                }
+                    .into_view()
+            } else {
+                view! {}.into_view()
+            }
+        }}
 
         <Suspense fallback=move || {
             view! { <p>"Loading..."</p> }
@@ -227,9 +242,8 @@ fn Word(word: Word, i: usize, word_selector: WriteSignal<Option<usize>>) -> impl
     if !word.clickable {
         class.push_str(" punctuation");
     }
-    if let Some(morph) = word.morph {
-        class.push(' ');
-        class.push_str(&morph);
+    for (feat, value) in &word.morph {
+        class.push_str(&format!(" {feat}-{value}"));
     }
     class.push_str(" rating-");
     class.push_str(&word.rating.to_string());
@@ -237,7 +251,9 @@ fn Word(word: Word, i: usize, word_selector: WriteSignal<Option<usize>>) -> impl
         <span
             class=class
             on:click=move |_| {
-                word_selector.set(Some(i));
+                if word.clickable {
+                    word_selector.set(Some(i));
+                }
             }
         >
 

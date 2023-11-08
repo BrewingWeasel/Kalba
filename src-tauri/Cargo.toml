@@ -18,10 +18,10 @@ tauri-build = { version = "1.5.0", features = [] }
 serde_json = "1.0"
 serde = { version = "1.0", features = ["derive"] }
 tauri = { version = "1.5.2", features = ["dialog-all"] }
-pyo3 = { version = "0.20.0", features = ["auto-initialize"] }
 stardict = "0.2.0"
 reqwest = { version = "0.11.22", features = ["json"] }
 shared = { path = "../shared" }
+spacy-parsing = { path = "../spacy-parsing" }
 toml = "0.8.2"
 dirs = "5.0.1"
 chrono = { version = "0.4.31", features = ["serde"] }
