@@ -82,11 +82,18 @@ struct FieldInfo {
 
 async fn generic_anki_connect_action(action: &str, data: Value) -> Response {
     let client = reqwest::Client::new();
-    let request = json!({
-        "action": action,
-        "version": 6,
-        "params": data
-    });
+    let request = if data == Value::Null {
+        json!({
+            "action": action,
+            "version": 6,
+        })
+    } else {
+        json!({
+            "action": action,
+            "version": 6,
+            "params": data
+        })
+    };
 
     client
         .post("http://127.0.0.1:8765")
@@ -155,4 +162,22 @@ fn get_word_from_field(selected_field: String, handler: &NoteToWordHandling) -> 
         }
     }
     parsed
+}
+
+#[tauri::command]
+pub async fn get_all_deck_names() -> Result<Vec<String>, String> {
+    let res = generic_anki_connect_action("deckNames", Value::Null).await;
+    res.json::<AnkiResult<Vec<String>>>().await.unwrap().into()
+}
+
+#[tauri::command]
+pub async fn get_all_note_names() -> Result<Vec<String>, String> {
+    let res = generic_anki_connect_action("modelNames", Value::Null).await;
+    res.json::<AnkiResult<Vec<String>>>().await.unwrap().into()
+}
+
+#[tauri::command]
+pub async fn get_note_field_names(model: &str) -> Result<Vec<String>, String> {
+    let res = generic_anki_connect_action("modelFieldNames", json!({ "modelName": model })).await;
+    res.json::<AnkiResult<Vec<String>>>().await.unwrap().into()
 }

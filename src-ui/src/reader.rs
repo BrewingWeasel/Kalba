@@ -40,7 +40,7 @@ async fn send_sentence(sent: String) -> Vec<Word> {
         "parse_text",
         &ParsingInfo {
             sent: &sent,
-            model: "lt_core_news_sm",
+            model: "lt_core_news_sm", // TODO: why is this hardcoded all of a sudden what
         },
     )
     .await

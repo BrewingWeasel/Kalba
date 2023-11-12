@@ -1,7 +1,12 @@
 // Prevents additional console window on Windows in release, DO NOT REMOVE!!
 #![cfg_attr(not(debug_assertions), windows_subsystem = "windows")]
 
-use crate::{add_to_anki::add_to_anki, dictionary::get_defs, language_parsing::parse_text};
+use crate::{
+    add_to_anki::add_to_anki,
+    ankiconnect::{get_all_deck_names, get_all_note_names, get_note_field_names},
+    dictionary::get_defs,
+    language_parsing::parse_text,
+};
 use ankiconnect::get_anki_card_statuses;
 use chrono::{DateTime, Utc};
 use commands::run_command;
@@ -89,6 +94,9 @@ fn main() {
             get_settings,
             add_to_anki,
             write_settings,
+            get_all_deck_names,
+            get_all_note_names,
+            get_note_field_names,
         ])
         .on_window_event(handle_window_event)
         .run(tauri::generate_context!())

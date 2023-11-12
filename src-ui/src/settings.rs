@@ -36,6 +36,14 @@ fn save_settings(settings: Settings) {
     })
 }
 
+async fn get_all_x_names(x: &str) -> Vec<String> {
+    let note_or_deck = tauri::invoke::<(), Vec<String>>(&format!("get_all_{x}_names"), &()).await;
+    match note_or_deck {
+        Err(_) => Vec::new(),
+        Ok(decks) => decks,
+    }
+}
+
 #[component]
 pub fn SettingsChanger(settings: Resource<(), Settings>) -> impl IntoView {
     let old_settings = if let Some(s) = settings() {
@@ -43,6 +51,9 @@ pub fn SettingsChanger(settings: Resource<(), Settings>) -> impl IntoView {
     } else {
         return view! { <p>Unable to load settings</p> }.into_view();
     };
+
+    let decks = create_resource(|| (), |_| async move { get_all_x_names("deck").await });
+    let notes = create_resource(|| (), |_| async move { get_all_x_names("note").await });
 
     let (model, set_model) = create_signal(old_settings.model);
     let (deck, set_deck) = create_signal(old_settings.deck);
@@ -93,9 +104,9 @@ pub fn SettingsChanger(settings: Resource<(), Settings>) -> impl IntoView {
             </div>
             <hr/>
             <h2>Anki Settings</h2>
-            <SimpleTextSetting readsig=deck writesig=set_deck name="deck" desc="Anki Deck"/>
+            <SimpleDropDown readsig=deck writesig=set_deck name="deck" desc="Anki Deck" options=decks/>
             <br/>
-            <SimpleTextSetting readsig=note writesig=set_note name="note" desc="Note type"/>
+            <SimpleDropDown readsig=note writesig=set_note name="note" desc="Note type" options=notes/>
             <br/>
             <SimpleTextAreaSetting
                 readsig=note_fields
@@ -185,6 +196,29 @@ fn SimpleTextSetting(
 
                 prop:value=readsig
             />
+        </div>
+    }
+}
+
+#[component]
+fn SimpleDropDown(
+    readsig: ReadSignal<String>,
+    writesig: WriteSignal<String>,
+    name: &'static str,
+    desc: &'static str,
+    options: Resource<(), Vec<String>>,
+) -> impl IntoView {
+    view! {
+        <div class="dropdown">
+            <label for=name>{desc}</label>
+            <select id=name
+                on:input=move |ev| {
+                    writesig(event_target_value(&ev));
+                }
+                prop:value=readsig
+            >
+                { move || options.get().map(|v| v.iter().map(|x| view! { <option value=x selected=readsig() == *x>{x}</option> }.into_view() ).collect_view()) }
+            </select>
         </div>
     }
 }
@@ -496,10 +530,6 @@ fn DictionaryRepresentation(
                 view! {
                     // TODO: make generic function for this
 
-                    // TODO: make generic function for this
-
-                    // TODO: make generic function for this
-
                     <div class="labeledinput">
                         // TODO: make generic function for this
                         <label for="command">Command</label>
@@ -524,18 +554,6 @@ fn DictionaryRepresentation(
                 let (read_filename, write_filename) = create_signal(filename);
                 let is_stardict = matches!(dict_type, DictFileType::StarDict);
                 view! {
-                    // TODO: make generic function for this
-
-                    // TODO: make generic function for this
-
-                    // TODO: make generic function for this
-
-                    // TODO: make generic function for this
-
-                    // TODO: make generic function for this
-
-                    // TODO: make generic function for this
-
                     // TODO: make generic function for this
 
                     <div class="labeledinput">
