@@ -1,8 +1,8 @@
 use shared::*;
 use std::{error::Error, fs};
-use tauri::State;
+use tauri::{AppHandle, State};
 
-use crate::{commands::run_command, SakinyjeState};
+use crate::{commands::run_command, ok_or_err_window, SakinyjeState};
 
 fn get_def_from_file(
     lemma: &str,
@@ -54,9 +54,13 @@ async fn get_def_command(lemma: &str, cmd: &str) -> Result<String, Box<dyn Error
 #[tauri::command]
 pub async fn get_defs(
     state: State<'_, SakinyjeState>,
+    handle: AppHandle,
     lemma: String,
 ) -> Result<Vec<SakinyjeResult<String>>, String> {
-    let mut state = state.0.lock().await;
+    let mut locked = state.0.lock().await;
+    let state = ok_or_err_window(&mut *locked, handle)
+        .await
+        .expect("lol xd");
     if let Some(v) = state.to_save.cached_defs.get(&lemma) {
         Ok(v.clone())
     } else {

@@ -48,6 +48,7 @@ fn App() -> impl IntoView {
                 <Routes>
                     <Route path="/" view=ReaderView/>
                     <Route path="/reader" view=ReaderView/>
+                    // <Route path="/error/*" view=Todo/>
                     <Route
                         path="/settings"
                         view=move || SettingsChanger(SettingsChangerProps { settings })

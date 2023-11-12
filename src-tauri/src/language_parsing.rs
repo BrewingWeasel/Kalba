@@ -1,15 +1,19 @@
-use crate::SakinyjeState;
+use crate::{ok_or_err_window, SakinyjeState};
 use shared::*;
 use spacy_parsing::{get_spacy_info, PartOfSpeech};
-use tauri::State;
+use tauri::{AppHandle, State};
 
 #[tauri::command]
 pub async fn parse_text(
     sent: &str,
     model: &str,
     state: State<'_, SakinyjeState>,
+    handle: AppHandle,
 ) -> Result<Vec<Word>, String> {
-    let mut state = state.0.lock().await;
+    let mut locked = state.0.lock().await;
+    let state = ok_or_err_window(&mut *locked, handle)
+        .await
+        .expect("lol xd");
     let mut words = Vec::new();
     if sent.is_empty() {
         return Ok(words);

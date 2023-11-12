@@ -29,8 +29,7 @@ pub async fn get_anki_card_statuses(
     original_words: &mut HashMap<String, WordInfo>,
     days_passed: i64,
 ) -> Result<(), String> {
-    let find_cards_query = format!("deck:{deck} rated:{days_passed}"); // TODO: only check cards reviewed since last
-                                                                       // check
+    let find_cards_query = format!("deck:{deck} rated:{days_passed}");
 
     let cards = get_card_or_note_vals("findCards", json!({ "query": find_cards_query })).await?;
     let intervals = get_card_or_note_vals("getIntervals", json!({ "cards": &cards })).await?;
@@ -80,7 +79,7 @@ struct FieldInfo {
     value: String,
 }
 
-async fn generic_anki_connect_action(action: &str, data: Value) -> Response {
+async fn generic_anki_connect_action(action: &str, data: Value) -> Result<Response, String> {
     let client = reqwest::Client::new();
     let request = json!({
         "action": action,
@@ -88,26 +87,31 @@ async fn generic_anki_connect_action(action: &str, data: Value) -> Response {
         "params": data
     });
 
-    client
+    Ok(client
         .post("http://127.0.0.1:8765")
         .json(&request)
         .send()
         .await
-        .unwrap()
+        .map_err(|e| e.to_string())?)
 }
 
 async fn get_card_or_note_vals(action: &str, data: Value) -> Result<Vec<usize>, String> {
-    let res = generic_anki_connect_action(action, data).await;
-    res.json::<AnkiResult<Vec<usize>>>().await.unwrap().into()
+    let res = generic_anki_connect_action(action, data).await?;
+    res.json::<AnkiResult<Vec<usize>>>()
+        .await
+        .map_err(|e| e.to_string())?
+        .into()
 }
 
 async fn get_words_from_notes(
     notes: Vec<usize>,
     templates: &HashMap<String, NoteToWordHandling>,
 ) -> Result<Vec<String>, String> {
-    let res = generic_anki_connect_action("notesInfo", json!({ "notes": notes })).await;
+    let res = generic_anki_connect_action("notesInfo", json!({ "notes": notes })).await?;
     let notes = Into::<Result<Vec<NoteInfo>, String>>::into(
-        res.json::<AnkiResult<Vec<NoteInfo>>>().await.unwrap(),
+        res.json::<AnkiResult<Vec<NoteInfo>>>()
+            .await
+            .map_err(|e| e.to_string())?,
     )?;
 
     let mut words = Vec::new();

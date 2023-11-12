@@ -2,9 +2,9 @@ use reqwest::Client;
 use serde_json::json;
 use shared::Settings;
 use std::collections::HashMap;
-use tauri::State;
+use tauri::{AppHandle, State};
 
-use crate::SakinyjeState;
+use crate::{ok_or_err_window, SakinyjeState};
 
 fn get_json(
     sent: &str,
@@ -67,9 +67,13 @@ pub async fn add_to_anki(
     word: &str,
     defs: Vec<String>,
     state: State<'_, SakinyjeState>,
+    handle: AppHandle,
 ) -> Result<(), String> {
-    let settings = &state.0.lock().await.settings;
-    let args = get_json(sent, word, defs, settings).map_err(|e| e.to_string())?;
+    let mut locked = state.0.lock().await;
+    let state = ok_or_err_window(&mut *locked, handle)
+        .await
+        .expect("lol xd");
+    let args = get_json(sent, word, defs, &state.settings).map_err(|e| e.to_string())?;
     let client = Client::new();
     client
         .post("http://localhost:8765/")
