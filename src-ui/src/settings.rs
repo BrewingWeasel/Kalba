@@ -25,6 +25,12 @@ pub struct SettingsSaver {
     pub settings: Settings,
 }
 
+#[derive(Clone, Copy)]
+struct AnkiInfo {
+    decks: Resource<(), Vec<String>>,
+    templates: Resource<(), Vec<String>>,
+}
+
 fn save_settings(settings: Settings) {
     wasm_bindgen_futures::spawn_local(async move {
         console_log("saving settings");
@@ -52,8 +58,10 @@ pub fn SettingsChanger(settings: Resource<(), Settings>) -> impl IntoView {
         return view! { <p>Unable to load settings</p> }.into_view();
     };
 
-    let decks = create_resource(|| (), |_| async move { get_all_x_names("deck").await });
-    let notes = create_resource(|| (), |_| async move { get_all_x_names("note").await });
+    let info = AnkiInfo {
+        decks: create_resource(|| (), |_| async move { get_all_x_names("deck").await }),
+        templates: create_resource(|| (), |_| async move { get_all_x_names("note").await }),
+    };
 
     let (model, set_model) = create_signal(old_settings.model);
     let (deck, set_deck) = create_signal(old_settings.deck);
@@ -104,9 +112,21 @@ pub fn SettingsChanger(settings: Resource<(), Settings>) -> impl IntoView {
             </div>
             <hr/>
             <h2>Anki Settings</h2>
-            <SimpleDropDown readsig=deck writesig=set_deck name="deck" desc="Anki Deck" options=decks/>
+            <SimpleDropDown
+                readsig=deck
+                writesig=set_deck
+                name="deck"
+                desc="Anki Deck"
+                options=info.decks
+            />
             <br/>
-            <SimpleDropDown readsig=note writesig=set_note name="note" desc="Note type" options=notes/>
+            <SimpleDropDown
+                readsig=note
+                writesig=set_note
+                name="note"
+                desc="Note type"
+                options=info.templates
+            />
             <br/>
             <SimpleTextAreaSetting
                 readsig=note_fields
@@ -119,7 +139,7 @@ pub fn SettingsChanger(settings: Resource<(), Settings>) -> impl IntoView {
             <DictionaryList dicts=dicts set_dicts=set_dicts/>
 
             <hr/>
-            <WordKnowledgeList templates=templates set_templates=set_templates/>
+            <WordKnowledgeList templates=templates set_templates=set_templates info=info/>
 
             <hr/>
             <h2>Styling</h2>
@@ -201,23 +221,45 @@ fn SimpleTextSetting(
 }
 
 #[component]
-fn SimpleDropDown(
-    readsig: ReadSignal<String>,
-    writesig: WriteSignal<String>,
+fn SimpleDropDown<Read, Write>(
+    readsig: Read,
+    mut writesig: Write,
     name: &'static str,
     desc: &'static str,
     options: Resource<(), Vec<String>>,
-) -> impl IntoView {
+) -> impl IntoView
+where
+    Read: Fn() -> String + 'static + Copy,
+    Write: FnMut(String) + 'static + Copy,
+{
     view! {
         <div class="dropdown">
             <label for=name>{desc}</label>
-            <select id=name
+            <select
+                id=name
                 on:input=move |ev| {
                     writesig(event_target_value(&ev));
                 }
+
                 prop:value=readsig
             >
-                { move || options.get().map(|v| v.iter().map(|x| view! { <option value=x selected=readsig() == *x>{x}</option> }.into_view() ).collect_view()) }
+                {move || {
+                    options
+                        .get()
+                        .map(|v| {
+                            v
+                                .iter()
+                                .map(|x| {
+                                    view! {
+                                        <option value=x selected=readsig() == *x>
+                                            {x}
+                                        </option>
+                                    }
+                                        .into_view()
+                                })
+                                .collect_view()
+                        })
+                }}
             </select>
         </div>
     }
@@ -250,6 +292,7 @@ fn SimpleTextAreaSetting(
 fn WordKnowledgeList(
     templates: ReadSignal<TemplateList>,
     set_templates: WriteSignal<TemplateList>,
+    info: AnkiInfo,
 ) -> impl IntoView {
     let mut next_templ_id = templates().len();
     let add_template = move |_| {
@@ -284,7 +327,7 @@ fn WordKnowledgeList(
 
                                 "x"
                             </button>
-                            <IndividualDeckRepresentation rtempl=rtempl wtempl=wtempl/>
+                            <IndividualDeckRepresentation rtempl=rtempl wtempl=wtempl info=info/>
                             <hr/>
                         </div>
                     }
@@ -299,6 +342,7 @@ fn WordKnowledgeList(
 fn IndividualDeckRepresentation(
     rtempl: ReadSignal<AnkiDeck>,
     wtempl: WriteSignal<AnkiDeck>,
+    info: AnkiInfo,
 ) -> impl IntoView {
     let add_note_template = move |_| {
         let new_template = NoteToWordHandling {
@@ -309,18 +353,13 @@ fn IndividualDeckRepresentation(
         wtempl.update(move |templs| templs.1.push(create_signal((String::new(), new_template))));
     };
     view! {
-        <div class="labeledinput">
-            <label for="deckname">Anki deck name</label>
-            <input
-                id="deckname"
-                type="text"
-                on:input=move |ev| {
-                    wtempl.update(|v| v.0 = event_target_value(&ev));
-                }
-
-                prop:value=move || rtempl().0
-            />
-        </div>
+        <SimpleDropDown
+            readsig=move || rtempl().0
+            writesig=move |x| wtempl.update(|v| v.0 = x)
+            name="deck"
+            desc="Anki Deck"
+            options=info.decks
+        />
         <button class="smallernewbutton" on:click=add_note_template>
             "new note type"
         </button>
@@ -328,7 +367,7 @@ fn IndividualDeckRepresentation(
             each=move || rtempl().1
             key=|templ| templ.0
             children=move |(rnote, wnote)| {
-                view! { <AnkiNoteParsing rnote=rnote wnote=wnote/> }
+                view! { <AnkiNoteParsing rnote=rnote wnote=wnote info=info/> }
             }
         />
     }
@@ -338,22 +377,18 @@ fn IndividualDeckRepresentation(
 fn AnkiNoteParsing(
     rnote: ReadSignal<(String, NoteToWordHandling)>,
     wnote: WriteSignal<(String, NoteToWordHandling)>,
+    info: AnkiInfo,
 ) -> impl IntoView {
     view! {
         <hr/>
         <div class="individualnote">
-            <div class="labeledinput">
-                <label for="notename">Name of note</label>
-                <input
-                    id="notename"
-                    type="text"
-                    on:input=move |ev| {
-                        wnote.update(|v| v.0 = event_target_value(&ev));
-                    }
-
-                    prop:value=move || rnote().0
-                />
-            </div>
+            <SimpleDropDown
+                readsig=move || rnote().0
+                writesig=move |x| wnote.update(|v| v.0 = x)
+                name="template"
+                desc="Anki Template"
+                options=info.templates
+            />
 
             <div class="labeledinput">
                 <label for="fieldname">Note field to use</label>
@@ -554,6 +589,12 @@ fn DictionaryRepresentation(
                 let (read_filename, write_filename) = create_signal(filename);
                 let is_stardict = matches!(dict_type, DictFileType::StarDict);
                 view! {
+                    // TODO: make generic function for this
+
+                    // TODO: make generic function for this
+
+                    // TODO: make generic function for this
+
                     // TODO: make generic function for this
 
                     <div class="labeledinput">
