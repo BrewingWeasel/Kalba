@@ -497,23 +497,11 @@ fn DictionaryList(dicts: ReadSignal<DictList>, set_dicts: WriteSignal<DictList>)
     }
 }
 
-#[derive(PartialEq, Eq)]
-enum DictType {
-    File,
-    Command,
-    Url,
-}
-
 #[component]
 fn DictionaryRepresentation(
     rdict: ReadSignal<Dictionary>,
     wdict: WriteSignal<Dictionary>,
 ) -> impl IntoView {
-    let current_dict_type = move || match rdict() {
-        Dictionary::Command(_) => DictType::Command,
-        Dictionary::Url(_) => DictType::Url,
-        Dictionary::File(_, _) => DictType::File,
-    };
     view! {
         <div class="dropdown">
             <select
@@ -521,17 +509,17 @@ fn DictionaryRepresentation(
                 on:input=move |e| {
                     match event_target_value(&e).as_str() {
                         "file" => {
-                            if current_dict_type() != DictType::File {
+                            if !matches!(rdict(), Dictionary::File(_, _)) {
                                 wdict(Dictionary::File(String::new(), DictFileType::StarDict));
                             }
                         }
                         "url" => {
-                            if current_dict_type() != DictType::Url {
+                            if !matches!(rdict(), Dictionary::Url(_)) {
                                 wdict(Dictionary::Url(String::new()));
                             }
                         }
                         "command" => {
-                            if current_dict_type() != DictType::Command {
+                            if !matches!(rdict(), Dictionary::Command(_)) {
                                 wdict(Dictionary::Command(String::new()));
                             }
                         }
@@ -540,13 +528,13 @@ fn DictionaryRepresentation(
                 }
             >
 
-                <option value="file" selected=current_dict_type() == DictType::File>
+                <option value="file" selected=matches!(rdict(), Dictionary::File(_, _))>
                     From file
                 </option>
-                <option value="url" selected=current_dict_type() == DictType::Url>
+                <option value="url" selected=matches!(rdict(), Dictionary::Url(_))>
                     From server
                 </option>
-                <option value="command" selected=current_dict_type() == DictType::Command>
+                <option value="command" selected=matches!(rdict(), Dictionary::Command(_))>
                     From command
                 </option>
             </select>
