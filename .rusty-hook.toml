@@ -1,5 +1,5 @@
 [hooks]
-pre-commit = "cargo check && leptosfmt ./src-ui/src/ && cargo fmt"
+pre-commit = "cargo check && leptosfmt --check ./src-ui/src/ && cargo fmt --check"
 post-commit = "echo commited!"
 
 [logging]

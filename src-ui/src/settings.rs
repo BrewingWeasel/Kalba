@@ -155,7 +155,7 @@ pub fn SettingsChanger(settings: Resource<(), Settings>) -> impl IntoView {
             <DictionaryList dicts=dicts set_dicts=set_dicts/>
 
             <hr/>
-            <WordKnowledgeList templates=templates set_templates=set_templates info=info />
+            <WordKnowledgeList templates=templates set_templates=set_templates info=info/>
 
             <hr/>
             <h2>Styling</h2>
@@ -343,7 +343,7 @@ fn WordKnowledgeList(
 
                                 "x"
                             </button>
-                            <IndividualDeckRepresentation rtempl=rtempl wtempl=wtempl info=info />
+                            <IndividualDeckRepresentation rtempl=rtempl wtempl=wtempl info=info/>
                             <hr/>
                         </div>
                     }
@@ -552,7 +552,6 @@ fn DictionaryRepresentation(
                 let (read_sig, write_sig) = create_signal(url);
                 view! {
                     <div class="labeledinput">
-                        // TODO: make generic function for this
                         <label for="url">Url</label>
                         <input
                             id="url"
@@ -574,10 +573,7 @@ fn DictionaryRepresentation(
             Dictionary::Command(url) => {
                 let (read_sig, write_sig) = create_signal(url);
                 view! {
-                    // TODO: make generic function for this
-
                     <div class="labeledinput">
-                        // TODO: make generic function for this
                         <label for="command">Command</label>
                         <input
                             id="command"
@@ -600,9 +596,7 @@ fn DictionaryRepresentation(
                 let (read_filename, write_filename) = create_signal(filename);
                 let is_stardict = matches!(dict_type, DictFileType::StarDict);
                 view! {
-                    // TODO: make generic function for this
                     <div class="labeledinput">
-                        // TODO: make generic function for this
                         <label for="filename">File location</label>
                         <input
                             id="filename"
@@ -682,7 +676,6 @@ fn DictionaryRepresentation(
                         Some(
                             view! {
                                 <div class="labeledinput">
-                                    // TODO: make generic function for this
                                     <label for="delim">Delimiter</label>
                                     <input
                                         id="delim"
