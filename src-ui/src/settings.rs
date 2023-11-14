@@ -250,34 +250,38 @@ where
     OptionsGetter: Fn() -> Option<Vec<String>> + 'static,
 {
     view! {
-        <div class="dropdown">
-            <label for=name>{desc}</label>
-            <select
-                id=name
-                on:input=move |ev| {
-                    writesig(event_target_value(&ev));
-                }
+        {move || {
+            options()
+                .map(|opts| {
+                    view! {
+                        <div class="dropdown">
+                            <label for=name>{desc}</label>
+                            <select
+                                id=name
+                                on:input=move |ev| {
+                                    writesig(event_target_value(&ev));
+                                }
 
-                prop:value=readsig
-            >
-                {move || {
-                    options()
-                        .map(|v| {
-                            v.iter()
-                                .map(|x| {
-                                    view! {
-                                        <option value=x selected=readsig() == *x>
-                                            {x}
-                                        </option>
-                                    }
-                                        .into_view()
-                                })
-                                .collect_view()
-                        })
-                }}
+                                prop:value=readsig
+                            >
+                                {move || {
+                                    opts.iter()
+                                        .map(|x| {
+                                            view! {
+                                                <option value=x selected=readsig() == *x>
+                                                    {x}
+                                                </option>
+                                            }
+                                                .into_view()
+                                        })
+                                        .collect_view()
+                                }}
 
-            </select>
-        </div>
+                            </select>
+                        </div>
+                    }
+                })
+        }}
     }
 }
 
