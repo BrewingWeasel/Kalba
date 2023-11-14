@@ -55,6 +55,34 @@ pub fn SettingsChanger(settings: Resource<(), Settings>) -> impl IntoView {
     let (dicts, set_dicts) = create_signal(new_dicts);
     let (templates, set_templates) = create_signal(new_templates);
 
+    let save_settings_button = move || {
+        settings.update(|v| {
+            let updater = v.as_mut().unwrap();
+            updater.model = model();
+            updater.deck = deck();
+            updater.note_type = note();
+            updater.note_fields = note_fields();
+            updater.css = if css().is_empty() { None } else { Some(css()) };
+            updater.to_run = if commands().is_empty() {
+                None
+            } else {
+                Some(commands().split('\n').map(|v| v.to_string()).collect())
+            };
+            updater.dicts = dicts().iter().map(|(_, (r, _))| r()).collect();
+            let mut updated_templates = HashMap::new();
+            for (_, (readdeck, _)) in templates() {
+                let deckname = readdeck().0;
+                let mut notes = Vec::new();
+                for (readnote, _) in readdeck().1 {
+                    notes.push(readnote())
+                }
+                updated_templates.insert(deckname, notes.into_iter().collect());
+            }
+            updater.anki_parser = Some(updated_templates);
+        });
+        save_settings(settings().unwrap());
+    };
+
     view! {
         <div class="settings">
             <h2>Grammatical parsing</h2>
@@ -122,39 +150,7 @@ pub fn SettingsChanger(settings: Resource<(), Settings>) -> impl IntoView {
             />
             <hr/>
 
-            <button
-                class="parsebutton"
-                on:click=move |_| {
-                    settings
-                        .update(|v| {
-                            let updater = v.as_mut().unwrap();
-                            updater.model = model();
-                            updater.deck = deck();
-                            updater.note_type = note();
-                            updater.note_fields = note_fields();
-                            updater.css = if css().is_empty() { None } else { Some(css()) };
-                            updater
-                                .to_run = if commands().is_empty() {
-                                None
-                            } else {
-                                Some(commands().split('\n').map(|v| v.to_string()).collect())
-                            };
-                            updater.dicts = dicts().iter().map(|(_, (r, _))| r()).collect();
-                            let mut updated_templates = HashMap::new();
-                            for (_, (readdeck, _)) in templates() {
-                                let deckname = readdeck().0;
-                                let mut notes = Vec::new();
-                                for (readnote, _) in readdeck().1 {
-                                    notes.push(readnote())
-                                }
-                                updated_templates.insert(deckname, notes.into_iter().collect());
-                            }
-                            updater.anki_parser = Some(updated_templates);
-                        });
-                    save_settings(settings().unwrap());
-                }
-            >
-
+            <button class="parsebutton" on:click=move |_| { save_settings_button() }>
                 save
             </button>
         </div>

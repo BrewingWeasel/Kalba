@@ -58,32 +58,27 @@ fn DictionaryRepresentation(
     rdict: ReadSignal<Dictionary>,
     wdict: WriteSignal<Dictionary>,
 ) -> impl IntoView {
+    let update_currently_selected = move |e| match event_target_value(&e).as_str() {
+        "file" => {
+            if !matches!(rdict(), Dictionary::File(_, _)) {
+                wdict(Dictionary::File(String::new(), DictFileType::StarDict));
+            }
+        }
+        "url" => {
+            if !matches!(rdict(), Dictionary::Url(_)) {
+                wdict(Dictionary::Url(String::new()));
+            }
+        }
+        "command" => {
+            if !matches!(rdict(), Dictionary::Command(_)) {
+                wdict(Dictionary::Command(String::new()));
+            }
+        }
+        _ => unreachable!(),
+    };
     view! {
         <div class="dropdown">
-            <select
-                id="dict_type"
-                on:input=move |e| {
-                    match event_target_value(&e).as_str() {
-                        "file" => {
-                            if !matches!(rdict(), Dictionary::File(_, _)) {
-                                wdict(Dictionary::File(String::new(), DictFileType::StarDict));
-                            }
-                        }
-                        "url" => {
-                            if !matches!(rdict(), Dictionary::Url(_)) {
-                                wdict(Dictionary::Url(String::new()));
-                            }
-                        }
-                        "command" => {
-                            if !matches!(rdict(), Dictionary::Command(_)) {
-                                wdict(Dictionary::Command(String::new()));
-                            }
-                        }
-                        _ => unreachable!(),
-                    }
-                }
-            >
-
+            <select id="dict_type" on:input=update_currently_selected>
                 <option value="file" selected=matches!(rdict(), Dictionary::File(_, _))>
                     From file
                 </option>
@@ -141,120 +136,127 @@ fn DictionaryRepresentation(
                     .into_view()
             }
             Dictionary::File(filename, dict_type) => {
-                let (read_filename, write_filename) = create_signal(filename);
-                let is_stardict = matches!(dict_type, DictFileType::StarDict);
+                view! {
+                    <FileDictionaryRepresentation
+                        filename=filename
+                        dict_type=dict_type
+                        wdict=wdict
+                    />
+                }
+            }
+        }}
+    }
+}
+
+#[component]
+fn file_dictionary_representation(
+    filename: String,
+    dict_type: DictFileType,
+    wdict: WriteSignal<Dictionary>,
+) -> impl IntoView {
+    let (read_filename, write_filename) = create_signal(filename);
+    let is_stardict = matches!(dict_type, DictFileType::StarDict);
+
+    let on_filetype_change = move |e| match event_target_value(&e).as_str() {
+        "stardict" => {
+            if !is_stardict {
+                wdict.update(|v| {
+                    if let Dictionary::File(fname, _) = v {
+                        *v = Dictionary::File(fname.to_string(), DictFileType::StarDict);
+                    }
+                })
+            }
+        }
+        "delimiter" => {
+            if is_stardict {
+                wdict.update(|v| {
+                    if let Dictionary::File(fname, _) = v {
+                        *v = Dictionary::File(
+                            fname.to_string(),
+                            DictFileType::TextSplitAt(String::from(":")),
+                        );
+                    }
+                })
+            }
+        }
+        _ => unreachable!(),
+    };
+
+    view! {
+        <div class="labeledinput">
+            <label for="filename">File location</label>
+            <input
+                id="filename"
+                type="text"
+                on:input=move |ev| {
+                    write_filename(event_target_value(&ev));
+                }
+
+                on:change=move |_| {
+                    wdict
+                        .update(|v| {
+                            if let Dictionary::File(_, file_type) = v {
+                                *v = Dictionary::File(read_filename(), file_type.clone());
+                            }
+                        });
+                }
+
+                prop:value=read_filename
+            />
+        </div>
+
+        <button
+            class="selectfile"
+            on:click=move |_| {
+                get_file(write_filename, false);
+            }
+        >
+
+            browse
+        </button>
+        <div class="dropdown">
+            <select id="file_type" on:input=on_filetype_change>
+                <option value="stardict" selected=is_stardict>
+                    Stardict
+                </option>
+                <option value="delimiter" selected=!is_stardict>
+                    Delimiter
+                </option>
+            </select>
+        </div>
+        {if let DictFileType::TextSplitAt(delim) = dict_type {
+            let (read_delim, write_delim) = create_signal(delim);
+            Some(
                 view! {
                     <div class="labeledinput">
-                        <label for="filename">File location</label>
+                        <label for="delim">Delimiter</label>
                         <input
-                            id="filename"
+                            id="delim"
                             type="text"
                             on:input=move |ev| {
-                                write_filename(event_target_value(&ev));
+                                write_delim(event_target_value(&ev));
                             }
 
                             on:change=move |_| {
                                 wdict
                                     .update(|v| {
-                                        if let Dictionary::File(_, file_type) = v {
-                                            *v = Dictionary::File(read_filename(), file_type.clone());
+                                        if let Dictionary::File(file_name, _) = v {
+                                            *v = Dictionary::File(
+                                                file_name.clone(),
+                                                DictFileType::TextSplitAt(read_delim()),
+                                            );
                                         }
                                     });
                             }
 
-                            prop:value=read_filename
+                            prop:value=read_delim
                         />
                     </div>
-
-                    <button
-                        class="selectfile"
-                        on:click=move |_| {
-                            get_file(write_filename, false);
-                        }
-                    >
-
-                        browse
-                    </button>
-                    <div class="dropdown">
-                        <select
-                            id="file_type"
-                            on:input=move |e| {
-                                match event_target_value(&e).as_str() {
-                                    "stardict" => {
-                                        if !is_stardict {
-                                            wdict
-                                                .update(|v| {
-                                                    if let Dictionary::File(fname, _) = v {
-                                                        *v = Dictionary::File(
-                                                            fname.to_string(),
-                                                            DictFileType::StarDict,
-                                                        );
-                                                    }
-                                                })
-                                        }
-                                    }
-                                    "delimiter" => {
-                                        if is_stardict {
-                                            wdict
-                                                .update(|v| {
-                                                    if let Dictionary::File(fname, _) = v {
-                                                        *v = Dictionary::File(
-                                                            fname.to_string(),
-                                                            DictFileType::TextSplitAt(String::from(":")),
-                                                        );
-                                                    }
-                                                })
-                                        }
-                                    }
-                                    _ => unreachable!(),
-                                }
-                            }
-                        >
-
-                            <option value="stardict" selected=is_stardict>
-                                Stardict
-                            </option>
-                            <option value="delimiter" selected=!is_stardict>
-                                Delimiter
-                            </option>
-                        </select>
-                    </div>
-                    {if let DictFileType::TextSplitAt(delim) = dict_type {
-                        let (read_delim, write_delim) = create_signal(delim);
-                        Some(
-                            view! {
-                                <div class="labeledinput">
-                                    <label for="delim">Delimiter</label>
-                                    <input
-                                        id="delim"
-                                        type="text"
-                                        on:input=move |ev| {
-                                            write_delim(event_target_value(&ev));
-                                        }
-
-                                        on:change=move |_| {
-                                            wdict
-                                                .update(|v| {
-                                                    if let Dictionary::File(file_name, _) = v {
-                                                        *v = Dictionary::File(
-                                                            file_name.clone(),
-                                                            DictFileType::TextSplitAt(read_delim()),
-                                                        );
-                                                    }
-                                                });
-                                        }
-
-                                        prop:value=read_delim
-                                    />
-                                </div>
-                            },
-                        )
-                    } else {
-                        None
-                    }}
-                }
-                    .into_view()
-            }
+                },
+            )
+        } else {
+            None
         }}
     }
+    .into_view()
 }

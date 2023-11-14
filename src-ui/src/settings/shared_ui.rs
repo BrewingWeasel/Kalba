@@ -1,3 +1,4 @@
+#![allow(unused_braces)]
 use leptos::*;
 
 #[component]
@@ -36,40 +37,38 @@ where
     Write: FnMut(String) + 'static + Copy,
     OptionsGetter: Fn() -> Option<Vec<String>> + 'static,
 {
-    view! {
-        {move || {
-            options()
-                .map(|opts| {
-                    view! {
-                        <div class="dropdown">
-                            <label for=name>{desc}</label>
-                            <select
-                                id=name
-                                on:input=move |ev| {
-                                    writesig(event_target_value(&ev));
-                                }
+    let get_options = move |opts: &Vec<String>| -> View {
+        opts.iter()
+            .map(|x| {
+                view! {
+                    <option value=x selected=readsig() == *x>
+                        {x}
+                    </option>
+                }
+                .into_view()
+            })
+            .collect_view()
+    };
 
-                                prop:value=readsig
-                            >
-                                {move || {
-                                    opts.iter()
-                                        .map(|x| {
-                                            view! {
-                                                <option value=x selected=readsig() == *x>
-                                                    {x}
-                                                </option>
-                                            }
-                                                .into_view()
-                                        })
-                                        .collect_view()
-                                }}
-
-                            </select>
-                        </div>
+    let get_dropdown = move |opts: Vec<String>| {
+        view! {
+            <div class="dropdown">
+                <label for=name>{desc}</label>
+                <select
+                    id=name
+                    on:input=move |ev| {
+                        writesig(event_target_value(&ev));
                     }
-                })
-        }}
-    }
+
+                    prop:value=readsig
+                >
+                    {move || get_options(&opts)}
+                </select>
+            </div>
+        }
+    };
+
+    view! { {move || { options().map(get_dropdown) }} }
 }
 
 #[component]
