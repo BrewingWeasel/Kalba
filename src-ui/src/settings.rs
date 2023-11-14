@@ -31,6 +31,11 @@ struct AnkiInfo {
     templates: Resource<(), Vec<String>>,
 }
 
+#[derive(Clone, Serialize)]
+struct GetFields {
+    model: String,
+}
+
 fn save_settings(settings: Settings) {
     wasm_bindgen_futures::spawn_local(async move {
         console_log("saving settings");
@@ -46,6 +51,17 @@ async fn get_all_x_names(x: &str) -> Vec<String> {
     let note_or_deck = tauri::invoke::<(), Vec<String>>(&format!("get_all_{x}_names"), &()).await;
     match note_or_deck {
         Err(_) => Vec::new(),
+        Ok(decks) => decks,
+    }
+}
+
+async fn get_template_fields(template: String) -> Vec<String> {
+    let note_or_deck = tauri::invoke("get_note_field_names", &GetFields { model: template }).await;
+    match note_or_deck {
+        Err(e) => {
+            console_error(&format!("{}", e.to_string()));
+            Vec::new()
+        }
         Ok(decks) => decks,
     }
 }
@@ -139,7 +155,7 @@ pub fn SettingsChanger(settings: Resource<(), Settings>) -> impl IntoView {
             <DictionaryList dicts=dicts set_dicts=set_dicts/>
 
             <hr/>
-            <WordKnowledgeList templates=templates set_templates=set_templates info=info/>
+            <WordKnowledgeList templates=templates set_templates=set_templates info=info />
 
             <hr/>
             <h2>Styling</h2>
@@ -221,16 +237,17 @@ fn SimpleTextSetting(
 }
 
 #[component]
-fn SimpleDropDown<Read, Write>(
+fn SimpleDropDown<Read, Write, OptionsGetter>(
     readsig: Read,
     mut writesig: Write,
     name: &'static str,
     desc: &'static str,
-    options: Resource<(), Vec<String>>,
+    options: OptionsGetter,
 ) -> impl IntoView
 where
     Read: Fn() -> String + 'static + Copy,
     Write: FnMut(String) + 'static + Copy,
+    OptionsGetter: Fn() -> Option<Vec<String>> + 'static,
 {
     view! {
         <div class="dropdown">
@@ -244,11 +261,9 @@ where
                 prop:value=readsig
             >
                 {move || {
-                    options
-                        .get()
+                    options()
                         .map(|v| {
-                            v
-                                .iter()
+                            v.iter()
                                 .map(|x| {
                                     view! {
                                         <option value=x selected=readsig() == *x>
@@ -260,6 +275,7 @@ where
                                 .collect_view()
                         })
                 }}
+
             </select>
         </div>
     }
@@ -327,7 +343,7 @@ fn WordKnowledgeList(
 
                                 "x"
                             </button>
-                            <IndividualDeckRepresentation rtempl=rtempl wtempl=wtempl info=info/>
+                            <IndividualDeckRepresentation rtempl=rtempl wtempl=wtempl info=info />
                             <hr/>
                         </div>
                     }
@@ -379,6 +395,7 @@ fn AnkiNoteParsing(
     wnote: WriteSignal<(String, NoteToWordHandling)>,
     info: AnkiInfo,
 ) -> impl IntoView {
+    let fields_resource = create_resource(move || rnote().0, get_template_fields);
     view! {
         <hr/>
         <div class="individualnote">
@@ -389,19 +406,13 @@ fn AnkiNoteParsing(
                 desc="Anki Template"
                 options=info.templates
             />
-
-            <div class="labeledinput">
-                <label for="fieldname">Note field to use</label>
-                <input
-                    id="fieldname"
-                    type="text"
-                    on:input=move |ev| {
-                        wnote.update(|v| v.1.field_to_use = event_target_value(&ev));
-                    }
-
-                    prop:value=move || rnote().1.field_to_use
-                />
-            </div>
+            <SimpleDropDown
+                readsig=move || rnote().1.field_to_use
+                writesig=move |x| wnote.update(|v| v.1.field_to_use = x)
+                name="field"
+                desc="Field"
+                options=fields_resource
+            />
 
             <div class="labeledcheckbox">
                 <label for="firstword">Only take first word/line</label>
@@ -590,13 +601,6 @@ fn DictionaryRepresentation(
                 let is_stardict = matches!(dict_type, DictFileType::StarDict);
                 view! {
                     // TODO: make generic function for this
-
-                    // TODO: make generic function for this
-
-                    // TODO: make generic function for this
-
-                    // TODO: make generic function for this
-
                     <div class="labeledinput">
                         // TODO: make generic function for this
                         <label for="filename">File location</label>
