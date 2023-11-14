@@ -17,7 +17,6 @@ struct GetDefEvent<'a> {
 #[derive(Serialize)]
 pub struct ParsingInfo<'a> {
     pub sent: &'a str,
-    pub model: &'a str,
 }
 
 #[derive(Serialize)]
@@ -36,15 +35,7 @@ async fn export_card(sent: &str, word: &str, defs: &Vec<String>) {
 }
 
 async fn send_sentence(sent: String) -> Vec<Word> {
-    match tauri::invoke(
-        "parse_text",
-        &ParsingInfo {
-            sent: &sent,
-            model: "lt_core_news_sm", // TODO: why is this hardcoded all of a sudden what
-        },
-    )
-    .await
-    {
+    match tauri::invoke("parse_text", &ParsingInfo { sent: &sent }).await {
         Ok(v) => v,
         Err(e) => vec![Word {
             text: e.to_string(),
