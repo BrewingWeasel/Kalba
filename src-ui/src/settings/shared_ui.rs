@@ -2,12 +2,16 @@
 use leptos::*;
 
 #[component]
-pub fn SimpleTextSetting(
-    readsig: ReadSignal<String>,
-    writesig: WriteSignal<String>,
+pub fn SimpleTextSetting<Read, Write>(
+    readsig: Read,
+    mut writesig: Write,
     name: &'static str,
     desc: &'static str,
-) -> impl IntoView {
+) -> impl IntoView
+where
+    Read: Fn() -> String + 'static + Copy,
+    Write: FnMut(String) + 'static + Copy,
+{
     view! {
         <div class="labeledinput">
             <label for=name>{desc}</label>

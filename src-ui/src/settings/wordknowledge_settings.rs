@@ -31,6 +31,24 @@ pub fn WordKnowledgeList(
             .update(move |templs| templs.push((next_templ_id, create_signal(new_template))));
         next_templ_id += 1;
     };
+    let each_template = move |(id, (rtempl, wtempl))| {
+        view! {
+            <div class="deck_templates">
+                <button
+                    class="remove"
+                    on:click=move |_| {
+                        set_templates
+                            .update(|templ| { templ.retain(|(templ_id, _)| templ_id != &id) });
+                    }
+                >
+
+                    "x"
+                </button>
+                <IndividualDeckRepresentation rtempl=rtempl wtempl=wtempl info=info/>
+                <hr/>
+            </div>
+        }
+    };
     view! {
         <div class="dicts">
             <h2 class="dicts_title">Word Knowledge</h2>
@@ -39,30 +57,7 @@ pub fn WordKnowledgeList(
             </button>
         </div>
         <div class="all_templates">
-            <For
-                each=templates
-                key=|templ| templ.0
-                children=move |(id, (rtempl, wtempl))| {
-                    view! {
-                        <div class="deck_templates">
-                            <button
-                                class="remove"
-                                on:click=move |_| {
-                                    set_templates
-                                        .update(|templ| {
-                                            templ.retain(|(templ_id, _)| templ_id != &id)
-                                        });
-                                }
-                            >
-
-                                "x"
-                            </button>
-                            <IndividualDeckRepresentation rtempl=rtempl wtempl=wtempl info=info/>
-                            <hr/>
-                        </div>
-                    }
-                }
-            />
+            <For each=templates key=|templ| templ.0 children=each_template/>
 
         </div>
     }
