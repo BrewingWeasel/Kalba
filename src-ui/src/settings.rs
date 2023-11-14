@@ -59,7 +59,7 @@ async fn get_template_fields(template: String) -> Vec<String> {
     let note_or_deck = tauri::invoke("get_note_field_names", &GetFields { model: template }).await;
     match note_or_deck {
         Err(e) => {
-            console_error(&format!("{}", e.to_string()));
+            console_error(&format!("{}", e));
             Vec::new()
         }
         Ok(decks) => decks,
