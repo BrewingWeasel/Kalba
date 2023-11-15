@@ -1,6 +1,6 @@
 use select::{
     document::Document,
-    predicate::{Attr, Name, Predicate},
+    predicate::{Attr, Class, Name, Predicate},
 };
 use shared::*;
 use std::{error::Error, fs};
@@ -78,7 +78,13 @@ async fn get_def_wiktionary(lemma: &str, language: &str) -> Result<String, Box<d
             if cur_node.name() == Some("h2") {
                 break;
             }
-            if cur_node.as_comment().is_none() && cur_node.attr("class") != Some("mw-editsection") {
+            if cur_node.as_comment().is_none()
+            // TODO: this gets rid of all the labels which is maybe fine?
+                && cur_node
+                    .find(Class("mw-editsection").or(Class("mw-editsection-bracket")))
+                    .next()
+                    .is_none()
+            {
                 def.push_str(&cur_node.html());
             }
             node = cur_node;
