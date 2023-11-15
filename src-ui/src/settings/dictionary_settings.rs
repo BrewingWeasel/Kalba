@@ -93,6 +93,9 @@ fn DictionaryRepresentation(
                 <option value="command" selected=matches!(rdict(), Dictionary::Command(_))>
                     From command
                 </option>
+                <option value="wiktionary" selected=matches!(rdict(), Dictionary::Wiktionary(_))>
+                    From wiktionary
+                </option>
             </select>
         </div>
         {move || match rdict() {
