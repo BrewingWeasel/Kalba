@@ -1,3 +1,7 @@
+use select::{
+    document::Document,
+    predicate::{Attr, Name, Predicate},
+};
 use shared::*;
 use std::{error::Error, fs};
 use tauri::State;
@@ -51,6 +55,38 @@ async fn get_def_command(lemma: &str, cmd: &str) -> Result<String, Box<dyn Error
     Ok(String::from_utf8(output.stdout)?)
 }
 
+fn to_title(language: &str) -> String {
+    let mut c = language.chars();
+    match c.next() {
+        None => String::new(),
+        Some(f) => f.to_uppercase().collect::<String>() + c.as_str().to_lowercase().as_str(),
+    }
+}
+
+async fn get_def_wiktionary(lemma: &str, language: &str) -> Result<String, Box<dyn Error>> {
+    let language = to_title(language);
+    let text = reqwest::get(format!("https://wiktionary.org/wiki/{lemma}"))
+        .await?
+        .text()
+        .await?;
+    let doc = Document::from_read(text.as_bytes())?;
+
+    let mut def = String::new();
+    for node in doc.find(Name("h2").descendant(Attr("id", language.as_str()))) {
+        let mut node = node.parent().unwrap();
+        while let Some(cur_node) = node.next() {
+            if cur_node.name() == Some("h2") {
+                break;
+            }
+            if cur_node.as_comment().is_none() && cur_node.attr("class") != Some("mw-editsection") {
+                def.push_str(&cur_node.html());
+            }
+            node = cur_node;
+        }
+    }
+    Ok(format!("<div>'{def}</div>"))
+}
+
 #[tauri::command]
 pub async fn get_defs(
     state: State<'_, SakinyjeState>,
@@ -75,6 +111,7 @@ async fn get_def(dict: &Dictionary, lemma: &str) -> Result<String, Box<dyn Error
         Dictionary::File(f, dict_type) => get_def_from_file(lemma, f, dict_type),
         Dictionary::Url(url) => get_def_url(lemma, url).await,
         Dictionary::Command(cmd) => get_def_command(lemma, cmd).await,
+        Dictionary::Wiktionary(lang) => get_def_wiktionary(lemma, lang).await,
     }
 }
 

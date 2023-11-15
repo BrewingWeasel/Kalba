@@ -74,6 +74,11 @@ fn DictionaryRepresentation(
                 wdict(Dictionary::Command(String::new()));
             }
         }
+        "wiktionary" => {
+            if !matches!(rdict(), Dictionary::Wiktionary(_)) {
+                wdict(Dictionary::Wiktionary(String::new()));
+            }
+        }
         _ => unreachable!(),
     };
     view! {
@@ -127,6 +132,28 @@ fn DictionaryRepresentation(
 
                             on:change=move |_| {
                                 wdict.update(|v| { *v = Dictionary::Command(read_sig()) })
+                            }
+
+                            prop:value=read_sig
+                        />
+                    </div>
+                }
+                    .into_view()
+            }
+            Dictionary::Wiktionary(url) => {
+                let (read_sig, write_sig) = create_signal(url);
+                view! {
+                    <div class="labeledinput">
+                        <label for="wiktionary">Language</label>
+                        <input
+                            id="wiktionary"
+                            type="text"
+                            on:input=move |ev| {
+                                write_sig(event_target_value(&ev));
+                            }
+
+                            on:change=move |_| {
+                                wdict.update(|v| { *v = Dictionary::Wiktionary(read_sig()) })
                             }
 
                             prop:value=read_sig
