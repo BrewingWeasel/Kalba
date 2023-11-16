@@ -1,4 +1,4 @@
-use pyo3::{exceptions::PyEnvironmentError, prelude::*};
+use pyo3::prelude::*;
 use std::{collections::HashMap, str::FromStr};
 
 pub struct Token {
@@ -54,19 +54,29 @@ impl FromStr for PartOfSpeech {
     }
 }
 
-pub fn get_spacy_info(sent: &str, model: &str) -> Result<Vec<Token>, String> {
+pub fn get_spacy_model(model: &str) -> Result<Py<PyAny>, String> {
+    Python::with_gil(|py| -> PyResult<Py<PyAny>> {
+        let spacy = PyModule::import(py, "spacy")?;
+        let v = spacy.getattr("load")?.call1((model,))?;
+        Ok(v.to_object(py))
+    })
+    .map_err(|e| e.to_string())
+}
+
+pub fn get_spacy_info(sent: &str, morphologizer: &PyObject) -> Result<Vec<Token>, String> {
     Python::with_gil(|py| -> PyResult<Vec<Token>> {
         let mut words = Vec::new();
-        let spacy = PyModule::import(py, "spacy")?;
-        let morphologizer = match spacy.getattr("load")?.call1((model,)) {
-            Ok(v) => v,
-            Err(_) => {
-                return Err(PyEnvironmentError::new_err(format!(
-                    "Unable to load {model}"
-                )))
-            }
-        };
-        let total: Vec<PyObject> = morphologizer.call1((sent,))?.extract()?;
+        // let spacy = PyModule::import(py, "spacy")?;
+        // let morphologizerr = match spacy.getattr("load")?.call1((model,)) {
+        //     Ok(v) => v,
+        //     Err(_) => {
+        //         return Err(PyEnvironmentError::new_err(format!(
+        //             "Unable to load {model}"
+        //         )))
+        //     }
+        // };
+
+        let total: Vec<PyObject> = morphologizer.call1(py, (sent,))?.extract(py)?;
         for token in total {
             let text: String = token.getattr(py, "text")?.extract(py)?;
             let pos_str: String = token.getattr(py, "pos_")?.extract(py)?;

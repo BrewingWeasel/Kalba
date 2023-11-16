@@ -10,7 +10,7 @@ pub async fn parse_text(sent: &str, state: State<'_, SakinyjeState>) -> Result<V
     if sent.is_empty() {
         return Ok(words);
     }
-    let parsed_words = get_spacy_info(sent, &state.settings.model)?;
+    let parsed_words = get_spacy_info(sent, &state.model)?;
     for word in parsed_words {
         let clickable = !matches!(
             word.pos,

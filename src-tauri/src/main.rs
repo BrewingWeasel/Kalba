@@ -10,8 +10,10 @@ use crate::{
 use ankiconnect::get_anki_card_statuses;
 use chrono::{DateTime, Utc};
 use commands::run_command;
+use pyo3::PyObject;
 use serde::{Deserialize, Serialize};
 use shared::{SakinyjeResult, Settings};
+use spacy_parsing::get_spacy_model;
 use std::{collections::HashMap, fs};
 use tauri::{async_runtime::block_on, GlobalWindowEvent, Manager, State, WindowEvent};
 
@@ -26,6 +28,7 @@ struct SakinyjeState(tauri::async_runtime::Mutex<SharedInfo>);
 struct SharedInfo {
     settings: Settings,
     to_save: ToSave,
+    model: PyObject,
 }
 
 #[derive(Serialize, Deserialize, Default)]
@@ -41,7 +44,7 @@ impl Default for SharedInfo {
         let config_file = dirs::config_dir().unwrap().join("sakinyje.toml");
 
         let mut to_save: ToSave = fs::read_to_string(saved_state_file)
-            .map(|v| toml::from_str(&v).unwrap())
+            .map(|v| toml::from_str(&v).unwrap_or_default())
             .unwrap_or_default();
 
         let settings: Settings = fs::read_to_string(config_file)
@@ -74,8 +77,14 @@ impl Default for SharedInfo {
             }
         }
 
+        let model = get_spacy_model(&settings.model).unwrap(); // TODO: model
+
         to_save.last_launched = new_time;
-        Self { to_save, settings }
+        Self {
+            to_save,
+            settings,
+            model,
+        }
     }
 }
 

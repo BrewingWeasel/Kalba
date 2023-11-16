@@ -102,6 +102,7 @@ version = "0.1.0"
 dependencies = [
  "chrono",
  "dirs",
+ "pyo3",
  "reqwest",
  "serde",
  "serde_json",
