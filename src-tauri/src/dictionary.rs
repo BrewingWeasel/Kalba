@@ -63,7 +63,11 @@ fn to_title(language: &str) -> String {
     }
 }
 
-async fn get_def_wiktionary(lemma: &str, language: &str) -> Result<String, Box<dyn Error>> {
+async fn get_def_wiktionary(
+    lemma: &str,
+    language: &str,
+    ignore_morph: bool,
+) -> Result<String, Box<dyn Error>> {
     let language = to_title(language);
     let text = reqwest::get(format!("https://wiktionary.org/wiki/{lemma}"))
         .await?
@@ -85,6 +89,10 @@ async fn get_def_wiktionary(lemma: &str, language: &str) -> Result<String, Box<d
                     .next()
                     .is_none()
             {
+                if cur_node.is(Class("NavFrame")) && ignore_morph {
+                    node = cur_node;
+                    continue;
+                }
                 def.push_str(&cur_node.html());
             }
             node = cur_node;
@@ -117,7 +125,9 @@ async fn get_def(dict: &Dictionary, lemma: &str) -> Result<String, Box<dyn Error
         Dictionary::File(f, dict_type) => get_def_from_file(lemma, f, dict_type),
         Dictionary::Url(url) => get_def_url(lemma, url).await,
         Dictionary::Command(cmd) => get_def_command(lemma, cmd).await,
-        Dictionary::Wiktionary(lang) => get_def_wiktionary(lemma, lang).await,
+        Dictionary::Wiktionary(lang, ignore_morph) => {
+            get_def_wiktionary(lemma, lang, *ignore_morph).await
+        }
     }
 }
 

@@ -75,8 +75,8 @@ fn DictionaryRepresentation(
             }
         }
         "wiktionary" => {
-            if !matches!(rdict(), Dictionary::Wiktionary(_)) {
-                wdict(Dictionary::Wiktionary(String::new()));
+            if !matches!(rdict(), Dictionary::Wiktionary(_, _)) {
+                wdict(Dictionary::Wiktionary(String::new(), false));
             }
         }
         _ => unreachable!(),
@@ -93,7 +93,7 @@ fn DictionaryRepresentation(
                 <option value="command" selected=matches!(rdict(), Dictionary::Command(_))>
                     From command
                 </option>
-                <option value="wiktionary" selected=matches!(rdict(), Dictionary::Wiktionary(_))>
+                <option value="wiktionary" selected=matches!(rdict(), Dictionary::Wiktionary(_, _))>
                     From wiktionary
                 </option>
             </select>
@@ -143,8 +143,8 @@ fn DictionaryRepresentation(
                 }
                     .into_view()
             }
-            Dictionary::Wiktionary(url) => {
-                let (read_sig, write_sig) = create_signal(url);
+            Dictionary::Wiktionary(url, _) => {
+                let (read_url, write_url) = create_signal(url);
                 view! {
                     <div class="labeledinput">
                         <label for="wiktionary">Language</label>
@@ -152,14 +152,19 @@ fn DictionaryRepresentation(
                             id="wiktionary"
                             type="text"
                             on:input=move |ev| {
-                                write_sig(event_target_value(&ev));
+                                write_url(event_target_value(&ev));
                             }
 
                             on:change=move |_| {
-                                wdict.update(|v| { *v = Dictionary::Wiktionary(read_sig()) })
+                                wdict
+                                    .update(|v| {
+                                        if let Dictionary::Wiktionary(_, hide_morph) = v {
+                                            *v = Dictionary::Wiktionary(read_url(), *hide_morph);
+                                        }
+                                    })
                             }
 
-                            prop:value=read_sig
+                            prop:value=read_url
                         />
                     </div>
                 }
@@ -177,6 +182,30 @@ fn DictionaryRepresentation(
         }}
     }
 }
+
+// <div class="labeledcheckbox">
+// <label for="hidemorph">Hide morphology</label>
+// <input
+// id="hidemorph"
+// type="checkbox"
+// on:change=move |ev| {
+// // write_showmorph(event_target_checked(&ev));
+//
+// // FIX: writing breaks it
+// if let Dictionary::Wiktionary(lang, _) = rdict() {
+// console_log("got here");
+// wdict(Dictionary::Wiktionary(lang, event_target_checked(&ev)));
+// console_log("anndd got here");
+// } else {
+// console_log("didnt got here");
+// }
+// // write_showmorph(event_target_checked(&ev));
+// // wdict.update(move |v| if let Dictionary::Wiktionary(lang, _) = v { *v = Dictionary::Wiktionary(lang.to_owned(), read_showmorph()) });
+// }
+//
+// prop:value=move || if let Dictionary::Wiktionary(_, hide_morph) = rdict() { hide_morph } else { false }
+// />
+// </div>
 
 #[component]
 fn file_dictionary_representation(

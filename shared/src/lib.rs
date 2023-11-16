@@ -23,7 +23,7 @@ pub enum Dictionary {
     File(String, DictFileType),
     Url(String),
     Command(String),
-    Wiktionary(String),
+    Wiktionary(String, bool),
 }
 
 #[derive(Serialize, Deserialize, PartialEq, Eq, Clone, Debug)]
