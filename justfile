@@ -71,12 +71,29 @@ pip-command := if `command -v pip` != "" {
 
 install_deps_command := "apt-get install -y libgtk-3-dev libwebkit2gtk-4.0-dev libayatana-appindicator3-dev librsvg2-dev glibc-source libc6 python3-dev"
 
-build: (_install "cargo-tauri" "cargo install tauri-cli")  (_cargoinstall "trunk") 
+_install-spacy:
+  #!/usr/bin/env sh
+  echo "installing spacy"
+  if command -v pip; then
+    pipcommand="pip"
+  else if command -v pip3; then
+    pipcommand="pip3" 
+  else if command -v python; then
+    pipcommand="python -m pip"
+  else if command -v python3; then
+    pipcommand="python3 -m pip"
+  else
+    echo "failed to find pip"
+    exit 1
+  fi
+  $pipcommand install --upgrade spacy
+
+
+
+build: (_install "cargo-tauri" "cargo install tauri-cli")  (_cargoinstall "trunk") (_install-spacy)
   #!/usr/bin/env sh
   echo "Adding wasm target"
   rustup target add wasm32-unknown-unknown
-  echo "installing spacy"
-  {{pip-command}} install spacy --upgrade
 
   if command -v apt-get; then
     echo "you can install all external dependencies with the following command:"
