@@ -19,7 +19,7 @@ jobs:
       uses: extractions/setup-just@v1
 
     - name: setup
-    - run: |
+      run: |
        sudo apt-get update
        sudo apt-get install -y libgtk-3-dev libwebkit2gtk-4.0-dev librsvg2-dev glibc-source libc6
 
