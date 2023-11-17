@@ -23,4 +23,4 @@ fix: && format
 test:
   cargo test
 
-pre-commit: test lint
+check: test lint

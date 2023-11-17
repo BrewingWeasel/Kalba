@@ -15,18 +15,21 @@ jobs:
     runs-on: ubuntu-latest
 
     steps:
+    - uses: extractions/setup-just@v1
+
+    - name: setup
     - run: |
        sudo apt-get update
        sudo apt-get install -y libgtk-3-dev libwebkit2gtk-4.0-dev librsvg2-dev glibc-source libc6
+
     - name: Rust setup
       uses: dtolnay/rust-toolchain@nightly
       with:
         components: rustfmt, clippy
+
+    - name: Install leptosfmt
+      run: cargo install leptosfmt
       
-    - uses: actions/checkout@v3
-    - name: Run lints
-      run: | 
-        cargo clippy -- -D warnings
-        cargo fmt -- --check
-    - name: Run tests
-      run: cargo test --verbose
+    - name: check
+      uses: actions/checkout@v3
+      run: just check

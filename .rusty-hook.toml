@@ -1,5 +1,5 @@
 [hooks]
-pre-commit = "just pre-commit"
+pre-commit = "just check"
 post-commit = "echo commited!"
 
 [logging]
