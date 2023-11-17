@@ -57,18 +57,6 @@ _cargoinstall program: (_install program replace("cargo install program", "progr
 setup-dev: (_cargoinstall "leptosfmt") (_cargoinstall "trunk") (_install "cargo-tauri" "cargo install tauri-cli") (_install "cargo-clippy" "rustup component add clippy")
 # TODO: probably lots more that I'm forgetting
 
-pip-command := if `command -v pip` != "" { 
-  "pip" 
-} else if `command -v pip3` != "" { 
-  "pip3" 
-} else if `command -v python` != "" {
-  "python -m pip"
-} else if `command -v python3` != "" {
-  "python3 -m pip"
-} else {
-  error("unable to find pip or python")
-}
-
 install_deps_command := "apt-get install -y libgtk-3-dev libwebkit2gtk-4.0-dev libayatana-appindicator3-dev librsvg2-dev glibc-source libc6 python3-dev"
 
 _install-spacy:
@@ -76,18 +64,17 @@ _install-spacy:
   echo "installing spacy"
   if command -v pip; then
     pipcommand="pip"
-  else if command -v pip3; then
+  elif command -v pip3; then
     pipcommand="pip3" 
-  else if command -v python; then
+  elif command -v python; then
     pipcommand="python -m pip"
-  else if command -v python3; then
+  elif command -v python3; then
     pipcommand="python3 -m pip"
   else
     echo "failed to find pip"
     exit 1
   fi
   $pipcommand install --upgrade spacy
-
 
 
 build: (_install "cargo-tauri" "cargo install tauri-cli")  (_cargoinstall "trunk") (_install-spacy)
