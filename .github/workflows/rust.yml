@@ -15,7 +15,8 @@ jobs:
     runs-on: ubuntu-latest
 
     steps:
-    - uses: extractions/setup-just@v1
+    - name: install just
+      uses: extractions/setup-just@v1
 
     - name: setup
     - run: |
@@ -29,7 +30,11 @@ jobs:
 
     - name: Install leptosfmt
       run: cargo install leptosfmt
-      
-    - name: check
-      uses: actions/checkout@v3
-      run: just check
+
+    - uses: actions/checkout@v3
+
+    - name: Runs tests
+      run: just test
+
+    - name: Run lints
+      run: just test
