@@ -74,7 +74,11 @@ _install-spacy:
     echo "failed to find pip"
     exit 1
   fi
-  $pipcommand install --upgrade spacy
+  if ! $pipcommand install --upgrade spacy; then
+    echo "unable to install spacy; make sure that you have pip installed"
+    echo "see https://packaging.python.org/en/latest/guides/installing-using-linux-tools/#installing-pip-setuptools-wheel-with-linux-package-managers"
+    exit 1
+  fi
 
 
 build: (_install "cargo-tauri" "cargo install tauri-cli")  (_cargoinstall "trunk") (_install-spacy)
