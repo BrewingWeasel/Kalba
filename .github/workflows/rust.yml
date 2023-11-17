@@ -31,7 +31,8 @@ jobs:
     - name: Install leptosfmt
       run: cargo install leptosfmt
 
-    - uses: actions/checkout@v3
+    - name: Checkout source code
+      uses: actions/checkout@v3
 
     - name: Runs tests
       run: just test
