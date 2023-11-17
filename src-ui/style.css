@@ -306,3 +306,23 @@ select {
 .rating-4 {
   color: white;
 }
+
+.ratingchanger {
+  display: flex;
+  justify-content: center;
+}
+
+.ratingbutton {
+  background-color: #393552;
+  font-size: 18px;
+  border: none;
+  text-align: center;
+  text-decoration: none;
+  transition-duration: .2s;
+  padding: 7px 20px;
+  margin: 5px;
+  border-radius: 6px;
+  border-width: 0;
+  display: flex;
+  justify-content: center;
+}

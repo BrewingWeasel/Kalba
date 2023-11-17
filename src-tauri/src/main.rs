@@ -106,6 +106,7 @@ fn main() {
             get_all_deck_names,
             get_all_note_names,
             get_note_field_names,
+            update_word_knowledge,
         ])
         .on_window_event(handle_window_event)
         .run(tauri::generate_context!())
@@ -144,4 +145,17 @@ async fn write_settings(state: State<'_, SakinyjeState>, settings: Settings) -> 
     state.settings = settings;
 
     fs::write(config_file, conts).map_err(|e| e.to_string())
+}
+
+#[tauri::command]
+async fn update_word_knowledge(
+    state: State<'_, SakinyjeState>,
+    word: &str,
+    rating: u8,
+) -> Result<(), String> {
+    let mut state = state.0.lock().await;
+    let word_knowledge = state.to_save.words.get_mut(word).unwrap();
+    word_knowledge.rating = rating;
+    word_knowledge.can_modify = false;
+    Ok(())
 }

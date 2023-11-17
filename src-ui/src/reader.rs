@@ -20,6 +20,12 @@ pub struct ParsingInfo<'a> {
 }
 
 #[derive(Serialize)]
+pub struct UpdateWordKnowledge<'a> {
+    pub word: &'a str,
+    pub rating: u8,
+}
+
+#[derive(Serialize)]
 pub struct AddToAnki<'a> {
     pub sent: &'a str,
     pub word: &'a str,
@@ -45,6 +51,18 @@ async fn send_sentence(sent: String) -> Vec<Word> {
             clickable: false,
         }],
     }
+}
+
+async fn update_word_knowledge(word: &str, level: u8) {
+    tauri::invoke::<UpdateWordKnowledge, ()>(
+        "update_word_knowledge",
+        &UpdateWordKnowledge {
+            word,
+            rating: level,
+        },
+    )
+    .await
+    .unwrap();
 }
 
 async fn get_definition<'a>(
@@ -160,6 +178,38 @@ pub fn ReaderView() -> impl IntoView {
                                 .collect_view()
                         }}
 
+                    </div>
+                    <div class="ratingchanger">
+                        {(0..5)
+                            .map(|level| {
+                                view! {
+                                    <button
+                                        on:click=move |_| {
+                                            spawn_local(async move {
+                                                update_word_knowledge(
+                                                        &conts().unwrap()[selected_word().unwrap()].lemma,
+                                                        level,
+                                                    )
+                                                    .await;
+                                                conts
+                                                    .update(|v| {
+                                                        v
+                                                            .as_mut()
+                                                            .unwrap()
+                                                            .get_mut(selected_word().unwrap())
+                                                            .unwrap()
+                                                            .rating = level;
+                                                    });
+                                            });
+                                        }
+
+                                        class=format!("ratingbutton rating-{level}")
+                                    >
+                                        {level + 1}
+                                    </button>
+                                }
+                            })
+                            .collect_view()}
                     </div>
                     <hr/>
                 }
