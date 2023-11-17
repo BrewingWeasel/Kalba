@@ -56,3 +56,37 @@ _cargoinstall program: (_install program replace("cargo install program", "progr
 # Set up development related tools
 setup-dev: (_cargoinstall "leptosfmt") (_cargoinstall "trunk") (_install "cargo-tauri" "cargo install tauri-cli") (_install "cargo-clippy" "rustup component add clippy")
 # TODO: probably lots more that I'm forgetting
+
+pip-command := if `command -v pip` != "" { 
+  "pip" 
+} else if `command -v pip3` != "" { 
+  "pip3" 
+} else if `command -v python` != "" {
+  "python -m pip"
+} else if `command -v python3` != "" {
+  "python3 -m pip"
+} else {
+  error("unable to find pip or python")
+}
+
+install_deps_command := "apt-get install -y libgtk-3-dev libwebkit2gtk-4.0-dev libayatana-appindicator3-dev librsvg2-dev glibc-source libc6 python3-dev"
+
+build: (_install "cargo-tauri" "cargo install tauri-cli")  (_cargoinstall "trunk") 
+  #!/usr/bin/env sh
+  echo "Adding wasm target"
+  rustup target add wasm32-unknown-unknown
+  echo "installing spacy"
+  {{pip-command}} install spacy --upgrade
+
+  if command -v apt-get; then
+    echo "you can install all external dependencies with the following command:"
+    echo "{{install_deps_command}}"
+    echo "do you want to run it? (y/N)"
+    read answer
+    if [ "$answer" = "y"]; then 
+      {{install_deps_command}}
+    fi
+  fi
+
+  cargo tauri build
+  echo "installed successfully"
