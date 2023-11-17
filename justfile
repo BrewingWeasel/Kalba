@@ -9,7 +9,7 @@ lint:
 format:
   leptosfmt ./src-ui/src
   cargo fmt
-  @# TODO: some sort of css formatting (prettier?)
+# TODO: some sort of css formatting (prettier?)
 
 # Fix code not passing pre-commit hook (uses --allow-dirty + --allow-staged on clippy)
 force-fix: && format
@@ -23,7 +23,25 @@ fix: && format
 test:
   cargo test
 
-check: test lint
+rust-check: test lint
+
+ci-check:
+  actionlint
+
+check: 
+  rust-check
+
+pre-commit:
+  #!/usr/bin/env sh
+  newfiles=$(git status --porcelain | awk '{ print $2 }')
+  if (echo $newfiles | grep ".rs" ); then
+    just rust-check
+  fi
+  if (echo $newfiles | grep ".github" ); then
+    just ci-check
+  fi
+# TODO: do this with other languages
+# TODO: make this only do stuff for the specific rust directories modified
 
 _install program command:
   #!/usr/bin/env sh
