@@ -45,7 +45,7 @@ pre-commit:
 
 _install program command:
   #!/usr/bin/env sh
-  if command -v {{program}} &> /dev/null; then
+  if command -v {{program}} 2> /dev/null; then
     echo "{{program}} is already installed"
   else
     {{command}}
