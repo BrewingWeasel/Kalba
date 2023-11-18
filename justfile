@@ -74,9 +74,14 @@ _install-spacy:
     echo "failed to find pip"
     exit 1
   fi
-  if ! $pipcommand install --upgrade spacy; then
+  if ! ($pipcommand list | grep "spacy" ) && ! $pipcommand install --upgrade spacy; then
     echo "unable to install spacy; make sure that you have pip installed"
     echo "see https://packaging.python.org/en/latest/guides/installing-using-linux-tools/#installing-pip-setuptools-wheel-with-linux-package-managers"
+    printf "do you want to try again but by using the flag --break-system-packages (doesn't use a venv, could potentially be problematic)? (y/N): "
+    read answer
+    if [ "$answer" = "y" ]; then 
+      $pipcommand install --upgrade spacy --break-system-packages
+    fi
     exit 1
   fi
 
@@ -89,9 +94,9 @@ build: (_install "cargo-tauri" "cargo install tauri-cli")  (_cargoinstall "trunk
   if command -v apt-get; then
     echo "you can install all external dependencies with the following command:"
     echo "{{install_deps_command}}"
-    echo "do you want to run it? (y/N)"
+    printf "do you want to run it? (y/N): "
     read answer
-    if [ "$answer" = "y"]; then 
+    if [ "$answer" = "y" ]; then 
       {{install_deps_command}}
     fi
   fi
