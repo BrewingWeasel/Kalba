@@ -58,6 +58,7 @@ pub struct NoteToWordHandling {
     pub field_to_use: String,
     pub remove_everything_in_parens: bool,
     pub only_first_word_or_line: bool,
+    pub tags_wanted: Vec<String>,
 }
 
 #[derive(Deserialize, Serialize, Clone)]

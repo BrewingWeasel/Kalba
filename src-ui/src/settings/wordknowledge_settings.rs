@@ -1,7 +1,10 @@
 use leptos::*;
 use shared::NoteToWordHandling;
 
-use crate::settings::{get_template_fields, shared_ui::SimpleDropDown};
+use crate::settings::{
+    get_template_fields,
+    shared_ui::{SimpleDropDown, SimpleTextSetting},
+};
 
 type AnkiDeck = (
     String,
@@ -74,6 +77,7 @@ fn IndividualDeckRepresentation(
             field_to_use: String::new(),
             only_first_word_or_line: false,
             remove_everything_in_parens: false,
+            tags_wanted: Vec::new(),
         };
         wtempl.update(move |templs| templs.1.push(create_signal((String::new(), new_template))));
     };
@@ -152,6 +156,13 @@ fn AnkiNoteParsing(
                     prop:value=move || rnote().1.remove_everything_in_parens
                 />
             </div>
+
+            <SimpleTextSetting
+                readsig=move || rnote().1.tags_wanted.join(" ")
+                writesig=move |inp| wnote.update(|v| v.1.tags_wanted = inp.split_whitespace().map(|t| t.to_string()).collect())
+                name="tags"
+                desc="Tags required"
+            />
         </div>
     }
 }

@@ -29,15 +29,27 @@ pub async fn get_anki_card_statuses(
     original_words: &mut HashMap<String, WordInfo>,
     days_passed: i64,
 ) -> Result<(), String> {
-    let find_cards_query = format!("deck:{deck} rated:{days_passed}"); // TODO: only check cards reviewed since last
-                                                                       // check
+    println!("getting anki card statuses");
+    let find_cards_query = format!("\"deck:{deck}\""); // TODO: only check cards reviewed since last
+                                                       // check with rated:{days_passed} but only when new decks haven't been added
 
     let cards = get_card_or_note_vals("findCards", json!({ "query": find_cards_query })).await?;
     let intervals = get_card_or_note_vals("getIntervals", json!({ "cards": &cards })).await?;
     let notes = get_card_or_note_vals("cardsToNotes", json!({ "cards": &cards })).await?;
 
-    let words = get_words_from_notes(notes, note_handling).await?;
-    for (word, interval) in words.into_iter().zip(intervals) {
+    let res = generic_anki_connect_action("notesInfo", json!({ "notes": notes })).await;
+    let notes_info = Into::<Result<Vec<NoteInfo>, String>>::into(
+        res.json::<AnkiResult<Vec<NoteInfo>>>().await.unwrap(),
+    )?;
+
+    //let words = get_words_from_notes(notes, note_handling).await?;
+    for ((note, interval), note_info) in notes.into_iter().zip(intervals).zip(notes_info) {
+        let Ok(Some(word)) = get_word_from_note(note, note_info, note_handling).await else {
+            continue;
+        };
+
+        println!("word: {} interval: {interval}", word);
+
         let rating = if interval <= 1 {
             0
         } else if interval <= 4 {
@@ -103,40 +115,41 @@ async fn generic_anki_connect_action(action: &str, data: Value) -> Response {
         .unwrap()
 }
 
-async fn get_card_or_note_vals(action: &str, data: Value) -> Result<Vec<usize>, String> {
+async fn get_card_or_note_vals(action: &str, data: Value) -> Result<Vec<isize>, String> {
     let res = generic_anki_connect_action(action, data).await;
-    res.json::<AnkiResult<Vec<usize>>>().await.unwrap().into()
+    res.json::<AnkiResult<Vec<isize>>>().await.unwrap().into()
 }
 
-async fn get_words_from_notes(
-    notes: Vec<usize>,
+async fn get_word_from_note(
+    note_id: isize,
+    note: NoteInfo,
     templates: &HashMap<String, NoteToWordHandling>,
-) -> Result<Vec<String>, String> {
-    let res = generic_anki_connect_action("notesInfo", json!({ "notes": notes })).await;
-    let notes = Into::<Result<Vec<NoteInfo>, String>>::into(
-        res.json::<AnkiResult<Vec<NoteInfo>>>().await.unwrap(),
-    )?;
+) -> Result<Option<String>, String> {
+    if let Some(handler) = templates.get(&note.model_name) {
+        let res = generic_anki_connect_action("getNoteTags", json!({ "note": &note_id })).await;
+        let tags: Result<Vec<String>, String> =
+            res.json::<AnkiResult<Vec<String>>>().await.unwrap().into();
 
-    let mut words = Vec::new();
-
-    for note in notes {
-        if let Some(handler) = templates.get(&note.model_name) {
-            let selected_field = note
-                .fields
-                .into_iter()
-                .find(|x| x.0 == handler.field_to_use)
-                .unwrap()
-                .1
-                .value;
-            words.push(get_word_from_field(selected_field, handler))
-        } else {
-            return Err(format!(
-                "Unable to find model handler for {}",
-                note.model_name
-            ));
+        if !handler.tags_wanted.is_empty()
+            && !tags?.iter().any(|t| handler.tags_wanted.contains(&t))
+        {
+            return Ok(None);
         }
+
+        let selected_field = note
+            .fields
+            .into_iter()
+            .find(|x| x.0 == handler.field_to_use)
+            .unwrap()
+            .1
+            .value;
+        Ok(Some(get_word_from_field(selected_field, handler)))
+    } else {
+        Err(format!(
+            "Unable to find model handler for {}",
+            note.model_name
+        ))
     }
-    Ok(words)
 }
 
 fn get_word_from_field(selected_field: String, handler: &NoteToWordHandling) -> String {
@@ -144,7 +157,7 @@ fn get_word_from_field(selected_field: String, handler: &NoteToWordHandling) -> 
 
     let mut in_bracket = false;
 
-    for c in selected_field.chars() {
+    for c in selected_field.replace("&nbsp;", " ").chars() {
         match c {
             lp if lp == '[' || (lp == '(' && handler.remove_everything_in_parens) => {
                 if !in_bracket {
@@ -161,7 +174,7 @@ fn get_word_from_field(selected_field: String, handler: &NoteToWordHandling) -> 
             _ => (),
         }
     }
-    parsed
+    parsed.trim().to_owned()
 }
 
 #[tauri::command]
