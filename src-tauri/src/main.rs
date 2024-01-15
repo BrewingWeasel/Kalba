@@ -3,7 +3,7 @@
 
 use crate::{
     add_to_anki::add_to_anki,
-    ankiconnect::{get_all_deck_names, get_all_note_names, get_note_field_names},
+    ankiconnect::{get_all_deck_names, get_all_note_names, get_note_field_names, remove_deck},
     dictionary::get_defs,
     language_parsing::parse_text,
 };
@@ -36,6 +36,7 @@ struct ToSave {
     words: HashMap<String, WordInfo>,
     cached_defs: HashMap<String, Vec<SakinyjeResult<String>>>,
     last_launched: DateTime<Utc>,
+    decks_checked: Vec<String>,
 }
 
 impl Default for SharedInfo {
@@ -47,7 +48,7 @@ impl Default for SharedInfo {
             .map(|v| toml::from_str(&v).unwrap_or_default())
             .unwrap_or_default();
 
-        let settings: Settings = fs::read_to_string(config_file)
+        let mut settings: Settings = fs::read_to_string(config_file)
             .map(|v| toml::from_str(&v).unwrap()) // TODO: some sort of error handling when invalid
             // toml is used
             .unwrap_or_default();
@@ -58,16 +59,17 @@ impl Default for SharedInfo {
             .num_days()
             + 1;
 
-        if let Some(ankiparsers) = &settings.anki_parser {
+        if let Some(ankiparsers) = &mut settings.anki_parser {
             for (deck, note_parser) in ankiparsers {
                 block_on(get_anki_card_statuses(
                     deck,
                     note_parser,
                     &mut to_save.words,
                     days_passed,
+                    !to_save.decks_checked.contains(deck),
                 ))
                 .unwrap();
-                // TODO: handle error
+                to_save.decks_checked.push(deck.clone());
             }
         }
 
@@ -107,6 +109,7 @@ fn main() {
             get_all_note_names,
             get_note_field_names,
             update_word_knowledge,
+            remove_deck,
         ])
         .on_window_event(handle_window_event)
         .run(tauri::generate_context!())

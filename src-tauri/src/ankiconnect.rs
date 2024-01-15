@@ -4,8 +4,9 @@ use reqwest::Response;
 use serde::Deserialize;
 use serde_json::{json, value::Value};
 use shared::NoteToWordHandling;
+use tauri::State;
 
-use crate::WordInfo;
+use crate::{SakinyjeState, WordInfo};
 
 #[derive(Deserialize, Debug)]
 struct AnkiResult<T> {
@@ -28,10 +29,15 @@ pub async fn get_anki_card_statuses(
     note_handling: &HashMap<String, NoteToWordHandling>,
     original_words: &mut HashMap<String, WordInfo>,
     days_passed: i64,
+    first_time_run: bool,
 ) -> Result<(), String> {
     println!("getting anki card statuses");
-    let find_cards_query = format!("\"deck:{deck}\""); // TODO: only check cards reviewed since last
-                                                       // check with rated:{days_passed} but only when new decks haven't been added
+    let days_passed_query = if first_time_run {
+        String::new()
+    } else {
+        format!("rated:{days_passed}")
+    };
+    let find_cards_query = format!("\"deck:{deck}{days_passed_query}\"");
 
     let cards = get_card_or_note_vals("findCards", json!({ "query": find_cards_query })).await?;
     let intervals = get_card_or_note_vals("getIntervals", json!({ "cards": &cards })).await?;
@@ -42,7 +48,6 @@ pub async fn get_anki_card_statuses(
         res.json::<AnkiResult<Vec<NoteInfo>>>().await.unwrap(),
     )?;
 
-    //let words = get_words_from_notes(notes, note_handling).await?;
     for ((note, interval), note_info) in notes.into_iter().zip(intervals).zip(notes_info) {
         let Ok(Some(word)) = get_word_from_note(note, note_info, note_handling).await else {
             continue;
@@ -130,8 +135,7 @@ async fn get_word_from_note(
         let tags: Result<Vec<String>, String> =
             res.json::<AnkiResult<Vec<String>>>().await.unwrap().into();
 
-        if !handler.tags_wanted.is_empty()
-            && !tags?.iter().any(|t| handler.tags_wanted.contains(&t))
+        if !handler.tags_wanted.is_empty() && !tags?.iter().any(|t| handler.tags_wanted.contains(t))
         {
             return Ok(None);
         }
@@ -193,4 +197,16 @@ pub async fn get_all_note_names() -> Result<Vec<String>, String> {
 pub async fn get_note_field_names(model: &str) -> Result<Vec<String>, String> {
     let res = generic_anki_connect_action("modelFieldNames", json!({ "modelName": model })).await;
     res.json::<AnkiResult<Vec<String>>>().await.unwrap().into()
+}
+
+#[tauri::command]
+pub async fn remove_deck(deck: String, state: State<'_, SakinyjeState>) -> Result<(), String> {
+    state
+        .0
+        .lock()
+        .await
+        .to_save
+        .decks_checked
+        .retain(|v| v != &deck);
+    Ok(())
 }

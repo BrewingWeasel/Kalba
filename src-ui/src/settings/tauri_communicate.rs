@@ -8,6 +8,11 @@ pub struct SettingsSaver {
     pub settings: Settings,
 }
 
+#[derive(Serialize)]
+pub struct DeckRemover {
+    pub deck: String,
+}
+
 #[derive(Clone, Serialize)]
 struct GetFields {
     model: String,
@@ -18,6 +23,16 @@ pub fn save_settings(settings: Settings) {
         console_log("saving settings");
         #[allow(clippy::single_match)]
         match tauri::invoke("write_settings", &SettingsSaver { settings }).await {
+            Err(e) => console_error(&e.to_string()),
+            Ok(()) => (),
+        }
+    })
+}
+
+pub fn remove_deck(deck: String) {
+    wasm_bindgen_futures::spawn_local(async move {
+        #[allow(clippy::single_match)]
+        match tauri::invoke("remove_deck", &DeckRemover { deck }).await {
             Err(e) => console_error(&e.to_string()),
             Ok(()) => (),
         }

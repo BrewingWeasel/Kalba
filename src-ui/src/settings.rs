@@ -70,7 +70,7 @@ pub fn SettingsChanger(settings: Resource<(), Settings>) -> impl IntoView {
             };
             updater.dicts = dicts().iter().map(|(_, (r, _))| r()).collect();
             let mut updated_templates = HashMap::new();
-            for (_, (readdeck, _)) in templates() {
+            for (_, (readdeck, _)) in templates().iter() {
                 let deckname = readdeck().0;
                 let mut notes = Vec::new();
                 for (readnote, _) in readdeck().1 {

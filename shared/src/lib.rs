@@ -83,7 +83,7 @@ impl Default for Settings {
                 "Front:{sent}
 Back:{word}:{def}",
             ),
-            model: String::new(),
+            model: String::from("lt_core_news_sm"),
             dicts: Vec::new(),
             to_remove: None,
             css: None,

@@ -4,6 +4,7 @@ use shared::NoteToWordHandling;
 use crate::settings::{
     get_template_fields,
     shared_ui::{SimpleDropDown, SimpleTextSetting},
+    tauri_communicate::remove_deck,
 };
 
 type AnkiDeck = (
@@ -40,6 +41,14 @@ pub fn WordKnowledgeList(
                 <button
                     class="remove"
                     on:click=move |_| {
+                        if let Some(deck) = templates()
+                            .iter()
+                            .find_map(|(templ_id, (val, _))| {
+                                if templ_id == &id { Some(val().0) } else { None }
+                            })
+                        {
+                            remove_deck(deck)
+                        }
                         set_templates
                             .update(|templ| { templ.retain(|(templ_id, _)| templ_id != &id) });
                     }
@@ -159,7 +168,18 @@ fn AnkiNoteParsing(
 
             <SimpleTextSetting
                 readsig=move || rnote().1.tags_wanted.join(" ")
-                writesig=move |inp| wnote.update(|v| v.1.tags_wanted = inp.split_whitespace().map(|t| t.to_string()).collect())
+                writesig=move |inp| {
+                    wnote
+                        .update(|v| {
+                            v
+                                .1
+                                .tags_wanted = inp
+                                .split_whitespace()
+                                .map(|t| t.to_string())
+                                .collect();
+                        })
+                }
+
                 name="tags"
                 desc="Tags required"
             />
