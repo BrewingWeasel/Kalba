@@ -13,6 +13,20 @@ hr {
   width: 93%;
 }
 
+
+/* READER AREA */
+.wordpanel {
+  height: 100%;
+  width: 460px;
+  position: fixed;
+  z-index: 1;
+  top: 0;
+  right: 0;
+  overflow-x: hidden;
+  padding: 20px;
+  background-color: #2a273f;
+}
+
 /* # SETTINGS AREA */
 
 .settings label {
@@ -157,13 +171,17 @@ select {
 /* GENERAL STUFF */
 
 
-.sentence, .wordinfo, .definition, .export, .grammarinfo {
+.sentence, .wordinfo, .definition, .grammarinfo {
   display: flex;
   justify-content: center;
 }
 
+.sentence, .input {
+  margin-right: 460px;
+}
+
 .grammarinfo {
-  font-size: 18px;
+  font-size: 12px;
   font-style: italic;
   color: #908caa;
 }
@@ -212,13 +230,21 @@ select {
   border: none;
   text-align: center;
   text-decoration: none;
-  width: 15%;
+  width: 50%;
   transition-duration: .2s;
   padding: 10px;
   border-radius: 6px;
   border-width: 0;
+}
+
+.export {
+  position: absolute;
+  bottom: 0;
+  left: 0;
+  width: 100%;
   display: flex;
   justify-content: center;
+  padding-bottom: 50px;
 }
 
 .exportbutton:hover {

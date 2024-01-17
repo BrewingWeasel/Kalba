@@ -126,162 +126,163 @@ pub fn ReaderView() -> impl IntoView {
 
         </div>
         <br/>
-        {move || {
-            if selected_word().is_some() {
-                view! {
-                    <div class="wordinfo">
-                        <input
-                            class="selectedword"
-                            type="text"
-                            on:change=move |ev| {
+        <div class="wordpanel">
+            {move || {
+                if selected_word().is_some() {
+                    view! {
+                        <div class="wordinfo">
+                            <input
+                                class="selectedword"
+                                type="text"
+                                on:change=move |ev| {
+                                    conts
+                                        .update(|v| {
+                                            v
+                                                .as_mut()
+                                                .unwrap()
+                                                .get_mut(selected_word().unwrap())
+                                                .unwrap()
+                                                .lemma = event_target_value(&ev);
+                                        });
+                                    definition.refetch();
+                                }
+
+                                prop:value=move || {
+                                    selected_word
+                                        .get()
+                                        .and_then(|i| {
+                                            let words = conts.get().unwrap();
+                                            words.get(i).cloned()
+                                        })
+                                        .map(|v| v.lemma)
+                                }
+                            />
+
+                        </div>
+
+                        <div class="grammarinfo">
+                            {move || {
                                 conts
-                                    .update(|v| {
-                                        v
-                                            .as_mut()
-                                            .unwrap()
-                                            .get_mut(selected_word().unwrap())
-                                            .unwrap()
-                                            .lemma = event_target_value(&ev);
-                                    });
-                                definition.refetch();
-                            }
-
-                            prop:value=move || {
-                                selected_word
                                     .get()
-                                    .and_then(|i| {
-                                        let words = conts.get().unwrap();
-                                        words.get(i).cloned()
+                                    .unwrap()[selected_word().unwrap()]
+                                    .morph
+                                    .iter()
+                                    .map(|(k, v)| {
+                                        view! {
+                                            <div class="grammarfeature">
+                                                <span class=k>{k}</span>
+                                                <span class="seperator">:</span>
+                                                <span class=v>{v}</span>
+                                            </div>
+                                        }
                                     })
-                                    .map(|v| v.lemma)
-                            }
-                        />
+                                    .collect_view()
+                            }}
 
-                    </div>
-
-                    <div class="grammarinfo">
-                        {move || {
-                            conts
-                                .get()
-                                .unwrap()[selected_word().unwrap()]
-                                .morph
-                                .iter()
-                                .map(|(k, v)| {
+                        </div>
+                        <div class="ratingchanger">
+                            {(0..5)
+                                .map(|level| {
                                     view! {
-                                        <div class="grammarfeature">
-                                            <span class=k>{k}</span>
-                                            <span class="seperator">:</span>
-                                            <span class=v>{v}</span>
-                                        </div>
+                                        <button
+                                            on:click=move |_| {
+                                                spawn_local(async move {
+                                                    update_word_knowledge(
+                                                            &conts().unwrap()[selected_word().unwrap()].lemma,
+                                                            level,
+                                                        )
+                                                        .await;
+                                                    conts
+                                                        .update(|v| {
+                                                            v
+                                                                .as_mut()
+                                                                .unwrap()
+                                                                .get_mut(selected_word().unwrap())
+                                                                .unwrap()
+                                                                .rating = level;
+                                                        });
+                                                });
+                                            }
+
+                                            class=format!("ratingbutton rating-{level}")
+                                        >
+                                            {level + 1}
+                                        </button>
                                     }
                                 })
-                                .collect_view()
-                        }}
-
-                    </div>
-                    <div class="ratingchanger">
-                        {(0..5)
-                            .map(|level| {
-                                view! {
+                                .collect_view()}
+                        </div>
+                        <hr/>
+                    }
+                        .into_view()
+                } else {
+                    view! {}.into_view()
+                }
+            }}
+            <Suspense fallback=move || {
+                view! { <p>"Loading..."</p> }
+            }>
+                {definition
+                    .get()
+                    .map(|data| {
+                        data.iter()
+                            .map(|d| {
+                                match d {
+                                    SakinyjeResult::Ok(s) => {
+                                        view! {
+                                            <div class="definition" inner_html=s></div>
+                                            <br/>
+                                        }
+                                            .into_view()
+                                    }
+                                    SakinyjeResult::Err(v) => {
+                                        view! {
+                                            <div class="error">Err: {v}</div>
+                                            <br/>
+                                        }
+                                            .into_view()
+                                    }
+                                }
+                            })
+                            .collect_view()
+                    })}
+                {move || {
+                    selected_word()
+                        .map(|i| {
+                            view! {
+                                <div class="export">
                                     <button
                                         on:click=move |_| {
+                                            let cur_conts = conts().unwrap();
+                                            let lemma = cur_conts[i].lemma.clone();
+                                            console_log(&lemma);
                                             spawn_local(async move {
-                                                update_word_knowledge(
-                                                        &conts().unwrap()[selected_word().unwrap()].lemma,
-                                                        level,
+                                                export_card(
+                                                        &sentence(),
+                                                        &lemma,
+                                                        &definition()
+                                                            .unwrap()
+                                                            .into_iter()
+                                                            .filter_map(|d| {
+                                                                Into::<Result<String, String>>::into(d).ok()
+                                                            })
+                                                            .collect(),
                                                     )
                                                     .await;
-                                                conts
-                                                    .update(|v| {
-                                                        v
-                                                            .as_mut()
-                                                            .unwrap()
-                                                            .get_mut(selected_word().unwrap())
-                                                            .unwrap()
-                                                            .rating = level;
-                                                    });
                                             });
                                         }
 
-                                        class=format!("ratingbutton rating-{level}")
+                                        class="exportbutton"
                                     >
-                                        {level + 1}
+                                        export to anki
                                     </button>
-                                }
-                            })
-                            .collect_view()}
-                    </div>
-                    <hr/>
-                }
-                    .into_view()
-            } else {
-                view! {}.into_view()
-            }
-        }}
-
-        <Suspense fallback=move || {
-            view! { <p>"Loading..."</p> }
-        }>
-            {definition
-                .get()
-                .map(|data| {
-                    data.iter()
-                        .map(|d| {
-                            match d {
-                                SakinyjeResult::Ok(s) => {
-                                    view! {
-                                        <div class="definition" inner_html=s></div>
-                                        <br/>
-                                    }
-                                        .into_view()
-                                }
-                                SakinyjeResult::Err(v) => {
-                                    view! {
-                                        <div class="error">Err: {v}</div>
-                                        <br/>
-                                    }
-                                        .into_view()
-                                }
+                                </div>
                             }
                         })
-                        .collect_view()
-                })}
-            {move || {
-                selected_word()
-                    .map(|i| {
-                        view! {
-                            <div class="export">
-                                <button
-                                    on:click=move |_| {
-                                        let cur_conts = conts().unwrap();
-                                        let lemma = cur_conts[i].lemma.clone();
-                                        console_log(&lemma);
-                                        spawn_local(async move {
-                                            export_card(
-                                                    &sentence(),
-                                                    &lemma,
-                                                    &definition()
-                                                        .unwrap()
-                                                        .into_iter()
-                                                        .filter_map(|d| {
-                                                            Into::<Result<String, String>>::into(d).ok()
-                                                        })
-                                                        .collect(),
-                                                )
-                                                .await;
-                                        });
-                                    }
+                }}
 
-                                    class="exportbutton"
-                                >
-                                    export to anki
-                                </button>
-                            </div>
-                        }
-                    })
-            }}
-
-        </Suspense>
+            </Suspense>
+        </div>
     }
 }
 
