@@ -16,13 +16,13 @@ async function set_words() {
 }
 
 function handle_word_selected(word) {
-  selected_word.value = word;
+  selected_word.value = word.lemma;
 }
 
 </script>
 
 <template>
   <h1>Reader</h1>
-  <h2>Selected word</h2>
+  <h2>Selected word {{ selected_word }}</h2>
   <Word v-for="word in words" :word="word" @selected="handle_word_selected" />
 </template>
