@@ -1,4 +1,4 @@
 [workspace]
 resolver = "2"
 
-members = ["src-ui", "src-tauri", "shared", "spacy-parsing"]
+members = ["src-tauri", "shared", "spacy-parsing"]
