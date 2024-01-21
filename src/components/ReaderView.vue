@@ -26,6 +26,6 @@ function handle_word_selected(word) {
 </script>
 
 <template>
+  <SelectedWordView class="float-right w-96" v-if="selected_word" :word="selected_word" />
   <Word v-for="word in words" :word="word" @selected="handle_word_selected" />
-  <SelectedWordView v-if="selected_word" :word="selected_word" />
 </template>
