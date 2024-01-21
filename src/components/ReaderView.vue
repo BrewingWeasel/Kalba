@@ -4,25 +4,28 @@ import { invoke } from "@tauri-apps/api/tauri";
 // import { useRouter } from "vue-router";
 // import { Button } from '@/components/ui/button'
 import Word from "@/components/Word.vue";
+import SelectedWordView from "@/components/SelectedWordView.vue";
 
-const sentence = "Noriu tapti programuotoju.";
+const props = defineProps(["sentence"]);
 const words = ref([]);
-const selected_word = ref("");
+const selected_word = ref(null);
 set_words();
+
+const body = document.querySelector("body");
+body.classList.toggle("dark")
 
 
 async function set_words() {
-  words.value = await invoke("parse_text", { sent: sentence });
+  words.value = await invoke("parse_text", { sent: props.sentence });
 }
 
 function handle_word_selected(word) {
-  selected_word.value = word.lemma;
+  selected_word.value = word;
 }
 
 </script>
 
 <template>
-  <h1>Reader</h1>
-  <h2>Selected word {{ selected_word }}</h2>
   <Word v-for="word in words" :word="word" @selected="handle_word_selected" />
+  <SelectedWordView v-if="selected_word" :word="selected_word" />
 </template>
