@@ -1,4 +1,5 @@
 <script setup lang="ts">
+import { defineAsyncComponent } from 'vue'
 import {
   Card,
   CardContent,
@@ -7,7 +8,14 @@ import {
   CardHeader,
   CardTitle,
 } from '@/components/ui/card'
+
 const props = defineProps(['word'])
+
+
+const DefinitionComp = defineAsyncComponent(() =>
+  import('@/components/DefinitionView.vue')
+)
+
 </script>
 
 <template>
@@ -17,16 +25,16 @@ const props = defineProps(['word'])
       <CardDescription class="text-center"><i>{{ props.word.text }}</i></CardDescription>
     </CardHeader>
     <CardContent>
-      Card Content
+      <Suspense>
+        <DefinitionComp :lemma="word.lemma" />
+
+        <template #fallback>
+          Loading...
+        </template>
+      </Suspense>
     </CardContent>
     <CardFooter>
       {{ props.word.morph }}
     </CardFooter>
   </Card>
 </template>
-
-<style>
-.Card {
-  width: 50%;
-}
-</style>
