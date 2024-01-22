@@ -8,6 +8,7 @@ import {
   CardHeader,
   CardTitle,
 } from '@/components/ui/card'
+import RatingButtons from "@/components/RatingButtons.vue"
 
 const props = defineProps(['word'])
 
@@ -25,6 +26,7 @@ const DefinitionComp = defineAsyncComponent(() =>
       <CardDescription class="text-center"><i>{{ props.word.text }}</i></CardDescription>
     </CardHeader>
     <CardContent>
+      <RatingButtons />
       <Suspense>
         <DefinitionComp :lemma="word.lemma" />
 
