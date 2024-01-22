@@ -5,11 +5,12 @@ import {
   HoverCardTrigger,
 } from '@/components/ui/hover-card'
 import { computed } from 'vue';
-const props = defineProps(['word'])
+const props = defineProps(['word', 'rating'])
 const emit = defineEmits(['selected'])
 
 const rating = computed(() => {
-  if (props.word.rating == 0) {
+  console.log(props.rating)
+  if (props.rating == 0) {
     return 'text-rose-600'
   } else if (props.word.rating == 1) {
     return 'text-red-400'
@@ -18,7 +19,7 @@ const rating = computed(() => {
   } else if (props.word.rating == 3) {
     return 'text-amber-300'
   } else {
-    return 'text-white'
+    return ''
   }
 })
 

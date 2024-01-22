@@ -26,7 +26,7 @@ const DefinitionComp = defineAsyncComponent(() =>
       <CardDescription class="text-center"><i>{{ props.word.text }}</i></CardDescription>
     </CardHeader>
     <CardContent>
-      <RatingButtons />
+      <RatingButtons @change-rating="(r) => { $emit('change-rating', r); console.log('lol') }" />
       <Suspense>
         <DefinitionComp :lemma="word.lemma" />
 
