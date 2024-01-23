@@ -9,6 +9,7 @@ import {
   CardTitle,
 } from '@/components/ui/card'
 import RatingButtons from "@/components/RatingButtons.vue"
+import GrammarDetails from "@/components/GrammarDetails.vue"
 
 const props = defineProps(['word'])
 
@@ -26,7 +27,7 @@ const DefinitionComp = defineAsyncComponent(() =>
       <CardDescription class="text-center"><i>{{ props.word.text }}</i></CardDescription>
     </CardHeader>
     <CardContent>
-      <RatingButtons @change-rating="(r) => { $emit('change-rating', r); console.log('lol') }" />
+      <RatingButtons class="pb-3" @change-rating="(r) => { $emit('change-rating', r); console.log('lol') }" />
       <Suspense>
         <DefinitionComp :lemma="word.lemma" />
 
@@ -36,7 +37,7 @@ const DefinitionComp = defineAsyncComponent(() =>
       </Suspense>
     </CardContent>
     <CardFooter>
-      {{ props.word.morph }}
+      <GrammarDetails :morph="word.morph" />
     </CardFooter>
   </Card>
 </template>
