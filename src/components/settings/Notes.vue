@@ -26,21 +26,23 @@ const fields = computedAsync(async (): Promise<string[]> => {
 </script>
 
 <template>
-  <div class="flex flex-col gap-1 mb-2">
-    <StyledCombobox
-      :options="props.models"
-      v-model="props.note.model"
-      item-being-selected="model"
+  <div class="pl-5 bg-slate-200 dark:bg-slate-800 rounded-md">
+    <div class="flex flex-col gap-1 mb-2 pt-2">
+      <StyledCombobox
+        :options="props.models"
+        v-model="props.note.model"
+        item-being-selected="model"
+      />
+      <StyledCombobox
+        :options="fields"
+        v-model="props.note.field"
+        item-being-selected="field"
+      />
+    </div>
+    <StyledCheckbox
+      label="Remove everything in parentheses"
+      name="removeparens"
     />
-    <StyledCombobox
-      :options="fields"
-      v-model="props.note.field"
-      item-being-selected="field"
-    />
+    <StyledCheckbox label="Only use the first word" name="firstword" />
   </div>
-  <StyledCheckbox
-    label="Remove everything in parentheses"
-    name="removeparens"
-  />
-  <StyledCheckbox label="Only use the first word" name="firstword" />
 </template>
