@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { ref } from "vue";
+import { computed, ref } from "vue";
 import { CaretSortIcon, CheckIcon } from "@radix-icons/vue";
 
 import { cn } from "@/lib/utils";
@@ -27,10 +27,12 @@ const props = defineProps<{
 
 const selected = defineModel();
 
-const selections = props.options.map((option) => ({
-  value: option,
-  label: option, // TODO: title case?
-}));
+const selections = computed(() =>
+  props.options.map((option) => ({
+    value: option,
+    label: option, // TODO: title case?
+  })),
+);
 
 const searchPrompt = "Search " + props.itemBeingSelected + "...";
 const selectPrompt = "Select " + props.itemBeingSelected + "...";

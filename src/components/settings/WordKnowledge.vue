@@ -18,6 +18,7 @@ const selectedField = ref("");
 
 const models: string[] = await invoke("get_all_note_names", {});
 const fields = computedAsync(async (): Promise<string[]> => {
+  selectedField.value = "";
   return await invoke("get_note_field_names", {
     model: selectedTemplate.value,
   });
