@@ -45,7 +45,7 @@ const selectPrompt = "Select " + props.itemBeingSelected + "...";
         variant="outline"
         role="combobox"
         :aria-expanded="open"
-        class="w-[200px] justify-between"
+        class="w-[350px] justify-between"
       >
         {{
           selected
@@ -55,7 +55,7 @@ const selectPrompt = "Select " + props.itemBeingSelected + "...";
         <CaretSortIcon class="ml-2 h-4 w-4 shrink-0 opacity-50" />
       </Button>
     </PopoverTrigger>
-    <PopoverContent class="w-[200px] p-0">
+    <PopoverContent class="w-[350px] p-0">
       <Command>
         <CommandInput class="h-9" :placeholder="searchPrompt" />
         <CommandEmpty>No selection found.</CommandEmpty>
