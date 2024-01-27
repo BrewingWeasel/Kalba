@@ -5,6 +5,9 @@ settings:
   excludeLinksFromLockfile: false
 
 dependencies:
+  '@radix-icons/vue':
+    specifier: ^1.0.0
+    version: 1.0.0(vue@3.4.15)
   '@tauri-apps/api':
     specifier: ^1.5.0
     version: 1.5.3
@@ -17,6 +20,9 @@ dependencies:
   clsx:
     specifier: ^2.1.0
     version: 2.1.0
+  lucide-vue:
+    specifier: ^0.316.0
+    version: 0.316.0(vue@3.4.15)
   lucide-vue-next:
     specifier: ^0.312.0
     version: 0.312.0(vue@3.4.15)
@@ -383,6 +389,14 @@ packages:
     engines: {node: '>=14'}
     requiresBuild: true
     optional: true
+
+  /@radix-icons/vue@1.0.0(vue@3.4.15):
+    resolution: {integrity: sha512-gKWWk9tTK/laDRRNe5KLLR8A0qUwx4q4+DN8Fq48hJ904u78R82ayAO3TrxbNLgyn2D0h6rRiGdLzQWj7rPcvA==}
+    peerDependencies:
+      vue: '>= 3'
+    dependencies:
+      vue: 3.4.15(typescript@5.3.3)
+    dev: false
 
   /@tauri-apps/api@1.5.3:
     resolution: {integrity: sha512-zxnDjHHKjOsrIzZm6nO5Xapb/BxqUq1tc7cGkFXsFkGTsSWgCPH1D8mm0XS9weJY2OaR73I3k3S+b7eSzJDfqA==}
@@ -1011,6 +1025,14 @@ packages:
     resolution: {integrity: sha512-shgCY9tTEv+tkur9J+ril+JObJDfeb19OLrBjbfzDO4pscIirYguBZT7HS9tnQ0EKjmg2/cxG/ruq4p/dxyEfA==}
     peerDependencies:
       vue: '>=3.0.1'
+    dependencies:
+      vue: 3.4.15(typescript@5.3.3)
+    dev: false
+
+  /lucide-vue@0.316.0(vue@3.4.15):
+    resolution: {integrity: sha512-pfSpvcIUuJ3flVq1rsGxqU/Bux3J11XhuYggeqcBkNOhylMJvJJAek+5WgPYOUqDk4Z/n9NeRVVNnaekV17Mpw==}
+    peerDependencies:
+      vue: ^2.6.12
     dependencies:
       vue: 3.4.15(typescript@5.3.3)
     dev: false

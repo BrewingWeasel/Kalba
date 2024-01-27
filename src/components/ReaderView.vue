@@ -18,8 +18,7 @@ const selected_word: Ref<Word | undefined> = ref(undefined);
 set_words();
 
 const body = document.querySelector("body");
-body.classList.toggle("dark")
-
+body!.classList.toggle("dark");
 
 async function set_words() {
   words.value = await invoke("parse_text", { sent: props.sentence });
@@ -30,18 +29,27 @@ function handle_word_selected(word: Word) {
 }
 
 async function changeRating(rating: number) {
-  const attemptedLemma = selected_word.value.lemma;
-  words.value.forEach((word, i, vals) => {
-    if (word['lemma'] == attemptedLemma) {
-      vals[i]['rating'] = rating;
+  const attemptedLemma = selected_word.value!.lemma;
+  words.value!.forEach((word, i, vals) => {
+    if (word["lemma"] == attemptedLemma) {
+      vals[i]["rating"] = rating;
     }
   });
   await invoke("update_word_knowledge", { word: attemptedLemma, rating });
 }
-
 </script>
 
 <template>
-  <SelectedWordView class="float-right w-96" v-if="selected_word" :word="selected_word" @change-rating="changeRating" />
-  <Word v-for="word in words" :word="word" :rating="word.rating" @selected="handle_word_selected" />
+  <SelectedWordView
+    class="float-right w-96"
+    v-if="selected_word"
+    :word="selected_word"
+    @change-rating="changeRating"
+  />
+  <Word
+    v-for="word in words"
+    :word="word"
+    :rating="word.rating"
+    @selected="handle_word_selected"
+  />
 </template>
