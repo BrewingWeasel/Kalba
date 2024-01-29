@@ -17,6 +17,7 @@ import { Ref, ref, watch } from "vue";
 import { Deck } from "./settings/Deck.vue";
 import { Button } from "@/components/ui/button";
 import { Label } from "@/components/ui/label";
+import { Input } from "@/components/ui/input";
 
 interface Settings {
   deck: string;
@@ -71,6 +72,17 @@ watch(
           </CardContent>
         </Card>
       </TabsContent>
+      <TabsContent value="exporting">
+        <Card>
+          <CardHeader>
+            <CardTitle>Exporting</CardTitle>
+            <CardDescription>
+              Configure the default settings for exporting sentences
+            </CardDescription>
+          </CardHeader>
+          <CardContent class="space-y-2"> </CardContent>
+        </Card>
+      </TabsContent>
       <TabsContent value="knowledge">
         <Card>
           <CardHeader>
@@ -87,6 +99,17 @@ watch(
           </CardContent>
         </Card>
       </TabsContent>
+      <TabsContent value="dictionaries">
+        <Card>
+          <CardHeader>
+            <CardTitle>Dictionaries</CardTitle>
+            <CardDescription>
+              Configure dictionaries to use for word lookup
+            </CardDescription>
+          </CardHeader>
+          <CardContent class="space-y-2"> </CardContent>
+        </Card>
+      </TabsContent>
       <TabsContent value="grammar">
         <Card>
           <CardHeader>
@@ -94,6 +117,19 @@ watch(
             <CardDescription>
               Configure the automatic parsing of grammar
             </CardDescription>
+          </CardHeader>
+          <CardContent class="space-y-2">
+            <Label for="model">SpaCy model</Label>
+            <Input id="model" v-model="settings.model" />
+            <Button variant="destructive" @click="saveSettings">Save</Button>
+          </CardContent>
+        </Card>
+      </TabsContent>
+      <TabsContent value="advanced">
+        <Card>
+          <CardHeader>
+            <CardTitle>Advanced</CardTitle>
+            <CardDescription> Other advanced settings </CardDescription>
           </CardHeader>
           <CardContent class="space-y-2"> </CardContent>
         </Card>
