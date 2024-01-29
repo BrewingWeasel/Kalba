@@ -96,6 +96,7 @@ pub struct Settings {
     #[serde(with = "HashMapToArray::<String, Note, DeckKeyValueLabels>")]
     pub anki_parser: HashMap<String, Note>,
     pub to_run: Option<Vec<String>>,
+    pub dark_mode: bool,
 }
 
 impl Default for Settings {
@@ -113,6 +114,7 @@ Back:{word}:{def}",
             css: None,
             anki_parser: HashMap::new(),
             to_run: None,
+            dark_mode: true,
         }
     }
 }

@@ -5,14 +5,17 @@ import {
   NavigationMenuLink,
   NavigationMenuList,
   navigationMenuTriggerStyle,
-} from '@/components/ui/navigation-menu'
+} from "@/components/ui/navigation-menu";
 </script>
 
 <template>
   <NavigationMenu>
     <NavigationMenuList>
       <NavigationMenuItem>
-        <NavigationMenuLink href="/settings" :class="navigationMenuTriggerStyle()">
+        <NavigationMenuLink
+          href="/settings"
+          :class="navigationMenuTriggerStyle()"
+        >
           Settings
         </NavigationMenuLink>
       </NavigationMenuItem>
@@ -22,7 +25,10 @@ import {
         </NavigationMenuLink>
       </NavigationMenuItem>
       <NavigationMenuItem>
-        <NavigationMenuLink href="/reader" :class="navigationMenuTriggerStyle()">
+        <NavigationMenuLink
+          href="/reader"
+          :class="navigationMenuTriggerStyle()"
+        >
           Reader
         </NavigationMenuLink>
       </NavigationMenuItem>
@@ -32,15 +38,19 @@ import {
         </NavigationMenuLink>
       </NavigationMenuItem>
       <NavigationMenuItem>
-        <NavigationMenuLink href="/corpus" :class="navigationMenuTriggerStyle()">
+        <NavigationMenuLink
+          href="/corpus"
+          :class="navigationMenuTriggerStyle()"
+        >
           Corpus
         </NavigationMenuLink>
       </NavigationMenuItem>
     </NavigationMenuList>
   </NavigationMenu>
-  <router-view></router-view>
+  <Suspense>
+    <router-view></router-view>
+  </Suspense>
 </template>
 
 <!-- <style scoped> -->
 <!-- </style> -->
-

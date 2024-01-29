@@ -17,8 +17,9 @@ const words: Ref<[Word] | undefined> = ref(undefined);
 const selected_word: Ref<Word | undefined> = ref(undefined);
 set_words();
 
-const body = document.querySelector("body");
-body!.classList.toggle("dark");
+if (await invoke("get_dark_mode")) {
+  document.documentElement.classList.add("dark");
+}
 
 async function set_words() {
   words.value = await invoke("parse_text", { sent: props.sentence });

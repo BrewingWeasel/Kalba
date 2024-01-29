@@ -101,6 +101,7 @@ fn main() {
             parse_text,
             get_defs,
             get_settings,
+            get_dark_mode,
             add_to_anki,
             write_settings,
             get_all_deck_names,
@@ -135,6 +136,12 @@ fn handle_window_event(event: GlobalWindowEvent) {
 async fn get_settings(state: State<'_, SakinyjeState>) -> Result<Settings, String> {
     let state = state.0.lock().await;
     Ok(state.settings.clone())
+}
+
+#[tauri::command]
+async fn get_dark_mode(state: State<'_, SakinyjeState>) -> Result<bool, String> {
+    let state = state.0.lock().await;
+    Ok(state.settings.dark_mode)
 }
 
 #[tauri::command]

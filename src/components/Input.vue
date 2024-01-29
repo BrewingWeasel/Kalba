@@ -1,10 +1,13 @@
 <script setup lang="ts">
 import { ref } from "vue";
 import { invoke } from "@tauri-apps/api/tauri";
-import { useRouter } from "vue-router";
-import { Button } from '@/components/ui/button'
-import { Textarea } from '@/components/ui/textarea'
-import ReaderView from '@/components/ReaderView.vue'
+import { Button } from "@/components/ui/button";
+import { Textarea } from "@/components/ui/textarea";
+import ReaderView from "@/components/ReaderView.vue";
+
+if (await invoke("get_dark_mode")) {
+  document.documentElement.classList.add("dark");
+}
 
 const currentSentence = ref("");
 const sentence = ref("");

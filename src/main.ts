@@ -1,21 +1,22 @@
 import { createApp } from "vue";
 import { createRouter, createWebHistory } from "vue-router";
 
-import "./styles.css";
 import App from "./App.vue";
-import Input from "./components/Input.vue";
 import Settings from "./components/SettingsPage.vue";
 import WordView from "./components/WordView.vue";
-import ReaderView from "./components/ReaderView.vue";
+import LoadingPage from "./components/LoadingPage.vue";
+import "./styles.css";
 
 const router = createRouter({
   history: createWebHistory(),
   routes: [
-    { path: "/", component: Input },
-    { path: "/reader", component: ReaderView },
+    { path: "/", component: () => import("./components/Input.vue") },
+    {
+      path: "/reader",
+      component: () => import("./components/ReaderView.vue"),
+    },
     { path: "/settings", component: Settings },
     { path: "/words/:word", component: WordView },
-    // { path: "/reader", component: Reader },
   ],
 });
 

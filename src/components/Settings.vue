@@ -13,14 +13,10 @@ import { Switch } from "@/components/ui/switch";
 
 import WordKnowledge from "@/components/settings/WordKnowledge.vue";
 import { invoke } from "@tauri-apps/api/tauri";
-import { Ref, ref } from "vue";
+import { Ref, ref, watch } from "vue";
 import { Deck } from "./settings/Deck.vue";
 import { Button } from "@/components/ui/button";
-
-function toggleDarkMode() {
-  const body = document.querySelector("body");
-  body!.classList.toggle("dark");
-}
+import { Label } from "@/components/ui/label";
 
 interface Settings {
   deck: string;
@@ -28,6 +24,7 @@ interface Settings {
   note_fields: string;
   model: string;
   anki_parser: Deck[];
+  dark_mode: boolean;
 }
 
 const settings: Ref<Settings> = ref(await invoke("get_settings"));
@@ -35,6 +32,17 @@ const settings: Ref<Settings> = ref(await invoke("get_settings"));
 async function saveSettings() {
   await invoke("write_settings", { settings: settings.value });
 }
+
+watch(
+  () => settings.value.dark_mode,
+  async (dark_mode) => {
+    if (dark_mode) {
+      document.documentElement.classList.add("dark");
+    } else {
+      document.documentElement.classList.remove("dark");
+    }
+  },
+);
 </script>
 
 <template>
@@ -57,8 +65,9 @@ async function saveSettings() {
           <CardContent class="space-y-2">
             <div class="space-y-1">
               <Label for="theme">Use dark mode</Label>
-              <Switch id="theme" @click="toggleDarkMode" />
+              <Switch id="theme" v-model:checked="settings.dark_mode" />
             </div>
+            <Button variant="destructive" @click="saveSettings">Save</Button>
           </CardContent>
         </Card>
       </TabsContent>
