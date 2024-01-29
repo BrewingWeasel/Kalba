@@ -10,12 +10,12 @@ import {
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 
 import { Switch } from "@/components/ui/switch";
-import { Button } from "@/components/ui/button";
 
 import WordKnowledge from "@/components/settings/WordKnowledge.vue";
 import { invoke } from "@tauri-apps/api/tauri";
 import { Ref, ref } from "vue";
 import { Deck } from "./settings/Deck.vue";
+import { Button } from "@/components/ui/button";
 
 function toggleDarkMode() {
   const body = document.querySelector("body");
@@ -38,7 +38,6 @@ async function saveSettings() {
 </script>
 
 <template>
-  <Button @click="saveSettings">Save</Button>
   <div class="w-full flex justify-center">
     <Tabs default-value="knowledge" class="object-center">
       <TabsList class="grid w-full grid-cols-6">
@@ -75,6 +74,7 @@ async function saveSettings() {
             <Suspense>
               <WordKnowledge :decks="settings.anki_parser" />
             </Suspense>
+            <Button variant="destructive" @click="saveSettings">Save</Button>
           </CardContent>
         </Card>
       </TabsContent>
