@@ -1,6 +1,4 @@
 <script setup lang="ts">
-import { Ref, ref } from "vue";
-
 import {
   Accordion,
   AccordionContent,
@@ -13,13 +11,16 @@ import { Button } from "@/components/ui/button";
 import IndividualDeck from "@/components/settings/Deck.vue";
 import { Deck } from "@/components/settings/Deck.vue";
 
-const decks: Ref<Array<Deck>> = ref([]);
 const models: string[] = await invoke("get_all_note_names", {});
 
 const deckNames: string[] = await invoke("get_all_deck_names", {});
 
+const props = defineProps<{
+  decks: Deck[];
+}>();
+
 function addDeck() {
-  decks.value.push({
+  props.decks.push({
     name: "",
     notes: [],
   });

@@ -59,18 +59,16 @@ impl Default for SharedInfo {
             .num_days()
             + 1;
 
-        if let Some(ankiparsers) = &mut settings.anki_parser {
-            for (deck, note_parser) in ankiparsers {
-                block_on(get_anki_card_statuses(
-                    deck,
-                    note_parser,
-                    &mut to_save.words,
-                    days_passed,
-                    !to_save.decks_checked.contains(deck),
-                ))
-                .unwrap();
-                to_save.decks_checked.push(deck.clone());
-            }
+        for (deck, note_parser) in &mut settings.anki_parser {
+            block_on(get_anki_card_statuses(
+                deck,
+                &note_parser.0,
+                &mut to_save.words,
+                days_passed,
+                !to_save.decks_checked.contains(deck),
+            ))
+            .unwrap();
+            to_save.decks_checked.push(deck.clone());
         }
 
         if let Some(cmds) = &settings.to_run {

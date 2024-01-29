@@ -7,9 +7,14 @@ import { computedAsync } from "@vueuse/core";
 
 export interface Note {
   model: string;
-  field: string;
-  removeParens: boolean;
-  firstWordOnly: boolean;
+  handling: NoteToWordHandling;
+}
+
+interface NoteToWordHandling {
+  field_to_use: string;
+  only_first_word_or_line: boolean;
+  remove_everything_in_parens: boolean;
+  tags_wanted: string[];
 }
 
 const props = defineProps<{
@@ -18,7 +23,7 @@ const props = defineProps<{
 }>();
 
 const fields = computedAsync(async (): Promise<string[]> => {
-  props.note.field = "";
+  props.note.handling.field_to_use = "";
   return await invoke("get_note_field_names", {
     model: props.note.model,
   });
@@ -35,7 +40,7 @@ const fields = computedAsync(async (): Promise<string[]> => {
       />
       <StyledCombobox
         :options="fields"
-        v-model="props.note.field"
+        v-model="props.note.handling.field_to_use"
         item-being-selected="field"
       />
     </div>

@@ -2816,6 +2816,15 @@ dependencies = [
 ]
 
 [[package]]
+name = "serde-map-to-array"
+version = "1.1.1"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "c14b52efc56c711e0dbae3f26e0cc233f5dac336c1bf0b07e1b7dc2dca3b2cc7"
+dependencies = [
+ "serde",
+]
+
+[[package]]
 name = "serde_derive"
 version = "1.0.189"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -2956,6 +2965,7 @@ version = "0.1.0"
 dependencies = [
  "rusty-hook",
  "serde",
+ "serde-map-to-array",
 ]
 
 [[package]]

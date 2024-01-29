@@ -7,20 +7,38 @@ import {
   CardHeader,
   CardTitle,
 } from "@/components/ui/card";
-import { Input } from "@/components/ui/input";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 
 import { Switch } from "@/components/ui/switch";
+import { Button } from "@/components/ui/button";
 
 import WordKnowledge from "@/components/settings/WordKnowledge.vue";
+import { invoke } from "@tauri-apps/api/tauri";
+import { Ref, ref } from "vue";
+import { Deck } from "./settings/Deck.vue";
 
 function toggleDarkMode() {
   const body = document.querySelector("body");
   body!.classList.toggle("dark");
 }
+
+interface Settings {
+  deck: string;
+  note_type: string;
+  note_fields: string;
+  model: string;
+  anki_parser: Deck[];
+}
+
+const settings: Ref<Settings> = ref(await invoke("get_settings"));
+
+async function saveSettings() {
+  await invoke("write_settings", { settings: settings.value });
+}
 </script>
 
 <template>
+  <Button @click="saveSettings">Save</Button>
   <div class="w-full flex justify-center">
     <Tabs default-value="knowledge" class="object-center">
       <TabsList class="grid w-full grid-cols-6">
@@ -55,7 +73,7 @@ function toggleDarkMode() {
           </CardHeader>
           <CardContent class="space-y-2">
             <Suspense>
-              <WordKnowledge />
+              <WordKnowledge :decks="settings.anki_parser" />
             </Suspense>
           </CardContent>
         </Card>

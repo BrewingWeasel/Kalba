@@ -25,9 +25,12 @@ const props = defineProps<{
 function addNote() {
   props.deck.notes.push({
     model: "",
-    field: "",
-    removeParens: false,
-    firstWordOnly: false,
+    handling: {
+      field_to_use: "",
+      only_first_word_or_line: false,
+      remove_everything_in_parens: false,
+      tags_wanted: [],
+    },
   });
 }
 </script>
