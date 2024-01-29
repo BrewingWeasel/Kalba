@@ -88,7 +88,7 @@ pub struct Note(
 pub struct Settings {
     pub deck: String,
     pub note_type: String,
-    pub note_fields: String,
+    pub note_fields: HashMap<String, String>,
     pub model: String,
     pub dicts: Vec<Dictionary>,
     pub to_remove: Option<usize>,
@@ -102,12 +102,12 @@ pub struct Settings {
 impl Default for Settings {
     fn default() -> Self {
         Self {
-            deck: String::from("Default"),
-            note_type: String::from("Basic"),
-            note_fields: String::from(
-                "Front:{sent}
-Back:{word}:{def}",
-            ),
+            deck: String::from(""),
+            note_type: String::from(""),
+            note_fields: HashMap::from([
+                (String::from("Front"), String::from("{sent}")),
+                (String::from("Back"), String::from("{word}:{def}")),
+            ]),
             model: String::from("lt_core_news_sm"),
             dicts: Vec::new(),
             to_remove: None,

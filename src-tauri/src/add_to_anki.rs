@@ -30,8 +30,7 @@ fn get_json(
 
     let mut fields = HashMap::new();
 
-    for i in settings.note_fields.lines() {
-        let (field_name, conts) = i.split_once(':').ok_or("error parsing fields")?;
+    for (field_name, conts) in &settings.note_fields {
         let mut conts = conts.to_string();
         for (orig, replacement) in &replacements {
             conts = conts.replace(orig, replacement);
@@ -144,11 +143,11 @@ def3"})
         let settings = Settings {
             deck: String::from("deck"),
             note_type: String::from("note"),
-            note_fields: String::from(
-                "sentence:{sent}[{word}]
-word:{word}
-def:{def}",
-            ),
+            note_fields: HashMap::from([
+                (String::from("sentence"), String::from("{sent}[{word}]")),
+                (String::from("word"), String::from("{word}")),
+                (String::from("def"), String::from("{def}")),
+            ]),
             ..Default::default()
         };
         let args = get_json("sent", "word", vec![String::from("def1")], &settings).unwrap();
@@ -173,10 +172,10 @@ def:{def}",
         let settings = Settings {
             deck: String::from("deck"),
             note_type: String::from("note"),
-            note_fields: String::from(
-                "sentence:{sent}
-sentence:{word}",
-            ),
+            note_fields: HashMap::from([
+                (String::from("sentence"), String::from("{sent}")),
+                (String::from("sentence"), String::from("{word}")),
+            ]),
             ..Default::default()
         };
         let args = get_json("sent", "word", Vec::new(), &settings).unwrap();

@@ -6,17 +6,14 @@ import {
   AccordionTrigger,
 } from "@/components/ui/accordion";
 
-import { invoke } from "@tauri-apps/api/tauri";
 import { Button } from "@/components/ui/button";
 import IndividualDeck from "@/components/settings/Deck.vue";
 import { Deck } from "@/components/settings/Deck.vue";
 
-const models: string[] = await invoke("get_all_note_names", {});
-
-const deckNames: string[] = await invoke("get_all_deck_names", {});
-
 const props = defineProps<{
   decks: Deck[];
+  models: string[];
+  deckNames: string[];
 }>();
 
 function addDeck() {
