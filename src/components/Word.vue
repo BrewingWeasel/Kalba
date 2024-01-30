@@ -4,6 +4,8 @@ import {
   HoverCardContent,
   HoverCardTrigger,
 } from "@/components/ui/hover-card";
+import GrammarDetails from "@/components/GrammarDetails.vue";
+
 import { computed } from "vue";
 const props = defineProps(["word", "rating"]);
 const emit = defineEmits(["selected"]);
@@ -38,8 +40,11 @@ function set_selected() {
     <HoverCard>
       <HoverCardTrigger>{{ props.word.text }}</HoverCardTrigger>
       <HoverCardContent>
-        {{ props.word.lemma }}
-        {{ props.word.morph }}
+        <h1 class="text-center font-semibold text-lg" :class="rating">
+          {{ props.word.lemma }}
+        </h1>
+        <hr class="py-1" />
+        <GrammarDetails :morph="props.word.morph" />
       </HoverCardContent>
     </HoverCard>
   </div>
