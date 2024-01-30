@@ -42,15 +42,18 @@ async function changeRating(rating: number) {
 
 <template>
   <SelectedWordView
-    class="float-right w-96"
+    class="float-right w-96 m-3"
     v-if="selected_word"
     :word="selected_word"
     @change-rating="changeRating"
   />
-  <Word
-    v-for="word in words"
-    :word="word"
-    :rating="word.rating"
-    @selected="handle_word_selected"
-  />
+  <div class="flex flex-wrap px-6 py-3">
+    <Word
+      v-for="word in words"
+      :word="word"
+      :rating="word.rating"
+      @selected="handle_word_selected"
+    />
+    <!-- <div v-if="word.text == '\n\n'" class="basis-full h-0"></div> -->
+  </div>
 </template>
