@@ -19,8 +19,8 @@ function set_sentence() {
 
 <template>
   <div v-if="sentence.length == 0">
-    <div class="grid w-full gap-2">
-      <Textarea placeholder="Enter text to change" v-model="currentSentence" />
+    <div class="grid px-10 py-3 gap-2">
+      <Textarea placeholder="Enter text to analyze" v-model="currentSentence" />
       <Button @click="set_sentence">Submit</Button>
     </div>
   </div>
