@@ -31,8 +31,7 @@ const DefinitionComp = defineAsyncComponent(
         class="pb-3"
         @change-rating="
           (r) => {
-            $emit('change-rating', r);
-            console.log('lol');
+            $emit('set-rating', r, props.word.lemma);
           }
         "
       />

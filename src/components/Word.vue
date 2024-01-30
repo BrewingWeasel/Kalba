@@ -5,10 +5,11 @@ import {
   HoverCardTrigger,
 } from "@/components/ui/hover-card";
 import GrammarDetails from "@/components/GrammarDetails.vue";
+import RatingButtons from "@/components/RatingButtons.vue";
 
 import { computed } from "vue";
 const props = defineProps(["word", "rating"]);
-const emit = defineEmits(["selected"]);
+const emit = defineEmits(["selected", "set-rating"]);
 
 const rating = computed(() => {
   const startingClass = props.word.clickable ? "pl-1 " : "px-0 ";
@@ -43,6 +44,14 @@ function set_selected() {
         <h1 class="text-center font-semibold text-lg" :class="rating">
           {{ props.word.lemma }}
         </h1>
+        <RatingButtons
+          class="scale-75"
+          @change-rating="
+            (r: number) => {
+              $emit('set-rating', r, props.word.lemma);
+            }
+          "
+        />
         <hr class="py-1" />
         <GrammarDetails :morph="props.word.morph" />
       </HoverCardContent>

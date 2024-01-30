@@ -29,8 +29,7 @@ function handle_word_selected(word: Word) {
   selected_word.value = word;
 }
 
-async function changeRating(rating: number) {
-  const attemptedLemma = selected_word.value!.lemma;
+async function changeRating(rating: number, attemptedLemma: string) {
   words.value!.forEach((word, i, vals) => {
     if (word["lemma"] == attemptedLemma) {
       vals[i]["rating"] = rating;
@@ -45,7 +44,7 @@ async function changeRating(rating: number) {
     class="float-right w-96 m-3"
     v-if="selected_word"
     :word="selected_word"
-    @change-rating="changeRating"
+    @set-rating="changeRating"
   />
   <div class="flex flex-wrap px-6 py-3">
     <Word
@@ -53,6 +52,7 @@ async function changeRating(rating: number) {
       :word="word"
       :rating="word.rating"
       @selected="handle_word_selected"
+      @set-rating="changeRating"
     />
     <!-- <div v-if="word.text == '\n\n'" class="basis-full h-0"></div> -->
   </div>
