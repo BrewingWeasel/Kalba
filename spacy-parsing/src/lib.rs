@@ -80,7 +80,11 @@ pub fn get_spacy_info(sent: &str, morphologizer: &PyObject) -> Result<Vec<Token>
         for token in total {
             let text: String = token.getattr(py, "text")?.extract(py)?;
             let pos_str: String = token.getattr(py, "pos_")?.extract(py)?;
-            let pos = PartOfSpeech::from_str(&pos_str).unwrap();
+            let pos = if let Ok(p) = PartOfSpeech::from_str(&pos_str) {
+                p
+            } else {
+                PartOfSpeech::Other
+            };
             let lemma: String = token.getattr(py, "lemma_")?.extract(py)?;
             let morph: HashMap<String, String> = token
                 .getattr(py, "morph")?
