@@ -12,23 +12,7 @@ import {
   <NavigationMenu>
     <NavigationMenuList>
       <NavigationMenuItem>
-        <NavigationMenuLink
-          href="/settings"
-          :class="navigationMenuTriggerStyle()"
-        >
-          Settings
-        </NavigationMenuLink>
-      </NavigationMenuItem>
-      <NavigationMenuItem>
         <NavigationMenuLink href="/" :class="navigationMenuTriggerStyle()">
-          Input
-        </NavigationMenuLink>
-      </NavigationMenuItem>
-      <NavigationMenuItem>
-        <NavigationMenuLink
-          href="/reader"
-          :class="navigationMenuTriggerStyle()"
-        >
           Reader
         </NavigationMenuLink>
       </NavigationMenuItem>
@@ -43,6 +27,14 @@ import {
           :class="navigationMenuTriggerStyle()"
         >
           Corpus
+        </NavigationMenuLink>
+      </NavigationMenuItem>
+      <NavigationMenuItem>
+        <NavigationMenuLink
+          href="/settings"
+          :class="navigationMenuTriggerStyle()"
+        >
+          Settings
         </NavigationMenuLink>
       </NavigationMenuItem>
     </NavigationMenuList>
