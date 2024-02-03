@@ -91,11 +91,9 @@ watch(
               <Exporting
                 :deckNames
                 :models
-                :deck="settings.deck"
-                :model="settings.note_type"
-                :fields="settings.note_fields"
-                @set-deck="(deck) => (settings.deck = deck)"
-                @set-model="(model) => (settings.note_type = model)"
+                v-model:deck="settings.deck"
+                v-model:model="settings.note_type"
+                v-model:fields="settings.note_fields"
               />
             </div>
           </CardContent>
