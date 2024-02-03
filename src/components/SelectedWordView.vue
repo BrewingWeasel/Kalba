@@ -10,12 +10,22 @@ import {
 } from "@/components/ui/card";
 import RatingButtons from "@/components/RatingButtons.vue";
 import GrammarDetails from "@/components/GrammarDetails.vue";
+import { Button } from "@/components/ui/button";
+import { invoke } from "@tauri-apps/api/tauri";
 
 const props = defineProps(["word"]);
 
 const DefinitionComp = defineAsyncComponent(
   () => import("@/components/DefinitionView.vue"),
 );
+
+async function exportWord() {
+  await invoke("add_to_anki", {
+    word: props.word.lemma,
+    sent: "",
+    defs: [],
+  });
+}
 </script>
 
 <template>
@@ -44,5 +54,8 @@ const DefinitionComp = defineAsyncComponent(
     <CardFooter>
       <GrammarDetails :morph="word.morph" separator="true" />
     </CardFooter>
+    <div class="flex justify-center bottom-0 py-3">
+      <Button @click="exportWord" variant="destructive">Export</Button>
+    </div>
   </Card>
 </template>

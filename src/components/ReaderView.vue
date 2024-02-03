@@ -40,12 +40,14 @@ async function changeRating(rating: number, attemptedLemma: string) {
 </script>
 
 <template>
-  <SelectedWordView
-    class="float-right w-96 m-3"
-    v-if="selected_word"
-    :word="selected_word"
-    @set-rating="changeRating"
-  />
+  <Suspense>
+    <SelectedWordView
+      class="float-right w-96 m-3"
+      v-if="selected_word"
+      :word="selected_word"
+      @set-rating="changeRating"
+    />
+  </Suspense>
   <div class="flex flex-wrap px-6 py-3">
     <Word
       v-for="word in words"

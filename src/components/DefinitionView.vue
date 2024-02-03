@@ -4,7 +4,12 @@ import { computedAsync } from "@vueuse/core";
 
 const props = defineProps(["lemma"]);
 
-const definition = computedAsync(async () => {
+interface Definition {
+  t: string;
+  conts: string;
+}
+
+const definition = computedAsync(async (): Promise<Definition[]> => {
   return await invoke("get_defs", { lemma: props.lemma });
 }, []);
 </script>
