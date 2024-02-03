@@ -1,5 +1,4 @@
 <script setup lang="ts">
-import { defineAsyncComponent } from "vue";
 import {
   Card,
   CardContent,
@@ -10,20 +9,27 @@ import {
 } from "@/components/ui/card";
 import RatingButtons from "@/components/RatingButtons.vue";
 import GrammarDetails from "@/components/GrammarDetails.vue";
+import DefinitionView from "@/components/DefinitionView.vue";
 import { Button } from "@/components/ui/button";
 import { invoke } from "@tauri-apps/api/tauri";
+import { computedAsync } from "@vueuse/core";
 
-const props = defineProps(["word"]);
+interface Definition {
+  t: string;
+  conts: string;
+}
 
-const DefinitionComp = defineAsyncComponent(
-  () => import("@/components/DefinitionView.vue"),
-);
+const props = defineProps(["word", "sentence"]);
+
+const definition = computedAsync(async (): Promise<Definition[]> => {
+  return await invoke("get_defs", { lemma: props.word.lemma });
+}, []);
 
 async function exportWord() {
   await invoke("add_to_anki", {
     word: props.word.lemma,
-    sent: "",
-    defs: [],
+    sent: props.sentence,
+    defs: definition.value.map((def) => def.conts),
   });
 }
 </script>
@@ -46,7 +52,7 @@ async function exportWord() {
         "
       />
       <Suspense>
-        <DefinitionComp :lemma="word.lemma" />
+        <DefinitionView :definition />
 
         <template #fallback> Loading... </template>
       </Suspense>

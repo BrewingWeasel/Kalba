@@ -45,6 +45,7 @@ async function changeRating(rating: number, attemptedLemma: string) {
       class="float-right w-96 m-3"
       v-if="selected_word"
       :word="selected_word"
+      :sentence
       @set-rating="changeRating"
     />
   </Suspense>
