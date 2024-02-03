@@ -7,6 +7,7 @@ import {
   DialogHeader,
   DialogTitle,
   DialogTrigger,
+  DialogClose,
 } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
 import Exporting from "@/components/settings/Exporting.vue";
@@ -60,7 +61,9 @@ async function exportWord() {
         v-model:fields="exportDetails.fields"
       />
       <DialogFooter>
-        <Button @click="exportWord" type="submit"> Export </Button>
+        <DialogClose as-child>
+          <Button @click="exportWord" type="submit"> Export </Button>
+        </DialogClose>
       </DialogFooter>
     </DialogContent>
   </Dialog>
