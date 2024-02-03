@@ -15,24 +15,15 @@ import WordKnowledge from "@/components/settings/WordKnowledge.vue";
 import Exporting from "@/components/settings/Exporting.vue";
 import { invoke } from "@tauri-apps/api/tauri";
 import { Ref, ref, watch } from "vue";
-import { Deck } from "./settings/Deck.vue";
 import { Button } from "@/components/ui/button";
 import { Label } from "@/components/ui/label";
 import { Input } from "@/components/ui/input";
-
-interface Settings {
-  deck: string;
-  note_type: string;
-  note_fields: { [key: string]: string };
-  model: string;
-  anki_parser: Deck[];
-  dark_mode: boolean;
-}
+import { Settings } from "@/types";
 
 const settings: Ref<Settings> = ref(await invoke("get_settings"));
 
-const models: string[] = await invoke("get_all_note_names", {});
-const deckNames: string[] = await invoke("get_all_deck_names", {});
+const models: string[] = await invoke("get_all_note_names");
+const deckNames: string[] = await invoke("get_all_deck_names");
 
 async function saveSettings() {
   await invoke("write_settings", { settings: settings.value });

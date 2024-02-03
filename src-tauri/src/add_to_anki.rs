@@ -1,36 +1,27 @@
 use reqwest::Client;
 use serde_json::json;
-use shared::Settings;
 use std::collections::HashMap;
-use tauri::State;
 
-use crate::SakinyjeState;
-
-fn get_json(
-    sent: &str,
-    word: &str,
-    defs: Vec<String>,
-    settings: &Settings,
-) -> Result<serde_json::Value, String> {
+fn get_json(export_details: ExportDetails<'_>) -> Result<serde_json::Value, String> {
     let mut def = String::new();
-    for cur_def in &defs {
+    for cur_def in &export_details.defs {
         def.push('\n');
         def.push_str(cur_def);
     }
 
     let mut replacements = HashMap::from([
-        (String::from("{sent}"), sent),
-        (String::from("{word}"), word),
+        (String::from("{sent}"), export_details.sentence),
+        (String::from("{word}"), export_details.word),
         (String::from("{def}"), &def),
     ]);
 
-    for (i, v) in defs.iter().enumerate() {
-        replacements.insert(format!("${}", i).to_owned(), v);
+    for (i, v) in export_details.defs.iter().enumerate() {
+        replacements.insert(format!("${}", i).to_owned(), v.as_str());
     }
 
     let mut fields = HashMap::new();
 
-    for (field_name, conts) in &settings.note_fields {
+    for (field_name, conts) in &export_details.fields {
         let mut conts = conts.to_string();
         for (orig, replacement) in &replacements {
             conts = conts.replace(orig, replacement);
@@ -43,14 +34,14 @@ fn get_json(
         "version": 6,
         "params": {
             "note": {
-                "deckName": settings.deck,
-                "modelName": settings.note_type,
+                "deckName": export_details.deck,
+                "modelName": export_details.model,
                 "fields": fields,
                 "options": {
                     "allowDuplicate": false,
                     "duplicateScope": "deck",
                     "duplicateScopeOptions": {
-                        "deckName": settings.deck,
+                        "deckName": export_details.deck,
                         "checkChildren": false,
                         "checkAllModels": false
                     }
@@ -60,15 +51,19 @@ fn get_json(
     }))
 }
 
-#[tauri::command]
-pub async fn add_to_anki(
-    sent: &str,
-    word: &str,
+#[derive(serde::Deserialize)]
+pub struct ExportDetails<'a> {
+    word: &'a str,
+    sentence: &'a str,
+    deck: &'a str,
+    model: &'a str,
+    fields: HashMap<&'a str, &'a str>,
     defs: Vec<String>,
-    state: State<'_, SakinyjeState>,
-) -> Result<(), String> {
-    let settings = &state.0.lock().await.settings;
-    let args = get_json(sent, word, defs, settings).map_err(|e| e.to_string())?;
+}
+
+#[tauri::command]
+pub async fn add_to_anki(export_details: ExportDetails<'_>) -> Result<(), String> {
+    let args = get_json(export_details).map_err(|e| e.to_string())?;
     let client = Client::new();
     client
         .post("http://localhost:8765/")

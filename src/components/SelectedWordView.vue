@@ -10,7 +10,7 @@ import {
 import RatingButtons from "@/components/RatingButtons.vue";
 import GrammarDetails from "@/components/GrammarDetails.vue";
 import DefinitionView from "@/components/DefinitionView.vue";
-import { Button } from "@/components/ui/button";
+import ExportButton from "@/components/ExportButton.vue";
 import { invoke } from "@tauri-apps/api/tauri";
 import { computedAsync } from "@vueuse/core";
 
@@ -24,14 +24,6 @@ const props = defineProps(["word", "sentence"]);
 const definition = computedAsync(async (): Promise<Definition[]> => {
   return await invoke("get_defs", { lemma: props.word.lemma });
 }, []);
-
-async function exportWord() {
-  await invoke("add_to_anki", {
-    word: props.word.lemma,
-    sent: props.sentence,
-    defs: definition.value.map((def) => def.conts),
-  });
-}
 </script>
 
 <template>
@@ -60,8 +52,8 @@ async function exportWord() {
     <CardFooter>
       <GrammarDetails :morph="word.morph" separator="true" />
     </CardFooter>
-    <div class="flex justify-center bottom-0 py-3">
-      <Button @click="exportWord" variant="destructive">Export</Button>
-    </div>
+    <Suspense>
+      <ExportButton :defs="definition.map((v) => v.conts)" :word="word.lemma" />
+    </Suspense>
   </Card>
 </template>
