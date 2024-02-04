@@ -57,6 +57,11 @@ const definition = computedAsync(async (): Promise<Definition[]> => {
         :defs="definition.map((v) => v.conts)"
         :word="word.lemma"
         :sentence="props.sentence"
+        @change-rating="
+          (r) => {
+            $emit('set-rating', r, props.word.lemma, true);
+          }
+        "
       />
     </Suspense>
   </Card>

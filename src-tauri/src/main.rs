@@ -160,10 +160,11 @@ async fn update_word_knowledge(
     state: State<'_, SakinyjeState>,
     word: &str,
     rating: u8,
+    modifiable: bool,
 ) -> Result<(), String> {
     let mut state = state.0.lock().await;
     let word_knowledge = state.to_save.words.get_mut(word).unwrap();
     word_knowledge.rating = rating;
-    word_knowledge.can_modify = false;
+    word_knowledge.can_modify = modifiable;
     Ok(())
 }

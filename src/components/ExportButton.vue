@@ -34,6 +34,8 @@ const settings: Settings = await invoke("get_settings");
 const models: string[] = await invoke("get_all_note_names");
 const deckNames: string[] = await invoke("get_all_deck_names");
 
+const emit = defineEmits(["change-rating"]);
+
 const exportDetails: Ref<ExportDetails> = ref({
   word: props.word,
   defs: props.defs,
@@ -44,6 +46,7 @@ const exportDetails: Ref<ExportDetails> = ref({
 });
 
 async function exportWord() {
+  emit("change-rating", 1, props.word, true);
   await invoke("add_to_anki", { exportDetails: exportDetails.value });
 }
 

@@ -53,13 +53,21 @@ function handle_word_selected(word: Word, index: number) {
   selected_index.value = index;
 }
 
-async function changeRating(rating: number, attemptedLemma: string) {
+async function changeRating(
+  rating: number,
+  attemptedLemma: string,
+  modifiable: boolean = false,
+) {
   words.value!.forEach((word, i, vals) => {
     if (word["lemma"] == attemptedLemma) {
       vals[i]["rating"] = rating;
     }
   });
-  await invoke("update_word_knowledge", { word: attemptedLemma, rating });
+  await invoke("update_word_knowledge", {
+    word: attemptedLemma,
+    rating,
+    modifiable,
+  });
 }
 </script>
 
