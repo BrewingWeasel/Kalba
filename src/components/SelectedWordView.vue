@@ -53,7 +53,11 @@ const definition = computedAsync(async (): Promise<Definition[]> => {
       <GrammarDetails :morph="word.morph" separator="true" />
     </CardFooter>
     <Suspense>
-      <ExportButton :defs="definition.map((v) => v.conts)" :word="word.lemma" />
+      <ExportButton
+        :defs="definition.map((v) => v.conts)"
+        :word="word.lemma"
+        :sentence="props.sentence"
+      />
     </Suspense>
   </Card>
 </template>

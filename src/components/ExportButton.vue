@@ -14,9 +14,17 @@ import Exporting from "@/components/settings/Exporting.vue";
 import { invoke } from "@tauri-apps/api/tauri";
 import { ref, Ref } from "vue";
 import { Settings, ExportDetails } from "@/types";
+import {
+  Card,
+  CardContent,
+  CardDescription,
+  CardHeader,
+  CardTitle,
+} from "@/components/ui/card";
 
 const props = defineProps<{
   word: string;
+  sentence: string;
   defs: string[];
 }>();
 
@@ -37,6 +45,14 @@ const exportDetails: Ref<ExportDetails> = ref({
 async function exportWord() {
   await invoke("add_to_anki", { exportDetails: exportDetails.value });
 }
+
+function selectWord() {
+  const selection = window.getSelection();
+  if (selection) {
+    if (selection.focusNode?.parentElement?.id === "sentence")
+      exportDetails.value.sentence = selection.toString();
+  }
+}
 </script>
 
 <template>
@@ -46,7 +62,7 @@ async function exportWord() {
         <Button variant="destructive"> Export </Button>
       </div>
     </DialogTrigger>
-    <DialogContent class="sm:max-w-[425px]">
+    <DialogContent>
       <DialogHeader>
         <DialogTitle>Export word</DialogTitle>
         <DialogDescription>
@@ -60,9 +76,33 @@ async function exportWord() {
         v-model:model="exportDetails.model"
         v-model:fields="exportDetails.fields"
       />
+      <Card>
+        <CardHeader>
+          <CardTitle>Export Context</CardTitle>
+          <CardDescription v-if="exportDetails.sentence == ''">
+            Select the context to export
+          </CardDescription>
+          <CardDescription v-else>
+            {{ exportDetails.sentence }}
+          </CardDescription>
+        </CardHeader>
+        <CardContent>
+          <p
+            @mouseup="selectWord"
+            @mousedown="selectWord"
+            @mouseleave="selectWord"
+            id="sentence"
+            class="selection:bg-pink-300"
+          >
+            {{ props.sentence }}
+          </p>
+        </CardContent>
+      </Card>
       <DialogFooter>
         <DialogClose as-child>
-          <Button @click="exportWord" type="submit"> Export </Button>
+          <div class="flex justify-center bottom-0 py-3">
+            <Button @click="exportWord" type="submit"> Export </Button>
+          </div>
         </DialogClose>
       </DialogFooter>
     </DialogContent>
