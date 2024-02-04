@@ -14,12 +14,14 @@ import Exporting from "@/components/settings/Exporting.vue";
 import { invoke } from "@tauri-apps/api/tauri";
 import { ref, Ref } from "vue";
 import { Settings, ExportDetails } from "@/types";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import {
-  Accordion,
-  AccordionContent,
-  AccordionItem,
-  AccordionTrigger,
-} from "@/components/ui/accordion";
+  Card,
+  CardContent,
+  CardDescription,
+  CardHeader,
+  CardTitle,
+} from "@/components/ui/card";
 
 const props = defineProps<{
   word: string;
@@ -68,44 +70,63 @@ function selectWord() {
           Export the word to Anki with information
         </DialogDescription>
       </DialogHeader>
-      <Accordion type="multiple" collapsible>
-        <AccordionItem value="location">
-          <AccordionTrigger>Export location</AccordionTrigger>
-          <AccordionContent>
-            <div class="select-auto">
-              <Exporting
-                :models
-                :deckNames
-                v-model:deck="exportDetails.deck"
-                v-model:model="exportDetails.model"
-                v-model:fields="exportDetails.fields"
-              />
-            </div>
-          </AccordionContent>
-        </AccordionItem>
-        <AccordionItem value="context">
-          <AccordionTrigger>Export context</AccordionTrigger>
-          <AccordionContent>
-            <p v-if="exportDetails.sentence == ''">
-              Select the context to export
-            </p>
-            <p v-else>
-              {{ exportDetails.sentence }}
-            </p>
-            <div class="border-2 border-slate-800 p-2 mt-2 rounded-md">
-              <p
-                @mouseup="selectWord"
-                @mousedown="selectWord"
-                @mouseleave="selectWord"
-                id="sentence"
-                class="selection:bg-pink-300 select-auto"
+      <Tabs default-value="context" class="w-[400px]">
+        <TabsList>
+          <TabsTrigger value="context"> Context </TabsTrigger>
+          <TabsTrigger value="location"> Location </TabsTrigger>
+        </TabsList>
+        <TabsContent value="context">
+          <Card>
+            <CardHeader>
+              <CardTitle>Context</CardTitle>
+              <CardDescription
+                >Highlight the context to be exported along with the
+                sentence</CardDescription
               >
-                {{ props.sentence }}
+            </CardHeader>
+            <CardContent>
+              <p v-if="exportDetails.sentence == ''">
+                Select the context to export
               </p>
-            </div>
-          </AccordionContent>
-        </AccordionItem>
-      </Accordion>
+              <p v-else>
+                {{ exportDetails.sentence }}
+              </p>
+              <div class="border-2 border-slate-800 p-2 mt-2 rounded-md">
+                <p
+                  @mouseup="selectWord"
+                  @mousedown="selectWord"
+                  @mouseleave="selectWord"
+                  id="sentence"
+                  class="selection:bg-pink-300 select-auto"
+                >
+                  {{ props.sentence }}
+                </p>
+              </div>
+            </CardContent>
+          </Card>
+        </TabsContent>
+        <TabsContent value="location">
+          <Card>
+            <CardHeader>
+              <CardTitle>Location</CardTitle>
+              <CardDescription
+                >Edit the settings for exporting to Anki</CardDescription
+              >
+            </CardHeader>
+            <CardContent>
+              <div class="select-auto">
+                <Exporting
+                  :models
+                  :deckNames
+                  v-model:deck="exportDetails.deck"
+                  v-model:model="exportDetails.model"
+                  v-model:fields="exportDetails.fields"
+                />
+              </div>
+            </CardContent>
+          </Card>
+        </TabsContent>
+      </Tabs>
       <DialogFooter>
         <DialogClose as-child>
           <div class="flex justify-center bottom-0 py-3">
