@@ -15,12 +15,11 @@ import { invoke } from "@tauri-apps/api/tauri";
 import { ref, Ref } from "vue";
 import { Settings, ExportDetails } from "@/types";
 import {
-  Card,
-  CardContent,
-  CardDescription,
-  CardHeader,
-  CardTitle,
-} from "@/components/ui/card";
+  Accordion,
+  AccordionContent,
+  AccordionItem,
+  AccordionTrigger,
+} from "@/components/ui/accordion";
 
 const props = defineProps<{
   word: string;
@@ -62,42 +61,51 @@ function selectWord() {
         <Button variant="destructive"> Export </Button>
       </div>
     </DialogTrigger>
-    <DialogContent>
+    <DialogContent class="select-none">
       <DialogHeader>
         <DialogTitle>Export word</DialogTitle>
         <DialogDescription>
           Export the word to Anki with information
         </DialogDescription>
       </DialogHeader>
-      <Exporting
-        :models
-        :deckNames
-        v-model:deck="exportDetails.deck"
-        v-model:model="exportDetails.model"
-        v-model:fields="exportDetails.fields"
-      />
-      <Card>
-        <CardHeader>
-          <CardTitle>Export Context</CardTitle>
-          <CardDescription v-if="exportDetails.sentence == ''">
-            Select the context to export
-          </CardDescription>
-          <CardDescription v-else>
-            {{ exportDetails.sentence }}
-          </CardDescription>
-        </CardHeader>
-        <CardContent>
-          <p
-            @mouseup="selectWord"
-            @mousedown="selectWord"
-            @mouseleave="selectWord"
-            id="sentence"
-            class="selection:bg-pink-300"
-          >
-            {{ props.sentence }}
-          </p>
-        </CardContent>
-      </Card>
+      <Accordion type="multiple" collapsible>
+        <AccordionItem value="location">
+          <AccordionTrigger>Export location</AccordionTrigger>
+          <AccordionContent>
+            <div class="select-auto">
+              <Exporting
+                :models
+                :deckNames
+                v-model:deck="exportDetails.deck"
+                v-model:model="exportDetails.model"
+                v-model:fields="exportDetails.fields"
+              />
+            </div>
+          </AccordionContent>
+        </AccordionItem>
+        <AccordionItem value="context">
+          <AccordionTrigger>Export context</AccordionTrigger>
+          <AccordionContent>
+            <p v-if="exportDetails.sentence == ''">
+              Select the context to export
+            </p>
+            <p v-else>
+              {{ exportDetails.sentence }}
+            </p>
+            <div class="border-2 border-slate-800 p-2 mt-2 rounded-md">
+              <p
+                @mouseup="selectWord"
+                @mousedown="selectWord"
+                @mouseleave="selectWord"
+                id="sentence"
+                class="selection:bg-pink-300 select-auto"
+              >
+                {{ props.sentence }}
+              </p>
+            </div>
+          </AccordionContent>
+        </AccordionItem>
+      </Accordion>
       <DialogFooter>
         <DialogClose as-child>
           <div class="flex justify-center bottom-0 py-3">
