@@ -32,8 +32,8 @@ const sentence = computed(() => {
     i < selected_index.value + DEFAULT_WORDS_AROUND;
     i++
   ) {
-    if (words.value) {
-      const curWord = words.value[i];
+    const curWord = words.value![i];
+    if (curWord) {
       if (curWord.clickable) {
         intendedSent += " " + curWord.text;
       } else {
@@ -81,6 +81,5 @@ async function changeRating(rating: number, attemptedLemma: string) {
       @selected="(w) => handle_word_selected(w, index)"
       @set-rating="changeRating"
     />
-    <!-- <div v-if="word.text == '\n\n'" class="basis-full h-0"></div> -->
   </div>
 </template>
