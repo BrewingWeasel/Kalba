@@ -57,7 +57,7 @@ impl Default for SharedInfo {
         let days_passed = new_time
             .signed_duration_since(to_save.last_launched)
             .num_days()
-            + 1;
+            + 2;
 
         for (deck, note_parser) in &mut settings.anki_parser {
             block_on(get_anki_card_statuses(

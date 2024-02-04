@@ -37,7 +37,7 @@ pub async fn get_anki_card_statuses(
     } else {
         format!("rated:{days_passed}")
     };
-    let find_cards_query = format!("\"deck:{deck}{days_passed_query}\"");
+    let find_cards_query = format!("\"deck:{deck}\"{days_passed_query}");
 
     let cards = get_card_or_note_vals("findCards", json!({ "query": find_cards_query })).await?;
     let intervals = get_card_or_note_vals("getIntervals", json!({ "cards": &cards })).await?;
