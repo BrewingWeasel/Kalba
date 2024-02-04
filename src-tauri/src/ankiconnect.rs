@@ -56,11 +56,11 @@ pub async fn get_anki_card_statuses(
         println!("word: {} interval: {interval}", word);
 
         let rating = if interval <= 1 {
-            0
-        } else if interval <= 4 {
             1
-        } else if interval <= 9 {
+        } else if interval <= 4 {
             2
+        } else if interval <= 9 {
+            3
         } else if interval <= 25 {
             4
         } else {
