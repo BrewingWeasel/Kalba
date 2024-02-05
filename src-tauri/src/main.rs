@@ -57,20 +57,18 @@ impl Default for SharedInfo {
         let days_passed = new_time
             .signed_duration_since(to_save.last_launched)
             .num_days()
-            + 1;
+            + 2;
 
-        if let Some(ankiparsers) = &mut settings.anki_parser {
-            for (deck, note_parser) in ankiparsers {
-                block_on(get_anki_card_statuses(
-                    deck,
-                    note_parser,
-                    &mut to_save.words,
-                    days_passed,
-                    !to_save.decks_checked.contains(deck),
-                ))
-                .unwrap();
-                to_save.decks_checked.push(deck.clone());
-            }
+        for (deck, note_parser) in &mut settings.anki_parser {
+            block_on(get_anki_card_statuses(
+                deck,
+                &note_parser.0,
+                &mut to_save.words,
+                days_passed,
+                !to_save.decks_checked.contains(deck),
+            ))
+            .unwrap();
+            to_save.decks_checked.push(deck.clone());
         }
 
         if let Some(cmds) = &settings.to_run {
@@ -103,6 +101,7 @@ fn main() {
             parse_text,
             get_defs,
             get_settings,
+            get_dark_mode,
             add_to_anki,
             write_settings,
             get_all_deck_names,
@@ -140,6 +139,12 @@ async fn get_settings(state: State<'_, SakinyjeState>) -> Result<Settings, Strin
 }
 
 #[tauri::command]
+async fn get_dark_mode(state: State<'_, SakinyjeState>) -> Result<bool, String> {
+    let state = state.0.lock().await;
+    Ok(state.settings.dark_mode)
+}
+
+#[tauri::command]
 async fn write_settings(state: State<'_, SakinyjeState>, settings: Settings) -> Result<(), String> {
     let config_file = dirs::config_dir().unwrap().join("sakinyje.toml");
     let conts = toml::to_string_pretty(&settings).unwrap();
@@ -155,10 +160,11 @@ async fn update_word_knowledge(
     state: State<'_, SakinyjeState>,
     word: &str,
     rating: u8,
+    modifiable: bool,
 ) -> Result<(), String> {
     let mut state = state.0.lock().await;
     let word_knowledge = state.to_save.words.get_mut(word).unwrap();
     word_knowledge.rating = rating;
-    word_knowledge.can_modify = false;
+    word_knowledge.can_modify = modifiable;
     Ok(())
 }

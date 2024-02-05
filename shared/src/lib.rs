@@ -2,6 +2,22 @@ use std::collections::HashMap;
 
 use serde::{Deserialize, Serialize};
 
+use serde_map_to_array::{HashMapToArray, KeyValueLabels};
+
+struct DeckKeyValueLabels;
+
+impl KeyValueLabels for DeckKeyValueLabels {
+    const KEY: &'static str = "name";
+    const VALUE: &'static str = "notes";
+}
+
+struct NoteKeyValueLabels;
+
+impl KeyValueLabels for NoteKeyValueLabels {
+    const KEY: &'static str = "model";
+    const VALUE: &'static str = "handling";
+}
+
 #[derive(Clone, Serialize, Deserialize, Debug)]
 pub struct Word {
     pub text: String,
@@ -62,33 +78,43 @@ pub struct NoteToWordHandling {
 }
 
 #[derive(Deserialize, Serialize, Clone)]
+
+pub struct Note(
+    #[serde(with = "HashMapToArray::<String, NoteToWordHandling, NoteKeyValueLabels>")]
+    pub  HashMap<String, NoteToWordHandling>,
+);
+
+#[derive(Deserialize, Serialize, Clone)]
 pub struct Settings {
     pub deck: String,
     pub note_type: String,
-    pub note_fields: String,
+    pub note_fields: HashMap<String, String>,
     pub model: String,
     pub dicts: Vec<Dictionary>,
     pub to_remove: Option<usize>,
     pub css: Option<String>,
-    pub anki_parser: Option<HashMap<String, HashMap<String, NoteToWordHandling>>>,
+    #[serde(with = "HashMapToArray::<String, Note, DeckKeyValueLabels>")]
+    pub anki_parser: HashMap<String, Note>,
     pub to_run: Option<Vec<String>>,
+    pub dark_mode: bool,
 }
 
 impl Default for Settings {
     fn default() -> Self {
         Self {
-            deck: String::from("Default"),
-            note_type: String::from("Basic"),
-            note_fields: String::from(
-                "Front:{sent}
-Back:{word}:{def}",
-            ),
+            deck: String::from(""),
+            note_type: String::from(""),
+            note_fields: HashMap::from([
+                (String::from("Front"), String::from("{sent}")),
+                (String::from("Back"), String::from("{word}:{def}")),
+            ]),
             model: String::from("lt_core_news_sm"),
             dicts: Vec::new(),
             to_remove: None,
             css: None,
-            anki_parser: None,
+            anki_parser: HashMap::new(),
             to_run: None,
+            dark_mode: true,
         }
     }
 }

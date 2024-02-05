@@ -1,50 +1,25 @@
 # Sakinyje
 
-!!!!
-The frontend of Sakinyje is currently being rebuilt using vue so the following information is out of date. Check out the vue branch to see the real current state of the project.
-
 Sakinyje is a tool for language learning based on the idea of [sentence mining](https://refold.la/roadmap/stage-2/a/basic-sentence-mining).
 
 ## Features:
 
-- export sentence to Anki (using ankiconnect)
-- automatically get definition from user supplied dictionaries
-  - allows fetching definitions from multiple different dictionaries
-  - allows multiple ways to get definition
-    - stardict
-    - from a server
-    - file with special delimiter
-- Customizable, config saved to toml file in configuration directory
-- Definitions and the auto generated lemma are editable
-- NLP with SpaCy which allows for:
-  - automatic lemma (base word) detection
-  - coloring of words based on grammatical characteristics
-  - easy support for the following languages:
-    - Catalan
-    - Chinese
-    - Croatian
-    - Danish
-    - Dutch
-    - English
-    - Finnish
-    - French
-    - German
-    - Greek
-    - Italian
-    - Japanese
-    - Korean
-    - Lithuanian
-    - Macedonian
-    - Norwegian
-    - Polish
-    - Portuguese
-    - Romanian
-    - Russian
-    - Slovenian
-    - Spanish
-    - Swedish
-    - Ukrainian
-  - training custom models for other languages or improving the models of existing languages (see https://spacy.io/usage/training for training instructions and https://universaldependencies.org/ for source data)
+- automatically detecting grammatical details such as the root word and morphology using SpaCy (works automatically for any languages with [pre-trained models](), and you can train [custom models](https://spacy.io/usage/training) with [data](https://universaldependencies.org/))
+  ![grammarandchange](https://github.com/BrewingWeasel/sakinyje/assets/111588298/32449ad7-9bf8-41f8-9768-cae3bc3c19dc)
+- colors the words based on how well you know them (automatically detected from Anki or selected by user)
+- export word and definition with custom context to Anki
+  ![exportcontext](https://github.com/BrewingWeasel/sakinyje/assets/111588298/ccd64024-a48c-4451-9e72-92a0fda23eaa)
+- automatically get definition from user supplied dictionaries (stardict, URL, file)
+  ![definition](https://github.com/BrewingWeasel/sakinyje/assets/111588298/3e0a9658-234b-4bf4-9d9f-733a7ced9aa3)
+- extremely customizable
+
+## Full demo video
+
+https://github.com/BrewingWeasel/sakinyje/assets/111588298/1c4fbcbd-ec7f-43ce-b9d4-b5dc9bd98a16
+
+## Status:
+
+work in progress, expect things to break frequently
 
 ## Future plans:
 
@@ -62,7 +37,10 @@ Note that currently the AppImage does not work, and the others are not tested
 Dependencies (debian based):
 libgtk-3-dev libwebkit2gtk-4.0-dev libayatana-appindicator3-dev librsvg2-dev glibc-source libc6 python3-dev
 
-#### Using Just
+Runtime Dependencies
+SpaCy python
+
+#### Using Just (currently broken)
 
 ```sh
 git clone https://github.com/BrewingWeasel/sakinyje && cd sakinyje
@@ -86,10 +64,11 @@ Add a dictionary. Here are some suggestions:
 
 ### Normal usage:
 
-Copy or write a sentence into the reader tab, then press parse.
+Copy or write a sentence into the input tab, then press submit.
 Click on any word to get its definition.
 Click on the export button to export to Anki
 
 ## Name
 
 The name comes from the locative form of the Lithuanian word for sentence (sakinys).
+Translates (roughly) to "in a sentence"
