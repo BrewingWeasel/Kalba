@@ -13,7 +13,6 @@ Sakinyje is a tool for language learning based on the idea of [sentence mining](
   ![definition](https://github.com/BrewingWeasel/sakinyje/assets/111588298/3e0a9658-234b-4bf4-9d9f-733a7ced9aa3)
 - extremely customizable
 
-
 ## Full demo video
 
 https://github.com/BrewingWeasel/sakinyje/assets/111588298/1c4fbcbd-ec7f-43ce-b9d4-b5dc9bd98a16
@@ -69,7 +68,7 @@ Copy or write a sentence into the input tab, then press submit.
 Click on any word to get its definition.
 Click on the export button to export to Anki
 
-## Name:
+## Name
 
 The name comes from the locative form of the Lithuanian word for sentence (sakinys).
 Translates (roughly) to "in a sentence"
