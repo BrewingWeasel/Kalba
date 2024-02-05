@@ -4,44 +4,15 @@ Sakinyje is a tool for language learning based on the idea of [sentence mining](
 
 ## Features:
 
-- export sentence to Anki (using ankiconnect)
-- automatically get definition from user supplied dictionaries
-  - allows fetching definitions from multiple different dictionaries
-  - allows multiple ways to get definition
-    - stardict
-    - from a server
-    - file with special delimiter
-- Customizable, config saved to toml file in configuration directory
-- ~~Definitions and the auto generated lemma are editable~~ (currently does not work)
-- NLP with SpaCy which allows for:
-  - automatic lemma (base word) detection
-  - coloring of words based on grammatical characteristics
-  - easy support for the following languages:
-    - Catalan
-    - Chinese
-    - Croatian
-    - Danish
-    - Dutch
-    - English
-    - Finnish
-    - French
-    - German
-    - Greek
-    - Italian
-    - Japanese
-    - Korean
-    - Lithuanian
-    - Macedonian
-    - Norwegian
-    - Polish
-    - Portuguese
-    - Romanian
-    - Russian
-    - Slovenian
-    - Spanish
-    - Swedish
-    - Ukrainian
-  - training custom models for other languages or improving the models of existing languages (see https://spacy.io/usage/training for training instructions and https://universaldependencies.org/ for source data)
+- automatically detecting grammatical details such as the root word and morphology using SpaCy (works automatically for any languages with [pre-trained models](), and you can train [custom models](https://spacy.io/usage/training) with [data](https://universaldependencies.org/))
+- colors the words based on how well you know them (automatically detected from Anki or selected by user)
+- export word and definition with custom context to Anki
+- automatically get definition from user supplied dictionaries (stardict, URL, file)
+- extremely customizable
+
+## Status:
+
+work in progress, expect things to break frequently
 
 ## Future plans:
 
@@ -58,6 +29,9 @@ Note that currently the AppImage does not work, and the others are not tested
 
 Dependencies (debian based):
 libgtk-3-dev libwebkit2gtk-4.0-dev libayatana-appindicator3-dev librsvg2-dev glibc-source libc6 python3-dev
+
+Runtime Dependencies
+SpaCy python
 
 #### Using Just (currently broken)
 
