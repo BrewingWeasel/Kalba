@@ -5,10 +5,18 @@ Sakinyje is a tool for language learning based on the idea of [sentence mining](
 ## Features:
 
 - automatically detecting grammatical details such as the root word and morphology using SpaCy (works automatically for any languages with [pre-trained models](), and you can train [custom models](https://spacy.io/usage/training) with [data](https://universaldependencies.org/))
+  ![grammarandchange](https://github.com/BrewingWeasel/sakinyje/assets/111588298/32449ad7-9bf8-41f8-9768-cae3bc3c19dc)
 - colors the words based on how well you know them (automatically detected from Anki or selected by user)
 - export word and definition with custom context to Anki
+  ![exportcontext](https://github.com/BrewingWeasel/sakinyje/assets/111588298/ccd64024-a48c-4451-9e72-92a0fda23eaa)
 - automatically get definition from user supplied dictionaries (stardict, URL, file)
+  ![definition](https://github.com/BrewingWeasel/sakinyje/assets/111588298/3e0a9658-234b-4bf4-9d9f-733a7ced9aa3)
 - extremely customizable
+
+
+## Full demo video
+
+https://github.com/BrewingWeasel/sakinyje/assets/111588298/1c4fbcbd-ec7f-43ce-b9d4-b5dc9bd98a16
 
 ## Status:
 
