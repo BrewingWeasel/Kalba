@@ -46,7 +46,7 @@ async function updateLemma() {
       <CardTitle
         ><Input
           @change="updateLemma"
-          class="text-center"
+          class="text-lg text-center border-0 hover:border-2 focus:border-2"
           v-model="word.lemma"
         ></Input
       ></CardTitle>
