@@ -28,6 +28,7 @@ const deckNames: string[] = await invoke("get_all_deck_names");
 async function saveSettings() {
   await invoke("write_settings", { settings: settings.value });
 }
+console.log(settings.value);
 
 watch(
   () => settings.value.dark_mode,
@@ -134,8 +135,13 @@ watch(
             <Input
               id="frequencylist"
               type="file"
-              v-model="settings.frequency_list"
+              @change="
+                (e: string) => {
+                  settings.frequency_list = e;
+                }
+              "
             />
+            <Label class="text-xs italic">{{ settings.frequency_list }}</Label>
             <Label for="freq">Number of words known</Label>
             <Input
               id="freq"
