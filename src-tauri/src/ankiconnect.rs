@@ -6,7 +6,7 @@ use serde_json::{json, value::Value};
 use shared::NoteToWordHandling;
 use tauri::State;
 
-use crate::{SakinyjeState, WordInfo};
+use crate::{Method, SakinyjeState, WordInfo};
 
 #[derive(Deserialize, Debug)]
 struct AnkiResult<T> {
@@ -68,7 +68,7 @@ pub async fn get_anki_card_statuses(
         };
 
         if let Some(orig) = original_words.get_mut(&word) {
-            if orig.can_modify {
+            if orig.method != Method::Specified {
                 orig.rating = rating;
             }
         } else {
@@ -76,7 +76,7 @@ pub async fn get_anki_card_statuses(
                 word,
                 WordInfo {
                     rating,
-                    can_modify: true,
+                    method: Method::FromAnki,
                 },
             );
         }

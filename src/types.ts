@@ -16,4 +16,6 @@ export interface Settings {
   model: string;
   anki_parser: Deck[];
   dark_mode: boolean;
+  frequency_list: string;
+  words_known_by_freq: number,
 }

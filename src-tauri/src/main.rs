@@ -70,6 +70,11 @@ impl Default for SharedInfo {
             .unwrap();
             to_save.decks_checked.push(deck.clone());
         }
+        update_words_known(
+            &settings.frequency_list,
+            settings.words_known_by_freq,
+            &mut to_save.words,
+        );
 
         if let Some(cmds) = &settings.to_run {
             for cmd in cmds {
@@ -91,7 +96,15 @@ impl Default for SharedInfo {
 #[derive(Serialize, Deserialize)]
 struct WordInfo {
     rating: u8,
-    can_modify: bool,
+    method: Method,
+}
+
+#[derive(Serialize, Deserialize, PartialEq, Eq)]
+enum Method {
+    FromAnki,
+    FromSeen,
+    Specified,
+    FromFrequency,
 }
 
 fn main() {
@@ -132,6 +145,27 @@ fn handle_window_event(event: GlobalWindowEvent) {
     })
 }
 
+fn update_words_known(
+    file_name: &str,
+    words_known: usize,
+    original_words: &mut HashMap<String, WordInfo>,
+) {
+    println!("updating words known");
+    if let Ok(contents) = fs::read_to_string(file_name) {
+        original_words.retain(|_, v| v.method != Method::FromFrequency);
+        for word in contents.lines().take(words_known) {
+            println!("{word}");
+            original_words.insert(
+                word.to_owned(),
+                WordInfo {
+                    rating: 5,
+                    method: Method::FromFrequency,
+                },
+            );
+        }
+    }
+}
+
 #[tauri::command]
 async fn get_settings(state: State<'_, SakinyjeState>) -> Result<Settings, String> {
     let state = state.0.lock().await;
@@ -165,6 +199,10 @@ async fn update_word_knowledge(
     let mut state = state.0.lock().await;
     let word_knowledge = state.to_save.words.get_mut(word).unwrap();
     word_knowledge.rating = rating;
-    word_knowledge.can_modify = modifiable;
+    word_knowledge.method = if modifiable {
+        Method::FromAnki
+    } else {
+        Method::Specified
+    };
     Ok(())
 }

@@ -22,7 +22,7 @@ pub async fn parse_text(sent: &str, state: State<'_, SakinyjeState>) -> Result<V
             .entry(word.lemma.clone())
             .or_insert(crate::WordInfo {
                 rating: 0,
-                can_modify: true,
+                method: crate::Method::FromSeen,
             })
             .rating;
 

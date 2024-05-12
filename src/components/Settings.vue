@@ -42,9 +42,9 @@ watch(
 </script>
 
 <template>
-  <div class="w-full flex justify-center">
+  <div class="flex justify-center w-full">
     <Tabs default-value="knowledge" class="object-center">
-      <TabsList class="grid w-full grid-cols-6">
+      <TabsList class="grid grid-cols-6 w-full">
         <TabsTrigger value="appearance"> Appearance </TabsTrigger>
         <TabsTrigger value="exporting"> Exporting </TabsTrigger>
         <TabsTrigger value="knowledge"> Word Knowledge </TabsTrigger>
@@ -130,6 +130,18 @@ watch(
           <CardContent class="space-y-2">
             <Label for="model">SpaCy model</Label>
             <Input id="model" v-model="settings.model" />
+            <Label for="frequencylist">Frequency list</Label>
+            <Input
+              id="frequencylist"
+              type="file"
+              v-model="settings.frequency_list"
+            />
+            <Label for="freq">Number of words known</Label>
+            <Input
+              id="freq"
+              type="number"
+              v-model="settings.words_known_by_freq"
+            />
           </CardContent>
           <CardFooter>
             <Button variant="destructive" @click="saveSettings">Save</Button>

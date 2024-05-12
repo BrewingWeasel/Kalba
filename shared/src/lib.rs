@@ -97,6 +97,8 @@ pub struct Settings {
     pub anki_parser: HashMap<String, Note>,
     pub to_run: Option<Vec<String>>,
     pub dark_mode: bool,
+    pub frequency_list: String,
+    pub words_known_by_freq: usize,
 }
 
 impl Default for Settings {
@@ -115,6 +117,8 @@ impl Default for Settings {
             anki_parser: HashMap::new(),
             to_run: None,
             dark_mode: true,
+            frequency_list: String::from(""),
+            words_known_by_freq: 0,
         }
     }
 }
