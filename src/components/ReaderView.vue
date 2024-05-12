@@ -1,16 +1,9 @@
 <script setup lang="ts">
 import { Ref, computed, ref } from "vue";
 import { invoke } from "@tauri-apps/api/tauri";
-import Word from "@/components/Word.vue";
+import IndividualWord from "@/components/Word.vue";
 import SelectedWordView from "@/components/SelectedWordView.vue";
-
-interface Word {
-  text: string;
-  lemma: string;
-  morph: any;
-  clickable: boolean;
-  rating: number;
-}
+import { Word } from "@/types";
 
 if (await invoke("get_dark_mode")) {
   document.documentElement.classList.add("dark");
@@ -58,6 +51,7 @@ async function changeRating(
   attemptedLemma: string,
   modifiable: boolean = false,
 ) {
+  console.log(attemptedLemma);
   words.value!.forEach((word, i, vals) => {
     if (word["lemma"] == attemptedLemma) {
       vals[i]["rating"] = rating;
@@ -74,15 +68,15 @@ async function changeRating(
 <template>
   <Suspense>
     <SelectedWordView
-      class="float-right w-96 m-3"
+      class="float-right m-3 w-96"
       v-if="selected_word"
-      :word="selected_word"
+      v-model="words![selected_index]"
       :sentence
       @set-rating="changeRating"
     />
   </Suspense>
-  <div class="flex flex-wrap px-6 py-3">
-    <Word
+  <div class="flex flex-wrap py-3 px-6">
+    <IndividualWord
       v-for="(word, index) in words"
       :word="word"
       :rating="word.rating"

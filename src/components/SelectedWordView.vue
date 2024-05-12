@@ -10,28 +10,48 @@ import {
 import RatingButtons from "@/components/RatingButtons.vue";
 import GrammarDetails from "@/components/GrammarDetails.vue";
 import DefinitionView from "@/components/DefinitionView.vue";
+import { Input } from "@/components/ui/input";
 import ExportButton from "@/components/ExportButton.vue";
 import { invoke } from "@tauri-apps/api/tauri";
 import { computedAsync } from "@vueuse/core";
+import { Word } from "@/types";
 
 interface Definition {
   t: string;
   conts: string;
 }
 
-const props = defineProps(["word", "sentence"]);
+const props = defineProps(["sentence"]);
+const word = defineModel<Word>({ required: true });
+
+const emit = defineEmits<{
+  (e: "set-rating", rating: number, lemma: string, modifiable?: boolean): void;
+}>();
 
 const definition = computedAsync(async (): Promise<Definition[]> => {
-  return await invoke("get_defs", { lemma: props.word.lemma });
+  return await invoke("get_defs", { lemma: word.value.lemma });
 }, []);
+
+async function updateLemma() {
+  const rating: number = await invoke("get_rating", {
+    lemma: word.value.lemma,
+  });
+  emit("set-rating", rating, word.value.lemma);
+}
 </script>
 
 <template>
   <Card>
     <CardHeader>
-      <CardTitle class="text-center">{{ props.word.lemma }}</CardTitle>
+      <CardTitle
+        ><Input
+          @change="updateLemma"
+          class="text-center"
+          v-model="word.lemma"
+        ></Input
+      ></CardTitle>
       <CardDescription class="text-center"
-        ><i>{{ props.word.text }}</i></CardDescription
+        ><i>{{ word.text }}</i></CardDescription
       >
     </CardHeader>
     <CardContent>
@@ -39,7 +59,7 @@ const definition = computedAsync(async (): Promise<Definition[]> => {
         class="pb-3"
         @change-rating="
           (r) => {
-            $emit('set-rating', r, props.word.lemma);
+            $emit('set-rating', r, word.lemma);
           }
         "
       />
@@ -59,7 +79,7 @@ const definition = computedAsync(async (): Promise<Definition[]> => {
         :sentence="props.sentence"
         @change-rating="
           (r) => {
-            $emit('set-rating', r, props.word.lemma, true);
+            $emit('set-rating', r, word.lemma, true);
           }
         "
       />

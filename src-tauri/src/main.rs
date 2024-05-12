@@ -122,6 +122,7 @@ fn main() {
             get_note_field_names,
             update_word_knowledge,
             remove_deck,
+            get_rating,
         ])
         .on_window_event(handle_window_event)
         .run(tauri::generate_context!())
@@ -176,6 +177,20 @@ async fn get_settings(state: State<'_, SakinyjeState>) -> Result<Settings, Strin
 async fn get_dark_mode(state: State<'_, SakinyjeState>) -> Result<bool, String> {
     let state = state.0.lock().await;
     Ok(state.settings.dark_mode)
+}
+
+#[tauri::command]
+async fn get_rating(lemma: String, state: State<'_, SakinyjeState>) -> Result<u8, String> {
+    let mut state = state.0.lock().await;
+    Ok(state
+        .to_save
+        .words
+        .entry(lemma)
+        .or_insert(WordInfo {
+            rating: 0,
+            method: Method::FromSeen,
+        })
+        .rating)
 }
 
 #[tauri::command]

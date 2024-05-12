@@ -19,3 +19,11 @@ export interface Settings {
   frequency_list: string;
   words_known_by_freq: number,
 }
+
+export interface Word {
+  text: string;
+  lemma: string;
+  morph: any;
+  clickable: boolean;
+  rating: number;
+}
