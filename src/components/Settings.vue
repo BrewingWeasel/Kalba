@@ -12,6 +12,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Switch } from "@/components/ui/switch";
 
 import WordKnowledge from "@/components/settings/WordKnowledge.vue";
+import Dictionaries from "@/components/settings/Dictionaries.vue";
 import Exporting from "@/components/settings/Exporting.vue";
 import { invoke } from "@tauri-apps/api/tauri";
 import { Ref, ref, watch } from "vue";
@@ -26,6 +27,7 @@ const models: string[] = await invoke("get_all_note_names");
 const deckNames: string[] = await invoke("get_all_deck_names");
 
 async function saveSettings() {
+  console.log("trying to write settings", settings.value);
   await invoke("write_settings", { settings: settings.value });
 }
 console.log(settings.value);
@@ -117,6 +119,9 @@ watch(
               Configure dictionaries to use for word lookup
             </CardDescription>
           </CardHeader>
+          <CardContent class="space-y-2">
+            <Dictionaries v-model="settings.dicts" />
+          </CardContent>
           <CardContent class="space-y-2"> </CardContent>
         </Card>
       </TabsContent>

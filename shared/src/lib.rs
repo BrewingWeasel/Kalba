@@ -28,6 +28,7 @@ pub struct Word {
 }
 
 #[derive(Serialize, Deserialize, PartialEq, Clone, Eq, Debug)]
+#[serde(tag = "t", content = "c")]
 pub enum DictFileType {
     TextSplitAt(String),
     StarDict,
