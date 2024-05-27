@@ -13,6 +13,7 @@ import { Switch } from "@/components/ui/switch";
 
 import WordKnowledge from "@/components/settings/WordKnowledge.vue";
 import Dictionaries from "@/components/settings/Dictionaries.vue";
+import FilePicker from "@/components/FilePicker.vue";
 import Exporting from "@/components/settings/Exporting.vue";
 import { invoke } from "@tauri-apps/api/tauri";
 import { Ref, ref, watch } from "vue";
@@ -137,16 +138,7 @@ watch(
             <Label for="model">SpaCy model</Label>
             <Input id="model" v-model="settings.model" />
             <Label for="frequencylist">Frequency list</Label>
-            <Input
-              id="frequencylist"
-              type="file"
-              @change="
-                (e: string) => {
-                  settings.frequency_list = e;
-                }
-              "
-            />
-            <Label class="text-xs italic">{{ settings.frequency_list }}</Label>
+            <FilePicker v-model="settings.frequency_list" />
             <Label for="freq">Number of words known</Label>
             <Input
               id="freq"

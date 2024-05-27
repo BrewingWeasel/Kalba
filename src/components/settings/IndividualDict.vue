@@ -1,6 +1,7 @@
 <script setup lang="ts">
 import { Input } from "@/components/ui/input";
 import StyledCombobox from "@/components/StyledCombobox.vue";
+import FilePicker from "@/components/FilePicker.vue";
 import { Dictionary, DictionaryType } from "@/types";
 import { watch } from "vue";
 
@@ -38,17 +39,7 @@ watch(
     item-being-selected="dictionary type"
   />
   <div v-if="dict.t == 'File' && typeof dict.c !== 'string'">
-    <Input
-      type="file"
-      @change="
-        (e: string) => {
-          if (typeof dict.c !== 'string') {
-            console.log(e);
-            dict.c[0] = e;
-          }
-        }
-      "
-    />
+    <FilePicker v-model="dict.c[0]" />
     <StyledCombobox
       :options="['TextSplitAt', 'StarDict']"
       v-model="dict.c[1].t"
