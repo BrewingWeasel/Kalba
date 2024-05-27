@@ -15,13 +15,13 @@ const dicts = defineModel({ type: Array<Dictionary>, required: true });
 function addDictionary() {
   dicts.value.push({
     t: DictionaryType.File,
-    c: {
-      filetype: {
+    c: [
+      "",
+      {
         t: "StarDict",
         c: null,
       },
-      file: "",
-    },
+    ],
   });
 }
 </script>

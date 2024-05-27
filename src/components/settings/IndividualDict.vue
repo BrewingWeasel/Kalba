@@ -12,13 +12,13 @@ watch(
     console.log(newT);
     switch (newT) {
       case DictionaryType.File: {
-        dict.value.c = {
-          file: "",
-          filetype: {
+        dict.value.c = [
+          "",
+          {
             t: "StarDict",
             c: null,
           },
-        };
+        ];
         break;
       }
       case DictionaryType.Url:
@@ -43,23 +43,24 @@ watch(
       @change="
         (e: string) => {
           if (typeof dict.c !== 'string') {
-            dict.c.file = e;
+            console.log(e);
+            dict.c[0] = e;
           }
         }
       "
     />
     <StyledCombobox
       :options="['TextSplitAt', 'StarDict']"
-      v-model="dict.c.filetype.t"
+      v-model="dict.c[1].t"
       item-being-selected="file dictionary type"
     />
     <Input
       type="text"
       placeholder="Definition separator"
-      v-if="dict.c.filetype.t == 'TextSplitAt'"
+      v-if="dict.c[1].t == 'TextSplitAt'"
       v-model="
         //@ts-ignore
-        dict.c.filetype.c
+        dict.c[1].c
       "
     />
   </div>

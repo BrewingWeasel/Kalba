@@ -42,8 +42,5 @@ export enum DictionaryType {
 
 export interface Dictionary {
   t: DictionaryType;
-  c: {
-     file: string,
-     filetype: FileType
-  } | string
+  c: [string, FileType] | string
 }
