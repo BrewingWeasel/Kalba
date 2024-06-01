@@ -200,7 +200,7 @@ pub async fn get_note_field_names(model: &str) -> Result<Vec<String>, String> {
 }
 
 #[tauri::command]
-pub async fn remove_deck(deck: String, state: State<'_, SakinyjeState>) -> Result<(), String> {
+pub async fn remove_deck(deck: String, state: State<'_, SakinyjeState<'_>>) -> Result<(), String> {
     state
         .0
         .lock()

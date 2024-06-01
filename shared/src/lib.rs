@@ -40,6 +40,7 @@ pub enum Dictionary {
     File(String, DictFileType),
     Url(String),
     Command(String),
+    EkalbaBendrines,
 }
 
 #[derive(Serialize, Deserialize, PartialEq, Eq, Clone, Debug)]

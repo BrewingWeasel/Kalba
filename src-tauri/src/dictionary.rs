@@ -1,8 +1,9 @@
+use serde::{Deserialize, Serialize};
 use shared::*;
-use std::{error::Error, fs};
+use std::{error::Error, fs, sync::Arc};
 use tauri::State;
 
-use crate::{commands::run_command, SakinyjeState};
+use crate::{commands::run_command, DictionaryInfo, SakinyjeState};
 
 fn get_def_from_file(
     lemma: &str,
@@ -53,7 +54,7 @@ async fn get_def_command(lemma: &str, cmd: &str) -> Result<String, Box<dyn Error
 
 #[tauri::command]
 pub async fn get_defs(
-    state: State<'_, SakinyjeState>,
+    state: State<'_, SakinyjeState<'_>>,
     lemma: String,
 ) -> Result<Vec<SakinyjeResult<String>>, String> {
     let mut state = state.0.lock().await;
@@ -62,7 +63,9 @@ pub async fn get_defs(
     } else {
         let mut defs = Vec::new();
         for dict in &state.settings.dicts {
-            let def = get_def(dict, &lemma).await.into();
+            let def = get_def(Arc::clone(&state.dict_info), dict, &lemma)
+                .await
+                .into();
             defs.push(def);
         }
         state.to_save.cached_defs.insert(lemma, defs.clone());
@@ -70,12 +73,51 @@ pub async fn get_defs(
     }
 }
 
-async fn get_def(dict: &Dictionary, lemma: &str) -> Result<String, Box<dyn Error>> {
+async fn get_def(
+    dict_info: Arc<tauri::async_runtime::Mutex<DictionaryInfo<'_>>>,
+    dict: &Dictionary,
+    lemma: &str,
+) -> Result<String, Box<dyn Error>> {
     match dict {
         Dictionary::File(f, dict_type) => get_def_from_file(lemma, f, dict_type),
         Dictionary::Url(url) => get_def_url(lemma, url).await,
         Dictionary::Command(cmd) => get_def_command(lemma, cmd).await,
+        Dictionary::EkalbaBendrines => Ok(get_ekalba_bendrines(dict_info, lemma).await),
     }
+}
+
+#[derive(Default, Debug, Clone, PartialEq, Serialize, Deserialize)]
+#[serde(rename_all = "camelCase")]
+pub struct EkalbaRoot {
+    pub details: EkalbaDetails,
+}
+
+#[derive(Default, Debug, Clone, PartialEq, Serialize, Deserialize)]
+#[serde(rename_all = "camelCase")]
+pub struct EkalbaDetails {
+    pub view_html: String,
+}
+
+async fn get_ekalba_bendrines(
+    dict_info: Arc<tauri::async_runtime::Mutex<DictionaryInfo<'_>>>,
+    word: &str,
+) -> String {
+    let response = {
+        let mut lock = dict_info.lock().await;
+        let Some(uuid) = lock.get_bendrines(word).await else {
+            return String::new();
+        };
+        let uuid = uuid.to_owned();
+
+        lock.send_request(&format!(
+            "https://ekalba.lt/action/vocabulary/record/{uuid}?viewType=64"
+        ))
+        .await
+        .json::<EkalbaRoot>()
+        .await
+        .unwrap()
+    };
+    response.details.view_html.to_string()
 }
 
 #[cfg(test)]

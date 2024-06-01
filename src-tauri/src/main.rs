@@ -11,10 +11,11 @@ use ankiconnect::get_anki_card_statuses;
 use chrono::{DateTime, Utc};
 use commands::run_command;
 use pyo3::PyObject;
+use reqwest::Client;
 use serde::{Deserialize, Serialize};
 use shared::{SakinyjeResult, Settings};
 use spacy_parsing::get_spacy_model;
-use std::{collections::HashMap, fs};
+use std::{collections::HashMap, fs, sync::Arc};
 use tauri::{async_runtime::block_on, GlobalWindowEvent, Manager, State, WindowEvent};
 
 mod add_to_anki;
@@ -23,12 +24,57 @@ mod commands;
 mod dictionary;
 mod language_parsing;
 
-struct SakinyjeState(tauri::async_runtime::Mutex<SharedInfo>);
+struct SakinyjeState<'a>(tauri::async_runtime::Mutex<SharedInfo<'a>>);
 
-struct SharedInfo {
+struct SharedInfo<'a> {
     settings: Settings,
     to_save: ToSave,
     model: PyObject,
+    dict_info: Arc<tauri::async_runtime::Mutex<DictionaryInfo<'a>>>,
+}
+
+#[derive(Default, Clone)]
+struct DictionaryInfo<'a> {
+    client: Option<Client>,
+    bendrines_file: Option<String>,
+    ekalba_bendrines: Option<HashMap<String, String>>,
+    ekalba_dabartines: Option<HashMap<&'a str, &'a str>>,
+}
+
+impl DictionaryInfo<'_> {
+    async fn send_request(&mut self, url: &str) -> reqwest::Response {
+        self.client
+            .get_or_insert_with(|| Client::new())
+            .get(url)
+            .send()
+            .await
+            .unwrap()
+    }
+
+    async fn get_bendrines(&mut self, word: &str) -> Option<String> {
+        let file = self.bendrines_file.get_or_insert_with(|| {
+            // TODO: include file + error handling
+            fs::read_to_string(
+                dirs::data_dir()
+                    .unwrap()
+                    .join("sakinyje")
+                    .join("language_data")
+                    .join("bendrines_uuids"),
+            )
+            .unwrap()
+        });
+        self.ekalba_bendrines
+            .get_or_insert_with(|| {
+                let mut words = HashMap::new();
+                for i in file.lines() {
+                    let (cur_word, uuid) = i.split_once('\t').unwrap();
+                    words.insert(cur_word.to_owned(), uuid.to_owned());
+                }
+                words
+            })
+            .get(word)
+            .cloned()
+    }
 }
 
 #[derive(Serialize, Deserialize, Default)]
@@ -39,7 +85,7 @@ struct ToSave {
     decks_checked: Vec<String>,
 }
 
-impl Default for SharedInfo {
+impl Default for SharedInfo<'_> {
     fn default() -> Self {
         let saved_state_file = dirs::data_dir().unwrap().join("sakinyje_saved_data.toml");
         let config_file = dirs::config_dir().unwrap().join("sakinyje.toml");
@@ -89,6 +135,7 @@ impl Default for SharedInfo {
             to_save,
             settings,
             model,
+            dict_info: Default::default(),
         }
     }
 }
@@ -155,7 +202,6 @@ fn update_words_known(
     if let Ok(contents) = fs::read_to_string(file_name) {
         original_words.retain(|_, v| v.method != Method::FromFrequency);
         for word in contents.lines().take(words_known) {
-            println!("{word}");
             original_words.insert(
                 word.to_owned(),
                 WordInfo {
@@ -168,19 +214,19 @@ fn update_words_known(
 }
 
 #[tauri::command]
-async fn get_settings(state: State<'_, SakinyjeState>) -> Result<Settings, String> {
+async fn get_settings(state: State<'_, SakinyjeState<'_>>) -> Result<Settings, String> {
     let state = state.0.lock().await;
     Ok(state.settings.clone())
 }
 
 #[tauri::command]
-async fn get_dark_mode(state: State<'_, SakinyjeState>) -> Result<bool, String> {
+async fn get_dark_mode(state: State<'_, SakinyjeState<'_>>) -> Result<bool, String> {
     let state = state.0.lock().await;
     Ok(state.settings.dark_mode)
 }
 
 #[tauri::command]
-async fn get_rating(lemma: String, state: State<'_, SakinyjeState>) -> Result<u8, String> {
+async fn get_rating(lemma: String, state: State<'_, SakinyjeState<'_>>) -> Result<u8, String> {
     let mut state = state.0.lock().await;
     Ok(state
         .to_save
@@ -194,7 +240,10 @@ async fn get_rating(lemma: String, state: State<'_, SakinyjeState>) -> Result<u8
 }
 
 #[tauri::command]
-async fn write_settings(state: State<'_, SakinyjeState>, settings: Settings) -> Result<(), String> {
+async fn write_settings(
+    state: State<'_, SakinyjeState<'_>>,
+    settings: Settings,
+) -> Result<(), String> {
     let config_file = dirs::config_dir().unwrap().join("sakinyje.toml");
     let conts = toml::to_string_pretty(&settings).unwrap();
 
@@ -206,7 +255,7 @@ async fn write_settings(state: State<'_, SakinyjeState>, settings: Settings) -> 
 
 #[tauri::command]
 async fn update_word_knowledge(
-    state: State<'_, SakinyjeState>,
+    state: State<'_, SakinyjeState<'_>>,
     word: &str,
     rating: u8,
     modifiable: bool,
