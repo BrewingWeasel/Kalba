@@ -6,6 +6,11 @@ use tauri::State;
 
 use crate::{commands::run_command, SakinyjeState};
 
+// TODO: should be customizable
+const DEFINITION: &'static str = "#eb6f92";
+const MAIN_DETAIL: &'static str = "#f6c177";
+const INFO: &'static str = "#c4a7e7";
+
 #[derive(Default, Clone)]
 pub struct DictionaryInfo<'a> {
     client: Option<Client>,
@@ -166,7 +171,28 @@ async fn get_ekalba_bendrines(
         .await
         .unwrap()
     };
-    response.details.view_html.to_string()
+    format!(
+        r#"<style>
+            .bzpusjuodis {{
+                font-weight: 800;
+                color: {MAIN_DETAIL};
+                font-size: large;
+            }}
+            .bzkursyvas {{
+                font-style: italic;
+            }}
+            .bzpaprastas {{ 
+                color: {DEFINITION};
+                font-weight: bold;
+            }}
+            .bzpetitas {{
+                font-style: italic;
+                color: {INFO};
+            }}
+        </style>
+        <div>{}</div>"#,
+        response.details.view_html
+    )
 }
 
 #[cfg(test)]
