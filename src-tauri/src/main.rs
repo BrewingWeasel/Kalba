@@ -52,17 +52,22 @@ impl DictionaryInfo<'_> {
     }
 
     async fn get_bendrines(&mut self, word: &str) -> Option<String> {
-        let file = self.bendrines_file.get_or_insert_with(|| {
+        let file = if let Some(f) = &self.bendrines_file {
+            f
+        } else {
+            let path = dirs::data_dir()
+                .unwrap()
+                .join("sakinyje")
+                .join("language_data")
+                .join("bendrines_uuids");
+            if !path.exists() {
+                let contents = self.send_request("https://raw.githubusercontent.com/BrewingWeasel/sakinyje/main/data/bendrines_uuids").await.text_with_charset("utf-8").await.unwrap();
+                fs::write(path.clone(), contents);
+            };
             // TODO: include file + error handling
-            fs::read_to_string(
-                dirs::data_dir()
-                    .unwrap()
-                    .join("sakinyje")
-                    .join("language_data")
-                    .join("bendrines_uuids"),
-            )
-            .unwrap()
-        });
+            self.bendrines_file = Some(fs::read_to_string(path).unwrap_or_default());
+            self.bendrines_file.as_ref().unwrap()
+        };
         self.ekalba_bendrines
             .get_or_insert_with(|| {
                 let mut words = HashMap::new();
