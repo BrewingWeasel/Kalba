@@ -1,9 +1,58 @@
+use reqwest::Client;
 use serde::{Deserialize, Serialize};
 use shared::*;
-use std::{error::Error, fs, sync::Arc};
+use std::{collections::HashMap, error::Error, fs, sync::Arc};
 use tauri::State;
 
-use crate::{commands::run_command, DictionaryInfo, SakinyjeState};
+use crate::{commands::run_command, SakinyjeState};
+
+#[derive(Default, Clone)]
+pub struct DictionaryInfo<'a> {
+    client: Option<Client>,
+    bendrines_file: Option<String>,
+    ekalba_bendrines: Option<HashMap<String, String>>,
+    ekalba_dabartines: Option<HashMap<&'a str, &'a str>>,
+}
+
+impl DictionaryInfo<'_> {
+    async fn send_request(&mut self, url: &str) -> reqwest::Response {
+        self.client
+            .get_or_insert_with(|| Client::new())
+            .get(url)
+            .send()
+            .await
+            .unwrap()
+    }
+
+    async fn get_bendrines(&mut self, word: &str) -> Option<String> {
+        let file = if let Some(f) = &self.bendrines_file {
+            f
+        } else {
+            let path = dirs::data_dir()
+                .unwrap()
+                .join("sakinyje")
+                .join("language_data")
+                .join("bendrines_uuids");
+            if !path.exists() {
+                let contents = self.send_request("https://raw.githubusercontent.com/BrewingWeasel/sakinyje/main/data/bendrines_uuids").await.text_with_charset("utf-8").await.unwrap();
+                fs::write(path.clone(), contents).unwrap();
+            };
+            self.bendrines_file = Some(fs::read_to_string(path).unwrap_or_default());
+            self.bendrines_file.as_ref().unwrap()
+        };
+        self.ekalba_bendrines
+            .get_or_insert_with(|| {
+                let mut words = HashMap::new();
+                for i in file.lines() {
+                    let (cur_word, uuid) = i.split_once('\t').unwrap();
+                    words.insert(cur_word.to_owned(), uuid.to_owned());
+                }
+                words
+            })
+            .get(word)
+            .cloned()
+    }
+}
 
 fn get_def_from_file(
     lemma: &str,

@@ -4,14 +4,13 @@
 use crate::{
     add_to_anki::add_to_anki,
     ankiconnect::{get_all_deck_names, get_all_note_names, get_note_field_names, remove_deck},
-    dictionary::get_defs,
+    dictionary::{get_defs, DictionaryInfo},
     language_parsing::parse_text,
 };
 use ankiconnect::get_anki_card_statuses;
 use chrono::{DateTime, Utc};
 use commands::run_command;
 use pyo3::PyObject;
-use reqwest::Client;
 use serde::{Deserialize, Serialize};
 use shared::{SakinyjeResult, Settings};
 use spacy_parsing::get_spacy_model;
@@ -31,55 +30,6 @@ struct SharedInfo<'a> {
     to_save: ToSave,
     model: PyObject,
     dict_info: Arc<tauri::async_runtime::Mutex<DictionaryInfo<'a>>>,
-}
-
-#[derive(Default, Clone)]
-struct DictionaryInfo<'a> {
-    client: Option<Client>,
-    bendrines_file: Option<String>,
-    ekalba_bendrines: Option<HashMap<String, String>>,
-    ekalba_dabartines: Option<HashMap<&'a str, &'a str>>,
-}
-
-impl DictionaryInfo<'_> {
-    async fn send_request(&mut self, url: &str) -> reqwest::Response {
-        self.client
-            .get_or_insert_with(|| Client::new())
-            .get(url)
-            .send()
-            .await
-            .unwrap()
-    }
-
-    async fn get_bendrines(&mut self, word: &str) -> Option<String> {
-        let file = if let Some(f) = &self.bendrines_file {
-            f
-        } else {
-            let path = dirs::data_dir()
-                .unwrap()
-                .join("sakinyje")
-                .join("language_data")
-                .join("bendrines_uuids");
-            if !path.exists() {
-                let contents = self.send_request("https://raw.githubusercontent.com/BrewingWeasel/sakinyje/main/data/bendrines_uuids").await.text_with_charset("utf-8").await.unwrap();
-                fs::write(path.clone(), contents);
-            };
-            // TODO: include file + error handling
-            self.bendrines_file = Some(fs::read_to_string(path).unwrap_or_default());
-            self.bendrines_file.as_ref().unwrap()
-        };
-        self.ekalba_bendrines
-            .get_or_insert_with(|| {
-                let mut words = HashMap::new();
-                for i in file.lines() {
-                    let (cur_word, uuid) = i.split_once('\t').unwrap();
-                    words.insert(cur_word.to_owned(), uuid.to_owned());
-                }
-                words
-            })
-            .get(word)
-            .cloned()
-    }
 }
 
 #[derive(Serialize, Deserialize, Default)]
