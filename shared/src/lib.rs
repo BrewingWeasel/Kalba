@@ -41,6 +41,7 @@ pub enum Dictionary {
     Url(String),
     Command(String),
     EkalbaBendrines,
+    EkalbaDabartines,
 }
 
 #[derive(Serialize, Deserialize, PartialEq, Eq, Clone, Debug)]

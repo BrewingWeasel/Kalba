@@ -1,4 +1,8 @@
-use lol_html::{element, rewrite_str, RewriteStrSettings};
+use lol_html::{
+    doc_text, element,
+    html_content::{ContentType, UserData},
+    rewrite_str, text, RewriteStrSettings,
+};
 use reqwest::Client;
 use serde::{Deserialize, Serialize};
 use shared::*;
@@ -8,8 +12,8 @@ use tauri::State;
 use crate::{commands::run_command, SakinyjeState};
 
 // TODO: should be customizable
-const DEFINITION: &str = "color: #eb6f92; font-weight: bold;";
-const MAIN_DETAIL: &str = "color: #f6c177; font-weight: 800; font-size: large;";
+const DEFINITION: &str = "color: #eb6f92; font-weight: 900;";
+const MAIN_DETAIL: &str = "color: #f6c177; font-weight: bold; font-size: large;";
 const INFO: &str = "color: #c4a7e7; font-style: italic;";
 
 #[derive(Default, Clone)]
@@ -156,6 +160,7 @@ async fn get_def(
         Dictionary::Url(url) => get_def_url(lemma, url).await,
         Dictionary::Command(cmd) => get_def_command(lemma, cmd).await,
         Dictionary::EkalbaBendrines => Ok(get_ekalba_bendrines(dict_info, lemma).await),
+        Dictionary::EkalbaDabartines => Ok(get_ekalba_dabartines(dict_info, lemma).await),
     }
 }
 
@@ -206,6 +211,68 @@ async fn get_ekalba_bendrines(
         }),
         element!("p.bz-update-date", |el| {
             el.remove();
+            Ok(())
+        }),
+    ];
+    rewrite_str(
+        &response.details.view_html,
+        RewriteStrSettings {
+            element_content_handlers,
+            ..RewriteStrSettings::default()
+        },
+    )
+    .unwrap()
+}
+
+async fn get_ekalba_dabartines(
+    dict_info: Arc<tauri::async_runtime::Mutex<DictionaryInfo>>,
+    word: &str,
+) -> String {
+    let response = {
+        let mut lock = dict_info.lock().await;
+        let Some(uuid) = lock.get_bendrines(EkalbaDictionary::Dabartines, word).await else {
+            return String::new();
+        };
+        let uuid = uuid.to_owned();
+
+        lock.send_request(&format!(
+            "https://ekalba.lt/action/vocabulary/record/{uuid}?viewType=64"
+        ))
+        .await
+        .json::<EkalbaRoot>()
+        .await
+        .unwrap()
+    };
+    let element_content_handlers = vec![
+        element!(".dz_homonym div", |el| {
+            el.set_tag_name("span").unwrap();
+            Ok(())
+        }),
+        element!(".dz_antraste", |el| {
+            el.set_attribute("style", MAIN_DETAIL).unwrap();
+            Ok(())
+        }),
+        element!(".dz_forms", |el| {
+            el.set_attribute("style", MAIN_DETAIL).unwrap();
+            Ok(())
+        }),
+        element!(".dz_valnumber", |el| {
+            el.replace("<br>", ContentType::Html);
+            Ok(())
+        }),
+        element!(".dz_tags", |el| {
+            el.set_attribute("style", INFO).unwrap();
+            Ok(())
+        }),
+        text!("*", |t| {
+            let content = t.as_str();
+            if content.ends_with(':') && content.starts_with(' ') {
+                println!("{content}");
+                t.replace(
+                    &format!("<span style=\"{DEFINITION}\">{content}</span>"),
+                    ContentType::Html,
+                )
+            }
             Ok(())
         }),
     ];
