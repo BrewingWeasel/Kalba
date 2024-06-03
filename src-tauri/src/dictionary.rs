@@ -13,14 +13,20 @@ const MAIN_DETAIL: &str = "color: #f6c177; font-weight: 800; font-size: large;";
 const INFO: &str = "color: #c4a7e7; font-style: italic;";
 
 #[derive(Default, Clone)]
-pub struct DictionaryInfo<'a> {
+pub struct DictionaryInfo {
     client: Option<Client>,
     bendrines_file: Option<String>,
+    dabartines_file: Option<String>,
     ekalba_bendrines: Option<HashMap<String, String>>,
-    ekalba_dabartines: Option<HashMap<&'a str, &'a str>>,
+    ekalba_dabartines: Option<HashMap<String, String>>,
 }
 
-impl DictionaryInfo<'_> {
+pub enum EkalbaDictionary {
+    Bendrines,
+    Dabartines,
+}
+
+impl DictionaryInfo {
     async fn send_request(&mut self, url: &str) -> reqwest::Response {
         self.client
             .get_or_insert_with(|| Client::new())
@@ -30,23 +36,35 @@ impl DictionaryInfo<'_> {
             .unwrap()
     }
 
-    async fn get_bendrines(&mut self, word: &str) -> Option<String> {
-        let file = if let Some(f) = &self.bendrines_file {
+    async fn get_bendrines(&mut self, dict: EkalbaDictionary, word: &str) -> Option<String> {
+        let (dict_file, uuid_file) = match dict {
+            EkalbaDictionary::Bendrines => (&mut self.bendrines_file, "bendrines_uuids"),
+            EkalbaDictionary::Dabartines => (&mut self.dabartines_file, "dabartines_uuids"),
+        };
+        let file = if let Some(f) = &dict_file {
             f
         } else {
             let path = dirs::data_dir()
                 .unwrap()
                 .join("sakinyje")
                 .join("language_data")
-                .join("bendrines_uuids");
+                .join(uuid_file);
             if !path.exists() {
-                let contents = self.send_request("https://raw.githubusercontent.com/BrewingWeasel/sakinyje/main/data/bendrines_uuids").await.text_with_charset("utf-8").await.unwrap();
+                let contents = self.send_request(&format!("https://raw.githubusercontent.com/BrewingWeasel/sakinyje/main/data/{uuid_file}")).await.text_with_charset("utf-8").await.unwrap();
                 fs::write(path.clone(), contents).unwrap();
             };
-            self.bendrines_file = Some(fs::read_to_string(path).unwrap_or_default());
-            self.bendrines_file.as_ref().unwrap()
+            let mut_dict_file = match dict {
+                EkalbaDictionary::Bendrines => &mut self.bendrines_file,
+                EkalbaDictionary::Dabartines => &mut self.dabartines_file,
+            };
+            *mut_dict_file = Some(fs::read_to_string(path).unwrap_or_default());
+            mut_dict_file.as_ref().unwrap()
         };
-        self.ekalba_bendrines
+        let dict_map = match dict {
+            EkalbaDictionary::Bendrines => &mut self.ekalba_bendrines,
+            EkalbaDictionary::Dabartines => &mut self.ekalba_dabartines,
+        };
+        dict_map
             .get_or_insert_with(|| {
                 let mut words = HashMap::new();
                 for i in file.lines() {
@@ -109,7 +127,7 @@ async fn get_def_command(lemma: &str, cmd: &str) -> Result<String, Box<dyn Error
 
 #[tauri::command]
 pub async fn get_defs(
-    state: State<'_, SakinyjeState<'_>>,
+    state: State<'_, SakinyjeState>,
     lemma: String,
 ) -> Result<Vec<SakinyjeResult<String>>, String> {
     let mut state = state.0.lock().await;
@@ -129,7 +147,7 @@ pub async fn get_defs(
 }
 
 async fn get_def(
-    dict_info: Arc<tauri::async_runtime::Mutex<DictionaryInfo<'_>>>,
+    dict_info: Arc<tauri::async_runtime::Mutex<DictionaryInfo>>,
     dict: &Dictionary,
     lemma: &str,
 ) -> Result<String, Box<dyn Error>> {
@@ -154,12 +172,12 @@ pub struct EkalbaDetails {
 }
 
 async fn get_ekalba_bendrines(
-    dict_info: Arc<tauri::async_runtime::Mutex<DictionaryInfo<'_>>>,
+    dict_info: Arc<tauri::async_runtime::Mutex<DictionaryInfo>>,
     word: &str,
 ) -> String {
     let response = {
         let mut lock = dict_info.lock().await;
-        let Some(uuid) = lock.get_bendrines(word).await else {
+        let Some(uuid) = lock.get_bendrines(EkalbaDictionary::Bendrines, word).await else {
             return String::new();
         };
         let uuid = uuid.to_owned();

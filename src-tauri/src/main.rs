@@ -23,13 +23,13 @@ mod commands;
 mod dictionary;
 mod language_parsing;
 
-struct SakinyjeState<'a>(tauri::async_runtime::Mutex<SharedInfo<'a>>);
+struct SakinyjeState(tauri::async_runtime::Mutex<SharedInfo>);
 
-struct SharedInfo<'a> {
+struct SharedInfo {
     settings: Settings,
     to_save: ToSave,
     model: PyObject,
-    dict_info: Arc<tauri::async_runtime::Mutex<DictionaryInfo<'a>>>,
+    dict_info: Arc<tauri::async_runtime::Mutex<DictionaryInfo>>,
 }
 
 #[derive(Serialize, Deserialize, Default)]
@@ -40,7 +40,7 @@ struct ToSave {
     decks_checked: Vec<String>,
 }
 
-impl Default for SharedInfo<'_> {
+impl Default for SharedInfo {
     fn default() -> Self {
         let saved_state_file = dirs::data_dir().unwrap().join("sakinyje_saved_data.toml");
         let config_file = dirs::config_dir().unwrap().join("sakinyje.toml");
@@ -169,19 +169,19 @@ fn update_words_known(
 }
 
 #[tauri::command]
-async fn get_settings(state: State<'_, SakinyjeState<'_>>) -> Result<Settings, String> {
+async fn get_settings(state: State<'_, SakinyjeState>) -> Result<Settings, String> {
     let state = state.0.lock().await;
     Ok(state.settings.clone())
 }
 
 #[tauri::command]
-async fn get_dark_mode(state: State<'_, SakinyjeState<'_>>) -> Result<bool, String> {
+async fn get_dark_mode(state: State<'_, SakinyjeState>) -> Result<bool, String> {
     let state = state.0.lock().await;
     Ok(state.settings.dark_mode)
 }
 
 #[tauri::command]
-async fn get_rating(lemma: String, state: State<'_, SakinyjeState<'_>>) -> Result<u8, String> {
+async fn get_rating(lemma: String, state: State<'_, SakinyjeState>) -> Result<u8, String> {
     let mut state = state.0.lock().await;
     Ok(state
         .to_save
@@ -195,10 +195,7 @@ async fn get_rating(lemma: String, state: State<'_, SakinyjeState<'_>>) -> Resul
 }
 
 #[tauri::command]
-async fn write_settings(
-    state: State<'_, SakinyjeState<'_>>,
-    settings: Settings,
-) -> Result<(), String> {
+async fn write_settings(state: State<'_, SakinyjeState>, settings: Settings) -> Result<(), String> {
     let config_file = dirs::config_dir().unwrap().join("sakinyje.toml");
     let conts = toml::to_string_pretty(&settings).unwrap();
 
@@ -210,7 +207,7 @@ async fn write_settings(
 
 #[tauri::command]
 async fn update_word_knowledge(
-    state: State<'_, SakinyjeState<'_>>,
+    state: State<'_, SakinyjeState>,
     word: &str,
     rating: u8,
     modifiable: bool,
