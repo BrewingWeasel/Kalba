@@ -1,3 +1,4 @@
+use lol_html::{element, rewrite_str, RewriteStrSettings};
 use reqwest::Client;
 use serde::{Deserialize, Serialize};
 use shared::*;
@@ -7,9 +8,9 @@ use tauri::State;
 use crate::{commands::run_command, SakinyjeState};
 
 // TODO: should be customizable
-const DEFINITION: &'static str = "#eb6f92";
-const MAIN_DETAIL: &'static str = "#f6c177";
-const INFO: &'static str = "#c4a7e7";
+const DEFINITION: &str = "color: #eb6f92; font-weight: bold;";
+const MAIN_DETAIL: &str = "color: #f6c177; font-weight: 800; font-size: large;";
+const INFO: &str = "color: #c4a7e7; font-style: italic;";
 
 #[derive(Default, Clone)]
 pub struct DictionaryInfo<'a> {
@@ -171,28 +172,33 @@ async fn get_ekalba_bendrines(
         .await
         .unwrap()
     };
-    format!(
-        r#"<style>
-            .bzpusjuodis {{
-                font-weight: 800;
-                color: {MAIN_DETAIL};
-                font-size: large;
-            }}
-            .bzkursyvas {{
-                font-style: italic;
-            }}
-            .bzpaprastas {{ 
-                color: {DEFINITION};
-                font-weight: bold;
-            }}
-            .bzpetitas {{
-                font-style: italic;
-                color: {INFO};
-            }}
-        </style>
-        <div>{}</div>"#,
-        response.details.view_html
+    let element_content_handlers = vec![
+        // Titles
+        element!("span.bzpusjuodis", |el| {
+            el.set_attribute("style", MAIN_DETAIL).unwrap();
+            Ok(())
+        }),
+        element!("span.bzpaprastas", |el| {
+            el.set_attribute("style", DEFINITION).unwrap();
+            Ok(())
+        }),
+        element!("span.bzpetitas", |el| {
+            el.set_attribute("style", INFO).unwrap();
+            Ok(())
+        }),
+        element!("p.bz-update-date", |el| {
+            el.remove();
+            Ok(())
+        }),
+    ];
+    rewrite_str(
+        &response.details.view_html,
+        RewriteStrSettings {
+            element_content_handlers,
+            ..RewriteStrSettings::default()
+        },
     )
+    .unwrap()
 }
 
 #[cfg(test)]
