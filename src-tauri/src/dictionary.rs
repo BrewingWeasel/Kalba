@@ -1,9 +1,9 @@
-use lol_html::{
-    doc_text, element,
-    html_content::{ContentType, UserData},
-    rewrite_str, text, RewriteStrSettings,
-};
+use lol_html::{element, html_content::ContentType, rewrite_str, text, RewriteStrSettings};
 use reqwest::Client;
+use select::{
+    document::Document,
+    predicate::{Attr, Name, Predicate},
+};
 use serde::{Deserialize, Serialize};
 use shared::*;
 use std::{collections::HashMap, error::Error, fs, sync::Arc};
@@ -161,7 +161,81 @@ async fn get_def(
         Dictionary::Command(cmd) => get_def_command(lemma, cmd).await,
         Dictionary::EkalbaBendrines => Ok(get_ekalba_bendrines(dict_info, lemma).await),
         Dictionary::EkalbaDabartines => Ok(get_ekalba_dabartines(dict_info, lemma).await),
+        Dictionary::Wiktionary(definition_lang, target_lang) => {
+            Ok(get_wiktionary(dict_info, lemma, definition_lang, target_lang).await)
+        }
     }
+}
+
+async fn get_wiktionary(
+    dict_info: Arc<tauri::async_runtime::Mutex<DictionaryInfo>>,
+    lemma: &str,
+    definition_lang: &str,
+    target_lang: &str,
+) -> String {
+    let mut lock = dict_info.lock().await;
+    let response = lock
+        .send_request(&format!(
+            "https://{definition_lang}.wiktionary.org/wiki/{lemma}"
+        ))
+        .await;
+    let doc = Document::from_read(response.text().await.unwrap().as_bytes()).unwrap();
+    let mut def_html = String::new();
+    for node in doc.find(Attr("id", target_lang)) {
+        let mut node = node.parent().unwrap();
+        while let Some(cur_node) = node.next() {
+            if cur_node.name() == Some("h2") || cur_node.children().any(|v| v.name() == Some("h2"))
+            {
+                break;
+            }
+            if cur_node.as_comment().is_none() && cur_node.attr("class") != Some("mw-editsection") {
+                def_html.push_str(&cur_node.html());
+            }
+            node = cur_node;
+        }
+    }
+
+    let element_content_handlers = vec![
+        element!("ol li", |el| {
+            el.set_attribute("style", DEFINITION).unwrap();
+            Ok(())
+        }),
+        element!(".h-usage-example", |el| {
+            el.set_attribute("style", INFO).unwrap();
+            Ok(())
+        }),
+        element!(".headword-line", |el| {
+            el.set_attribute("style", MAIN_DETAIL).unwrap();
+            Ok(())
+        }),
+        element!(".usage-label-sense, .antonym, .gender, ul li", |el| {
+            el.set_attribute("style", INFO).unwrap();
+            Ok(())
+        }),
+        element!(".mw-heading4", |el| {
+            el.set_attribute("style", "font-weight: bold; font-size: large;").unwrap();
+            Ok(())
+        }),
+        // titles of sections we don't want
+        element!("#Declension, #Declension_2, #Verb, #Verb_2, #Adjective, #Adjective_2, #Noun, #Noun_2, #Conjugation, #Conjugation_2, #Etymology, #Etymology_2, #References, #Further_reading", |el| {
+            el.remove();
+            Ok(())
+        }),
+        // wiktionary stuff we don't need
+        element!(".mw-editsection, .catlinks, .NavFrame, .reference, .mw-references-wrap, .maintenance-line, .citation-whole, .sister-wikipedia, p", |el| {
+            el.remove();
+            Ok(())
+        }),
+    ];
+
+    rewrite_str(
+        &def_html,
+        RewriteStrSettings {
+            element_content_handlers,
+            ..RewriteStrSettings::default()
+        },
+    )
+    .unwrap()
 }
 
 #[derive(Default, Debug, Clone, PartialEq, Serialize, Deserialize)]
@@ -267,7 +341,6 @@ async fn get_ekalba_dabartines(
         text!("*", |t| {
             let content = t.as_str();
             if content.ends_with(':') && content.starts_with(' ') {
-                println!("{content}");
                 t.replace(
                     &format!("<span style=\"{DEFINITION}\">{content}</span>"),
                     ContentType::Html,

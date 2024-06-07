@@ -42,6 +42,7 @@ pub enum Dictionary {
     Command(String),
     EkalbaBendrines,
     EkalbaDabartines,
+    Wiktionary(String, String),
 }
 
 #[derive(Serialize, Deserialize, PartialEq, Eq, Clone, Debug)]

@@ -27,6 +27,7 @@ dirs = "5.0.1"
 chrono = { version = "0.4.31", features = ["serde"] }
 pyo3 = "0.20.0"
 lol_html = "1.2.1"
+select = "0.6.0"
 
 
 [features]
