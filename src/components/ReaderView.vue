@@ -5,10 +5,6 @@ import IndividualWord from "@/components/Word.vue";
 import SelectedWordView from "@/components/SelectedWordView.vue";
 import { Word } from "@/types";
 
-if (await invoke("get_dark_mode")) {
-  document.documentElement.classList.add("dark");
-}
-
 const props = defineProps(["sentence"]);
 const words: Ref<[Word] | undefined> = ref(undefined);
 const selected_word: Ref<Word | undefined> = ref(undefined);

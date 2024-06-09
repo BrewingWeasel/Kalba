@@ -1,15 +1,10 @@
 <script setup lang="ts">
 import { ref } from "vue";
-import { invoke } from "@tauri-apps/api/tauri";
 import { Textarea } from "@/components/ui/textarea";
 import ReaderView from "@/components/ReaderView.vue";
 import ButtonDialog from "@/components/ButtonDialog.vue";
 import FilePicker from "./FilePicker.vue";
 import { readTextFile } from "@tauri-apps/api/fs";
-
-if (await invoke("get_dark_mode")) {
-  document.documentElement.classList.add("dark");
-}
 
 const currentSentence = ref("");
 const sentence = ref("");

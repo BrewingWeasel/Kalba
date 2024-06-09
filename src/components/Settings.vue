@@ -16,11 +16,14 @@ import Dictionaries from "@/components/settings/Dictionaries.vue";
 import FilePicker from "@/components/FilePicker.vue";
 import Exporting from "@/components/settings/Exporting.vue";
 import { invoke } from "@tauri-apps/api/tauri";
-import { Ref, ref, watch } from "vue";
+import { Ref, ref } from "vue";
 import { Button } from "@/components/ui/button";
 import { Label } from "@/components/ui/label";
 import { Input } from "@/components/ui/input";
 import { Settings } from "@/types";
+import { useDark } from "@vueuse/core";
+
+const isDark = useDark();
 
 const settings: Ref<Settings> = ref(await invoke("get_settings"));
 
@@ -32,17 +35,6 @@ async function saveSettings() {
   await invoke("write_settings", { settings: settings.value });
 }
 console.log(settings.value);
-
-watch(
-  () => settings.value.dark_mode,
-  async (dark_mode) => {
-    if (dark_mode) {
-      document.documentElement.classList.add("dark");
-    } else {
-      document.documentElement.classList.remove("dark");
-    }
-  },
-);
 </script>
 
 <template>
@@ -65,7 +57,7 @@ watch(
           <CardContent class="space-y-2">
             <div class="space-y-1">
               <Label for="theme">Use dark mode</Label>
-              <Switch id="theme" v-model:checked="settings.dark_mode" />
+              <Switch id="theme" v-model:checked="isDark" />
             </div>
           </CardContent>
           <CardFooter>
