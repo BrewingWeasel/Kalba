@@ -17,6 +17,10 @@
         "all": false,
         "open": true
       },
+      "fs": {
+         "all": false,
+        "readFile": true
+      },
       "dialog": {
          "all": true
       }

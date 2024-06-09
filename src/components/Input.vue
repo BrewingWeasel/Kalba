@@ -1,9 +1,11 @@
 <script setup lang="ts">
 import { ref } from "vue";
 import { invoke } from "@tauri-apps/api/tauri";
-import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
 import ReaderView from "@/components/ReaderView.vue";
+import ButtonDialog from "@/components/ButtonDialog.vue";
+import FilePicker from "./FilePicker.vue";
+import { readTextFile } from "@tauri-apps/api/fs";
 
 if (await invoke("get_dark_mode")) {
   document.documentElement.classList.add("dark");
@@ -18,11 +20,31 @@ function set_sentence() {
 </script>
 
 <template>
-  <div v-if="sentence.length == 0">
-    <div class="grid px-10 py-3 gap-2">
+  <div
+    v-if="sentence.length == 0"
+    class="flex flex-wrap py-4 px-10 space-x-5 basis-auto"
+  >
+    <ButtonDialog
+      class="flex-1 my-2 max-w-md"
+      title="User Input"
+      @submitted="set_sentence"
+      button-name="Input content"
+    >
       <Textarea placeholder="Enter text to analyze" v-model="currentSentence" />
-      <Button @click="set_sentence">Submit</Button>
-    </div>
+    </ButtonDialog>
+    <ButtonDialog
+      class="flex-1 my-2 max-w-md"
+      title="File Input"
+      button-name="Select file"
+      @submitted="
+        async () => {
+          currentSentence = await readTextFile(currentSentence);
+          set_sentence();
+        }
+      "
+    >
+      <FilePicker v-model="currentSentence" />
+    </ButtonDialog>
   </div>
   <div v-else>
     <ReaderView :sentence />
