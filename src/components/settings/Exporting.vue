@@ -5,6 +5,12 @@ import { computedAsync } from "@vueuse/core";
 import StyledCombobox from "@/components/StyledCombobox.vue";
 import { watch } from "vue";
 import { invoke } from "@tauri-apps/api/tauri";
+import { Info } from "lucide-vue-next";
+import {
+  HoverCard,
+  HoverCardContent,
+  HoverCardTrigger,
+} from "@/components/ui/hover-card";
 
 const props = defineProps<{
   models: string[];
@@ -46,7 +52,27 @@ watch(model, async (_) => {
     item-being-selected="model"
     id="modelselection"
   />
-  <h2 v-if="model" class="my-3 text-lg">Note Fields</h2>
+  <HoverCard v-if="model">
+    <div class="flex items-center">
+      <h2 class="pr-1 my-3 text-lg">Note Fields</h2>
+      <HoverCardTrigger><Info :size="20" /> </HoverCardTrigger>
+    </div>
+    <HoverCardContent>
+      <p>
+        Use variables to make certain content dependent on the card. You can
+        also use html.
+      </p>
+      <p>
+        For example, <span class="text-purple-500">{sentence}</span> will be
+        replaced with the sentence you mined.
+      </p>
+      <p>
+        Other useful variables are
+        <span class="text-purple-500">{sentence}</span> and
+        <span class="text-purple-500">{word}</span>.
+      </p>
+    </HoverCardContent>
+  </HoverCard>
   <template v-for="(field, index) in fieldNames">
     <Label :for="index.toString()">{{ field }}</Label>
     <Input :id="index.toString()" v-model="fields[field]" />

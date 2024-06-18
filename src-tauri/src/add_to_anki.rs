@@ -10,7 +10,7 @@ fn get_json(export_details: ExportDetails<'_>) -> Result<serde_json::Value, Stri
     }
 
     let mut replacements = HashMap::from([
-        (String::from("{sent}"), export_details.sentence),
+        (String::from("{sentence}"), export_details.sentence),
         (String::from("{word}"), export_details.word),
         (String::from("{def}"), &def),
     ]);
