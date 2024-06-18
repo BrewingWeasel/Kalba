@@ -1,5 +1,10 @@
 <script setup lang="ts">
 import { Switch } from "@/components/ui/switch";
+import {
+  HoverCard,
+  HoverCardContent,
+  HoverCardTrigger,
+} from "@/components/ui/hover-card";
 import Heading from "@/components/Heading.vue";
 
 import WordKnowledge from "@/components/settings/WordKnowledge.vue";
@@ -19,7 +24,7 @@ import {
   CollapsibleContent,
   CollapsibleTrigger,
 } from "@/components/ui/collapsible";
-import { ChevronDown } from "lucide-vue-next";
+import { ChevronDown, Info } from "lucide-vue-next";
 import { Button } from "@/components/ui/button";
 
 const isDark = useDark();
@@ -111,13 +116,41 @@ async function saveSettings() {
         <Heading
           title_id="grammar"
           title="Grammar"
-          description="Configure the automatic parsing of grammar"
+          description="Configure the automatic parsing of grammar and other language details"
         />
-        <Label for="model">SpaCy model</Label>
+        <HoverCard>
+          <div class="flex items-center">
+            <Label for="model" class="pr-1">SpaCy model</Label>
+            <HoverCardTrigger
+              ><Info class="mt-2" :size="16"
+            /></HoverCardTrigger>
+          </div>
+          <HoverCardContent>
+            <p>
+              SpaCy models are used to automatically determine the grammar of
+              the language so that words with the same root are automatically
+              considered the same
+            </p>
+          </HoverCardContent>
+        </HoverCard>
         <Input id="model" v-model="settings.model" />
         <Label for="frequencylist">Frequency list</Label>
         <FilePicker v-model="settings.frequency_list" />
-        <Label for="freq">Number of words known</Label>
+
+        <HoverCard>
+          <div class="flex items-center">
+            <Label for="freq">Number of words known</Label>
+            <HoverCardTrigger
+              ><Info class="mt-2" :size="16"
+            /></HoverCardTrigger>
+          </div>
+          <HoverCardContent>
+            <p>
+              The most frequent words within this range will be marked as known
+              automatically, referencing the frequency list provided.
+            </p>
+          </HoverCardContent>
+        </HoverCard>
         <Input id="freq" type="number" v-model="settings.words_known_by_freq" />
       </template>
 
