@@ -21,6 +21,6 @@ const props = defineProps({
       {{ props.title }}
     </h1>
     <Label :for="props.title_id" class="italic">{{ props.description }}</Label>
-    <hr class="mb-2 border" />
+    <hr class="border" />
   </div>
 </template>

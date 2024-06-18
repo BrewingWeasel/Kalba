@@ -31,18 +31,24 @@ watch(model, async (_) => {
 </script>
 
 <template>
+  <Label for="deckselection">Anki deck to be exported to:</Label>
   <StyledCombobox
     :options="props.deckNames"
     v-model="deck"
     item-being-selected="deck"
+    id="deckselection"
   />
+  <br />
+  <Label for="modelselection">Anki model to use for exporting:</Label>
   <StyledCombobox
     :options="props.models"
     v-model="model"
     item-being-selected="model"
+    id="modelselection"
   />
-  <div v-for="(field, index) in fieldNames">
+  <h2 v-if="model" class="my-3 text-lg">Note Fields</h2>
+  <template v-for="(field, index) in fieldNames">
     <Label :for="index.toString()">{{ field }}</Label>
     <Input :id="index.toString()" v-model="fields[field]" />
-  </div>
+  </template>
 </template>
