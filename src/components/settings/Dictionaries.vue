@@ -1,14 +1,30 @@
 <script setup lang="ts">
 import {
-  Accordion,
-  AccordionContent,
-  AccordionItem,
-  AccordionTrigger,
-} from "@/components/ui/accordion";
+  Table,
+  TableBody,
+  TableCaption,
+  TableCell,
+  TableHead,
+  TableHeader,
+  TableRow,
+} from "@/components/ui/table";
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+  AlertDialogTrigger,
+} from "@/components/ui/alert-dialog";
+import { Input } from "@/components/ui/input";
 
 import { Button } from "@/components/ui/button";
 import IndividualDict from "@/components/settings/IndividualDict.vue";
 import { Dictionary, DictionaryType } from "@/types";
+import { Pencil, X } from "lucide-vue-next";
 
 const dicts = defineModel({ type: Array<Dictionary>, required: true });
 
@@ -27,15 +43,48 @@ function addDictionary() {
 </script>
 
 <template>
-  <Accordion type="single" collapsible>
-    <Button @click="addDictionary">Add dictionary</Button>
-    <AccordionItem v-for="(_dict, index) in dicts" :value="index.toString()">
-      <AccordionTrigger>
-        {{ index }}
-      </AccordionTrigger>
-      <AccordionContent>
-        <IndividualDict v-model="dicts[index]" />
-      </AccordionContent>
-    </AccordionItem>
-  </Accordion>
+  <Table class="max-w-5xl">
+    <TableCaption>
+      <Button variant="ghost" class="text-xl" @click="addDictionary">+</Button>
+    </TableCaption>
+    <TableHeader>
+      <TableRow>
+        <TableHead class="w-1/3">Name</TableHead>
+        <TableHead>Type</TableHead>
+        <TableHead class="text-right">Configure</TableHead>
+        <TableHead class="w-1 text-right">Remove</TableHead>
+      </TableRow>
+    </TableHeader>
+    <TableBody>
+      <TableRow v-for="(dict, index) in dicts" :key="index">
+        <TableCell><Input /></TableCell>
+        <TableCell>{{ dict.t }}</TableCell>
+        <TableCell class="text-right">
+          <AlertDialog>
+            <AlertDialogTrigger><Pencil :size="16" /></AlertDialogTrigger>
+            <AlertDialogContent>
+              <AlertDialogHeader>
+                <AlertDialogTitle>Edit dictionary</AlertDialogTitle>
+              </AlertDialogHeader>
+              <IndividualDict v-model="dicts[index]" />
+              <AlertDialogFooter>
+                <AlertDialogCancel>Cancel</AlertDialogCancel>
+                <AlertDialogAction>Save</AlertDialogAction>
+              </AlertDialogFooter>
+            </AlertDialogContent>
+          </AlertDialog>
+        </TableCell>
+        <TableCell
+          ><X
+            @click="
+              () => {
+                dicts.splice(index, 1);
+              }
+            "
+            class="float-right cursor-pointer"
+            :size="16"
+        /></TableCell>
+      </TableRow>
+    </TableBody>
+  </Table>
 </template>

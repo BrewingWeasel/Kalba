@@ -66,7 +66,7 @@ async function saveSettings() {
         </CollapsibleContent>
       </Collapsible>
     </div>
-    <div>
+    <div class="w-full lg:pr-80">
       <template v-if="section == 'Appearance'">
         <Heading
           title_id="appearance"

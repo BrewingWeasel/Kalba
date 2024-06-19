@@ -49,10 +49,7 @@ watch(
       type="text"
       placeholder="Definition separator"
       v-if="dict.c[1].t == 'TextSplitAt'"
-      v-model="
-        //@ts-ignore
-        dict.c[1].c
-      "
+      v-model="dict.c[1].c!"
     />
   </div>
   <div v-if="typeof dict.c === 'string'">
