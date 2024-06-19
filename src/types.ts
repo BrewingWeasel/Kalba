@@ -38,9 +38,10 @@ export enum DictionaryType {
    File = "File",
    Url = "Url",
    Command = "Command",
+   Wiktionary = "Wiktionary",
 }
 
 export interface Dictionary {
   t: DictionaryType;
-  c: [string, FileType] | string
+  c: [string, FileType] | [string, string] | string
 }

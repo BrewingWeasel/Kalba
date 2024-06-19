@@ -2,7 +2,7 @@
 import { Input } from "@/components/ui/input";
 import StyledCombobox from "@/components/StyledCombobox.vue";
 import FilePicker from "@/components/FilePicker.vue";
-import { Dictionary, DictionaryType } from "@/types";
+import { Dictionary, DictionaryType, FileType } from "@/types";
 import { watch } from "vue";
 
 const dict = defineModel<Dictionary>({ required: true });
@@ -30,29 +30,63 @@ watch(
     }
   },
 );
+
+function isWiktionary(
+  dictType: DictionaryType,
+  _contents: any,
+): _contents is [String, String] {
+  return dictType == "Wiktionary";
+}
+
+function isFile(
+  dictType: DictionaryType,
+  _contents: any,
+): _contents is [String, FileType] {
+  return dictType == "File";
+}
 </script>
 
 <template>
+  <Label for="dicttype">Dictionary Type:</Label>
   <StyledCombobox
-    :options="['File', 'Url', 'Command']"
+    :options="['File', 'Url', 'Command', 'Wiktionary']"
     v-model="dict.t"
     item-being-selected="dictionary type"
+    id="dicttype"
   />
-  <div v-if="dict.t == 'File' && typeof dict.c !== 'string'">
-    <FilePicker v-model="dict.c[0]" />
+  <div v-if="isFile(dict.t, dict.c)">
+    <Label for="filepicker">Dictionary File:</Label>
+    <FilePicker v-model="dict.c[0]" id="filepicker" />
+    <Label for="filetype">File type: </Label>
+    <br />
     <StyledCombobox
       :options="['TextSplitAt', 'StarDict']"
       v-model="dict.c[1].t"
       item-being-selected="file dictionary type"
+      id="filetype"
     />
+    <br />
+    <Label for="separator">Definition Separator: </Label>
     <Input
       type="text"
-      placeholder="Definition separator"
-      v-if="dict.c[1].t == 'TextSplitAt'"
-      v-model="dict.c[1].c!"
+      v-if="dict.c[1].t == 'TextSplitAt' && dict.c[1].c"
+      v-model="dict.c[1].c"
+      class="w-20"
+      id="separator"
     />
   </div>
-  <div v-if="typeof dict.c === 'string'">
-    <Input type="text" v-model="dict.c" />
+  <div v-else-if="dict.t == 'Command' && typeof dict.c === 'string'">
+    <Label for="command">Command to run for definition:</Label>
+    <Input type="text" id="command" v-model="dict.c" />
+  </div>
+  <div v-else-if="isWiktionary(dict.t, dict.c)">
+    <Label for="definitionlang">Definition Language (two letter code):</Label>
+    <Input type="text" v-model="dict.c[0]" class="w-20" id="definitionlang" />
+    <Label for="wordlang">Word Language:</Label>
+    <Input type="text" v-model="dict.c[1]" class="w-100" id="wordlang" />
+  </div>
+  <div v-else-if="dict.t == 'Url' && typeof dict.c === 'string'">
+    <Label for="command">Url:</Label>
+    <Input type="text" id="command" v-model="dict.c" />
   </div>
 </template>
