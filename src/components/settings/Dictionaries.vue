@@ -13,7 +13,6 @@ import {
   AlertDialogAction,
   AlertDialogCancel,
   AlertDialogContent,
-  AlertDialogDescription,
   AlertDialogFooter,
   AlertDialogHeader,
   AlertDialogTitle,
@@ -81,7 +80,7 @@ function addDictionary() {
                 dicts.splice(index, 1);
               }
             "
-            class="float-right cursor-pointer"
+            class="float-right transition duration-200 cursor-pointer hover:scale-110 hover:stroke-rose-500"
             :size="16"
         /></TableCell>
       </TableRow>
