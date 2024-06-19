@@ -39,9 +39,11 @@ export enum DictionaryType {
    Url = "Url",
    Command = "Command",
    Wiktionary = "Wiktionary",
+   EkalbaBendrines = "EkalbaBendrines",
+   EkalbaDabartines = "EkalbaDabartines",
 }
 
 export interface Dictionary {
   t: DictionaryType;
-  c: [string, FileType] | [string, string] | string
+  c: [string, FileType] | [string, string] | string | undefined
 }

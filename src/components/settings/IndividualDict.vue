@@ -22,6 +22,15 @@ watch(
         ];
         break;
       }
+      case DictionaryType.Wiktionary: {
+        dict.value.c = ["en", ""];
+        break;
+      }
+      case DictionaryType.EkalbaBendrines:
+      case DictionaryType.EkalbaDabartines: {
+        dict.value.c = undefined;
+        break;
+      }
       case DictionaryType.Url:
       case DictionaryType.Command: {
         dict.value.c = "";
@@ -49,7 +58,14 @@ function isFile(
 <template>
   <Label for="dicttype">Dictionary Type:</Label>
   <StyledCombobox
-    :options="['File', 'Url', 'Command', 'Wiktionary']"
+    :options="[
+      ['File', 'File'],
+      ['Url', 'Url'],
+      ['Command', 'Command'],
+      ['Wiktionary', 'Wiktionary'],
+      ['EkalbaBendrines', 'Bendrinės lietuvių kalbos žodynas'],
+      ['EkalbaDabartines', 'Dabartinės lietuvių kalbos žodynas'],
+    ]"
     v-model="dict.t"
     item-being-selected="dictionary type"
     id="dicttype"

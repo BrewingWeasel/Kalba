@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { computed, ref } from "vue";
+import { ComputedRef, computed, ref } from "vue";
 import { CaretSortIcon, CheckIcon } from "@radix-icons/vue";
 
 import { cn } from "@/lib/utils";
@@ -22,16 +22,26 @@ const open = ref(false);
 
 const props = defineProps<{
   itemBeingSelected: string;
-  options: string[];
+  options: string[] | [string, string][];
 }>();
 
 const selected = defineModel();
 
-const selections = computed(() =>
-  props.options.map((option) => ({
-    value: option,
-    label: option, // TODO: title case?
-  })),
+const selections: ComputedRef<{ value: string; label: string }[]> = computed(
+  () =>
+    props.options.map((option) => {
+      if (typeof option == "string") {
+        return {
+          value: option,
+          label: option,
+        };
+      } else {
+        return {
+          value: option[0],
+          label: option[1],
+        };
+      }
+    }),
 );
 
 const searchPrompt = "Search " + props.itemBeingSelected + "...";
@@ -45,17 +55,17 @@ const selectPrompt = "Select " + props.itemBeingSelected + "...";
         variant="outline"
         role="combobox"
         :aria-expanded="open"
-        class="w-[350px] justify-between"
+        class="justify-between w-[350px]"
       >
         {{
           selected
             ? selections.find((opt) => opt.value === selected)?.label
             : selectPrompt
         }}
-        <CaretSortIcon class="ml-2 h-4 w-4 shrink-0 opacity-50" />
+        <CaretSortIcon class="ml-2 w-4 h-4 opacity-50 shrink-0" />
       </Button>
     </PopoverTrigger>
-    <PopoverContent class="w-[350px] p-0">
+    <PopoverContent class="p-0 w-[350px]">
       <Command>
         <CommandInput class="h-9" :placeholder="searchPrompt" />
         <CommandEmpty>No selection found.</CommandEmpty>
