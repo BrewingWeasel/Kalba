@@ -1,9 +1,6 @@
 use lol_html::{element, html_content::ContentType, rewrite_str, text, RewriteStrSettings};
 use reqwest::Client;
-use select::{
-    document::Document,
-    predicate::{Attr, Name, Predicate},
-};
+use select::{document::Document, predicate::Attr};
 use serde::{Deserialize, Serialize};
 use shared::*;
 use std::{collections::HashMap, error::Error, fs, sync::Arc};

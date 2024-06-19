@@ -97,7 +97,7 @@ impl Default for SharedInfo {
 
 #[derive(Serialize, Deserialize)]
 struct WordInfo {
-    rating: u8,
+    rating: i8,
     method: Method,
 }
 
@@ -181,7 +181,7 @@ async fn get_dark_mode(state: State<'_, SakinyjeState>) -> Result<bool, String> 
 }
 
 #[tauri::command]
-async fn get_rating(lemma: String, state: State<'_, SakinyjeState>) -> Result<u8, String> {
+async fn get_rating(lemma: String, state: State<'_, SakinyjeState>) -> Result<i8, String> {
     let mut state = state.0.lock().await;
     Ok(state
         .to_save
@@ -209,7 +209,7 @@ async fn write_settings(state: State<'_, SakinyjeState>, settings: Settings) -> 
 async fn update_word_knowledge(
     state: State<'_, SakinyjeState>,
     word: &str,
-    rating: u8,
+    rating: i8,
     modifiable: bool,
 ) -> Result<(), String> {
     let mut state = state.0.lock().await;

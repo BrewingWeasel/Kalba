@@ -22,7 +22,7 @@ impl KeyValueLabels for NoteKeyValueLabels {
 pub struct Word {
     pub text: String,
     pub lemma: String,
-    pub rating: u8,
+    pub rating: i8,
     pub morph: HashMap<String, String>,
     pub clickable: bool,
 }
