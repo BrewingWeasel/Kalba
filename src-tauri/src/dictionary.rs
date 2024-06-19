@@ -139,7 +139,7 @@ pub async fn get_defs(
         Ok(v.clone())
     } else {
         let mut defs = Vec::new();
-        for dict in &state.settings.dicts {
+        for (_, dict) in &state.settings.dicts {
             let def = get_def(Arc::clone(&state.dict_info), dict, &lemma)
                 .await
                 .into();

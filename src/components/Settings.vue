@@ -26,10 +26,14 @@ import {
 } from "@/components/ui/collapsible";
 import { ChevronDown, Info } from "lucide-vue-next";
 import { Button } from "@/components/ui/button";
+import { onBeforeRouteLeave } from "vue-router";
+import { confirm } from "@tauri-apps/api/dialog";
 
 const isDark = useDark();
 
 const settings: Ref<Settings> = ref(await invoke("get_settings"));
+
+var savedSettings: Ref<Settings | null> = ref(null);
 
 const models: string[] = await invoke("get_all_note_names");
 const deckNames: string[] = await invoke("get_all_deck_names");
@@ -41,7 +45,20 @@ const section: Ref<SettingsSection> = ref("Appearance");
 async function saveSettings() {
   console.log("trying to write settings", settings.value);
   await invoke("write_settings", { settings: settings.value });
+  savedSettings.value = window.structuredClone(settings.value);
 }
+
+// TODO: fix
+onBeforeRouteLeave(async (_to, _from) => {
+  if (
+    savedSettings.value != settings.value &&
+    !(await confirm(
+      "You have unsaved changes. Are you sure you want to leave?",
+    ))
+  ) {
+    return false;
+  }
+});
 </script>
 
 <template>

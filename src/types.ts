@@ -15,7 +15,7 @@ export interface Settings {
   note_fields: { [key: string]: string };
   model: string;
   anki_parser: Deck[];
-  dicts: Dictionary[];
+  dicts: [string, Dictionary][];
   dark_mode: boolean;
   frequency_list: string;
   words_known_by_freq: number,

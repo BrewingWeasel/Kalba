@@ -94,7 +94,7 @@ pub struct Settings {
     pub note_type: String,
     pub note_fields: HashMap<String, String>,
     pub model: String,
-    pub dicts: Vec<Dictionary>,
+    pub dicts: Vec<(String, Dictionary)>,
     pub to_remove: Option<usize>,
     pub css: Option<String>,
     #[serde(with = "HashMapToArray::<String, Note, DeckKeyValueLabels>")]

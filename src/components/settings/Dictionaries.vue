@@ -25,19 +25,25 @@ import IndividualDict from "@/components/settings/IndividualDict.vue";
 import { Dictionary, DictionaryType } from "@/types";
 import { Pencil, X } from "lucide-vue-next";
 
-const dicts = defineModel({ type: Array<Dictionary>, required: true });
+const dicts = defineModel({
+  type: Array<[string, Dictionary]>,
+  required: true,
+});
 
 function addDictionary() {
-  dicts.value.push({
-    t: DictionaryType.File,
-    c: [
-      "",
-      {
-        t: "StarDict",
-        c: null,
-      },
-    ],
-  });
+  dicts.value.push([
+    "New dictionary",
+    {
+      t: DictionaryType.File,
+      c: [
+        "",
+        {
+          t: "StarDict",
+          c: null,
+        },
+      ],
+    },
+  ]);
 }
 </script>
 
@@ -56,8 +62,8 @@ function addDictionary() {
     </TableHeader>
     <TableBody>
       <TableRow v-for="(dict, index) in dicts" :key="index">
-        <TableCell><Input /></TableCell>
-        <TableCell>{{ dict.t }}</TableCell>
+        <TableCell><Input v-model="dict[0]" /></TableCell>
+        <TableCell>{{ dict[1].t }}</TableCell>
         <TableCell class="text-right">
           <AlertDialog>
             <AlertDialogTrigger><Pencil :size="16" /></AlertDialogTrigger>
@@ -65,7 +71,7 @@ function addDictionary() {
               <AlertDialogHeader>
                 <AlertDialogTitle>Edit dictionary</AlertDialogTitle>
               </AlertDialogHeader>
-              <IndividualDict v-model="dicts[index]" />
+              <IndividualDict v-model="dicts[index][1]" />
               <AlertDialogFooter>
                 <AlertDialogCancel>Cancel</AlertDialogCancel>
                 <AlertDialogAction>Save</AlertDialogAction>
