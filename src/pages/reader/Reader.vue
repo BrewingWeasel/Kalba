@@ -15,49 +15,49 @@ set_words();
 const DEFAULT_WORDS_AROUND = 25;
 
 const sentence = computed(() => {
-  let intendedSent = "";
-  for (
-    let i = selected_index.value - DEFAULT_WORDS_AROUND;
-    i < selected_index.value + DEFAULT_WORDS_AROUND;
-    i++
-  ) {
-    const curWord = words.value![i];
-    if (curWord) {
-      if (curWord.clickable) {
-        intendedSent += " " + curWord.text;
-      } else {
-        intendedSent += curWord.text;
-      }
-    }
-  }
-  return intendedSent;
+	let intendedSent = "";
+	for (
+		let i = selected_index.value - DEFAULT_WORDS_AROUND;
+		i < selected_index.value + DEFAULT_WORDS_AROUND;
+		i++
+	) {
+		const curWord = words.value![i];
+		if (curWord) {
+			if (curWord.clickable) {
+				intendedSent += " " + curWord.text;
+			} else {
+				intendedSent += curWord.text;
+			}
+		}
+	}
+	return intendedSent;
 });
 
 async function set_words() {
-  words.value = await invoke("parse_text", { sent: props.sentence });
+	words.value = await invoke("parse_text", { sent: props.sentence });
 }
 
 function handle_word_selected(word: Word, index: number) {
-  selected_word.value = word;
-  selected_index.value = index;
+	selected_word.value = word;
+	selected_index.value = index;
 }
 
 async function changeRating(
-  rating: number,
-  attemptedLemma: string,
-  modifiable: boolean = false,
+	rating: number,
+	attemptedLemma: string,
+	modifiable: boolean = false,
 ) {
-  console.log(attemptedLemma);
-  words.value!.forEach((word, i, vals) => {
-    if (word["lemma"] == attemptedLemma) {
-      vals[i]["rating"] = rating;
-    }
-  });
-  await invoke("update_word_knowledge", {
-    word: attemptedLemma,
-    rating,
-    modifiable,
-  });
+	console.log(attemptedLemma);
+	words.value!.forEach((word, i, vals) => {
+		if (word["lemma"] == attemptedLemma) {
+			vals[i]["rating"] = rating;
+		}
+	});
+	await invoke("update_word_knowledge", {
+		word: attemptedLemma,
+		rating,
+		modifiable,
+	});
 }
 </script>
 

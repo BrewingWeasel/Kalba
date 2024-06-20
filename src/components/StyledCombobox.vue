@@ -5,43 +5,43 @@ import { CaretSortIcon, CheckIcon } from "@radix-icons/vue";
 import { cn } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
 import {
-  Command,
-  CommandEmpty,
-  CommandGroup,
-  CommandInput,
-  CommandItem,
-  CommandList,
+	Command,
+	CommandEmpty,
+	CommandGroup,
+	CommandInput,
+	CommandItem,
+	CommandList,
 } from "@/components/ui/command";
 import {
-  Popover,
-  PopoverContent,
-  PopoverTrigger,
+	Popover,
+	PopoverContent,
+	PopoverTrigger,
 } from "@/components/ui/popover";
 
 const open = ref(false);
 
 const props = defineProps<{
-  itemBeingSelected: string;
-  options: string[] | [string, string][];
+	itemBeingSelected: string;
+	options: string[] | [string, string][];
 }>();
 
 const selected = defineModel();
 
 const selections: ComputedRef<{ value: string; label: string }[]> = computed(
-  () =>
-    props.options.map((option) => {
-      if (typeof option == "string") {
-        return {
-          value: option,
-          label: option,
-        };
-      } else {
-        return {
-          value: option[0],
-          label: option[1],
-        };
-      }
-    }),
+	() =>
+		props.options.map((option) => {
+			if (typeof option == "string") {
+				return {
+					value: option,
+					label: option,
+				};
+			} else {
+				return {
+					value: option[0],
+					label: option[1],
+				};
+			}
+		}),
 );
 
 const searchPrompt = "Search " + props.itemBeingSelected + "...";

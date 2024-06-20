@@ -10,7 +10,7 @@ const currentSentence = ref("");
 const sentence = ref("");
 
 function set_sentence() {
-  sentence.value = currentSentence.value;
+	sentence.value = currentSentence.value;
 }
 </script>
 

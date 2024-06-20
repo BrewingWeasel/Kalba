@@ -1,13 +1,13 @@
 <script setup lang="ts">
 import {
-  Dialog,
-  DialogContent,
-  DialogDescription,
-  DialogFooter,
-  DialogHeader,
-  DialogTitle,
-  DialogTrigger,
-  DialogClose,
+	Dialog,
+	DialogContent,
+	DialogDescription,
+	DialogFooter,
+	DialogHeader,
+	DialogTitle,
+	DialogTrigger,
+	DialogClose,
 } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
 import Exporting from "@/components/ExportingConfiguration.vue";
@@ -16,17 +16,17 @@ import { ref, Ref } from "vue";
 import { Settings, ExportDetails } from "@/types";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import {
-  Card,
-  CardContent,
-  CardDescription,
-  CardHeader,
-  CardTitle,
+	Card,
+	CardContent,
+	CardDescription,
+	CardHeader,
+	CardTitle,
 } from "@/components/ui/card";
 
 const props = defineProps<{
-  word: string;
-  sentence: string;
-  defs: string[];
+	word: string;
+	sentence: string;
+	defs: string[];
 }>();
 
 const settings: Settings = await invoke("get_settings");
@@ -37,25 +37,25 @@ const deckNames: string[] = await invoke("get_all_deck_names");
 const emit = defineEmits(["change-rating"]);
 
 const exportDetails: Ref<ExportDetails> = ref({
-  word: props.word,
-  defs: props.defs,
-  deck: settings.deck,
-  model: settings.note_type,
-  sentence: "",
-  fields: settings.note_fields,
+	word: props.word,
+	defs: props.defs,
+	deck: settings.deck,
+	model: settings.note_type,
+	sentence: "",
+	fields: settings.note_fields,
 });
 
 async function exportWord() {
-  emit("change-rating", 1, props.word, true);
-  await invoke("add_to_anki", { exportDetails: exportDetails.value });
+	emit("change-rating", 1, props.word, true);
+	await invoke("add_to_anki", { exportDetails: exportDetails.value });
 }
 
 function selectWord() {
-  const selection = window.getSelection();
-  if (selection) {
-    if (selection.focusNode?.parentElement?.id === "sentence")
-      exportDetails.value.sentence = selection.toString();
-  }
+	const selection = window.getSelection();
+	if (selection) {
+		if (selection.focusNode?.parentElement?.id === "sentence")
+			exportDetails.value.sentence = selection.toString();
+	}
 }
 </script>
 

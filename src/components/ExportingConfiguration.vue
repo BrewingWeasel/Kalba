@@ -7,32 +7,32 @@ import { watch } from "vue";
 import { invoke } from "@tauri-apps/api/tauri";
 import { Info } from "lucide-vue-next";
 import {
-  HoverCard,
-  HoverCardContent,
-  HoverCardTrigger,
+	HoverCard,
+	HoverCardContent,
+	HoverCardTrigger,
 } from "@/components/ui/hover-card";
 
 const props = defineProps<{
-  models: string[];
-  deckNames: string[];
+	models: string[];
+	deckNames: string[];
 }>();
 
 const deck = defineModel<string>("deck", { required: true });
 const model = defineModel<string>("model", { required: true });
 const fields = defineModel<{ [key: string]: string }>("fields", {
-  required: true,
+	required: true,
 });
 
 const fieldNames = computedAsync(
-  async (): Promise<string[]> =>
-    await invoke("get_note_field_names", {
-      model: model.value,
-    }),
-  [],
+	async (): Promise<string[]> =>
+		await invoke("get_note_field_names", {
+			model: model.value,
+		}),
+	[],
 );
 
 watch(model, async (_) => {
-  fields.value = {};
+	fields.value = {};
 });
 </script>
 

@@ -6,27 +6,27 @@ import { invoke } from "@tauri-apps/api/tauri";
 import { computedAsync } from "@vueuse/core";
 
 export interface Note {
-  model: string;
-  handling: NoteToWordHandling;
+	model: string;
+	handling: NoteToWordHandling;
 }
 
 interface NoteToWordHandling {
-  field_to_use: string;
-  only_first_word_or_line: boolean;
-  remove_everything_in_parens: boolean;
-  tags_wanted: string[];
+	field_to_use: string;
+	only_first_word_or_line: boolean;
+	remove_everything_in_parens: boolean;
+	tags_wanted: string[];
 }
 
 const props = defineProps<{
-  note: Note;
-  models: string[];
+	note: Note;
+	models: string[];
 }>();
 
 const fields = computedAsync(async (): Promise<string[]> => {
-  props.note.handling.field_to_use = "";
-  return await invoke("get_note_field_names", {
-    model: props.note.model,
-  });
+	props.note.handling.field_to_use = "";
+	return await invoke("get_note_field_names", {
+		model: props.note.model,
+	});
 }, []);
 </script>
 

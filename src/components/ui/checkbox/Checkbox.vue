@@ -1,13 +1,17 @@
 <script setup lang="ts">
-import type { CheckboxRootEmits, CheckboxRootProps } from 'radix-vue'
-import { CheckboxIndicator, CheckboxRoot, useForwardPropsEmits } from 'radix-vue'
-import { Check } from 'lucide-vue-next'
-import { cn } from '@/lib/utils'
+import type { CheckboxRootEmits, CheckboxRootProps } from "radix-vue";
+import {
+	CheckboxIndicator,
+	CheckboxRoot,
+	useForwardPropsEmits,
+} from "radix-vue";
+import { Check } from "lucide-vue-next";
+import { cn } from "@/lib/utils";
 
-const props = defineProps<CheckboxRootProps>()
-const emits = defineEmits<CheckboxRootEmits>()
+const props = defineProps<CheckboxRootProps>();
+const emits = defineEmits<CheckboxRootEmits>();
 
-const forwarded = useForwardPropsEmits(props, emits)
+const forwarded = useForwardPropsEmits(props, emits);
 </script>
 
 <template>

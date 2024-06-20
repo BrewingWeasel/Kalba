@@ -1,11 +1,11 @@
 <script setup lang="ts">
-import { cn } from '@/lib/utils'
+import { cn } from "@/lib/utils";
 
 interface DialogFooterProps {
-  class?: string
+	class?: string;
 }
 
-const props = defineProps<DialogFooterProps>()
+const props = defineProps<DialogFooterProps>();
 </script>
 
 <template>

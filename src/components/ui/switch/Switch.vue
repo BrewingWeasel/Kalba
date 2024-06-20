@@ -1,10 +1,10 @@
 <script setup lang="ts">
 import {
-  SwitchRoot,
-  type SwitchRootEmits,
-  type SwitchRootProps,
-  SwitchThumb,
-  useForwardPropsEmits,
+	SwitchRoot,
+	type SwitchRootEmits,
+	type SwitchRootProps,
+	SwitchThumb,
+	useForwardPropsEmits,
 } from "radix-vue";
 import { cn } from "@/lib/utils";
 

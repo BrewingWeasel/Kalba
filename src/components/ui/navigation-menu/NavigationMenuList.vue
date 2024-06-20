@@ -1,8 +1,8 @@
 <script setup lang="ts">
-import { NavigationMenuList, type NavigationMenuListProps } from 'radix-vue'
-import { cn } from '@/lib/utils'
+import { NavigationMenuList, type NavigationMenuListProps } from "radix-vue";
+import { cn } from "@/lib/utils";
 
-const props = defineProps<NavigationMenuListProps & { class?: string }>()
+const props = defineProps<NavigationMenuListProps & { class?: string }>();
 </script>
 
 <template>

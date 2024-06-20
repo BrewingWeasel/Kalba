@@ -8,50 +8,50 @@ import { watch } from "vue";
 const dict = defineModel<Dictionary>({ required: true });
 
 watch(
-  () => dict.value.t,
-  async (newT, _) => {
-    console.log(newT);
-    switch (newT) {
-      case DictionaryType.File: {
-        dict.value.c = [
-          "",
-          {
-            t: "StarDict",
-            c: null,
-          },
-        ];
-        break;
-      }
-      case DictionaryType.Wiktionary: {
-        dict.value.c = ["en", ""];
-        break;
-      }
-      case DictionaryType.EkalbaBendrines:
-      case DictionaryType.EkalbaDabartines: {
-        dict.value.c = undefined;
-        break;
-      }
-      case DictionaryType.Url:
-      case DictionaryType.Command: {
-        dict.value.c = "";
-        break;
-      }
-    }
-  },
+	() => dict.value.t,
+	async (newT, _) => {
+		console.log(newT);
+		switch (newT) {
+			case DictionaryType.File: {
+				dict.value.c = [
+					"",
+					{
+						t: "StarDict",
+						c: null,
+					},
+				];
+				break;
+			}
+			case DictionaryType.Wiktionary: {
+				dict.value.c = ["en", ""];
+				break;
+			}
+			case DictionaryType.EkalbaBendrines:
+			case DictionaryType.EkalbaDabartines: {
+				dict.value.c = undefined;
+				break;
+			}
+			case DictionaryType.Url:
+			case DictionaryType.Command: {
+				dict.value.c = "";
+				break;
+			}
+		}
+	},
 );
 
 function isWiktionary(
-  dictType: DictionaryType,
-  _contents: any,
+	dictType: DictionaryType,
+	_contents: any,
 ): _contents is [String, String] {
-  return dictType == "Wiktionary";
+	return dictType == "Wiktionary";
 }
 
 function isFile(
-  dictType: DictionaryType,
-  _contents: any,
+	dictType: DictionaryType,
+	_contents: any,
 ): _contents is [String, FileType] {
-  return dictType == "File";
+	return dictType == "File";
 }
 </script>
 

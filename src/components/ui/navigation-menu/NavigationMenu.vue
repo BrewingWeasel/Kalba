@@ -1,15 +1,15 @@
 <script setup lang="ts">
 import {
-  NavigationMenuRoot,
-  type NavigationMenuRootEmits,
-  type NavigationMenuRootProps,
-} from 'radix-vue'
-import NavigationMenuViewport from './NavigationMenuViewport.vue'
-import { cn } from '@/lib/utils'
+	NavigationMenuRoot,
+	type NavigationMenuRootEmits,
+	type NavigationMenuRootProps,
+} from "radix-vue";
+import NavigationMenuViewport from "./NavigationMenuViewport.vue";
+import { cn } from "@/lib/utils";
 
-const props = defineProps<NavigationMenuRootProps & { class?: string }>()
+const props = defineProps<NavigationMenuRootProps & { class?: string }>();
 
-const emits = defineEmits<NavigationMenuRootEmits>()
+const emits = defineEmits<NavigationMenuRootEmits>();
 </script>
 
 <template>

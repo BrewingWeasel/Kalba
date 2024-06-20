@@ -1,11 +1,13 @@
 <script setup lang="ts">
-import type { ComboboxGroupProps } from 'radix-vue'
-import { ComboboxGroup, ComboboxLabel } from 'radix-vue'
-import { cn } from '@/lib/utils'
+import type { ComboboxGroupProps } from "radix-vue";
+import { ComboboxGroup, ComboboxLabel } from "radix-vue";
+import { cn } from "@/lib/utils";
 
-const props = defineProps<ComboboxGroupProps & {
-  heading?: string
-}>()
+const props = defineProps<
+	ComboboxGroupProps & {
+		heading?: string;
+	}
+>();
 </script>
 
 <template>

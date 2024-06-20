@@ -1,9 +1,9 @@
 <script setup lang="ts">
 import { Switch } from "@/components/ui/switch";
 import {
-  HoverCard,
-  HoverCardContent,
-  HoverCardTrigger,
+	HoverCard,
+	HoverCardContent,
+	HoverCardTrigger,
 } from "@/components/ui/hover-card";
 import Heading from "@/components/Heading.vue";
 import FilePicker from "@/components/FilePicker.vue";
@@ -20,9 +20,9 @@ import { Input } from "@/components/ui/input";
 import { Settings } from "@/types";
 import { useDark } from "@vueuse/core";
 import {
-  Collapsible,
-  CollapsibleContent,
-  CollapsibleTrigger,
+	Collapsible,
+	CollapsibleContent,
+	CollapsibleTrigger,
 } from "@/components/ui/collapsible";
 import { ChevronDown, Info } from "lucide-vue-next";
 import { Button } from "@/components/ui/button";
@@ -43,21 +43,21 @@ const languagesOpen = ref(true);
 const section: Ref<SettingsSection> = ref("Appearance");
 
 async function saveSettings() {
-  console.log("trying to write settings", settings.value);
-  await invoke("write_settings", { settings: settings.value });
-  savedSettings.value = window.structuredClone(settings.value);
+	console.log("trying to write settings", settings.value);
+	await invoke("write_settings", { settings: settings.value });
+	savedSettings.value = window.structuredClone(settings.value);
 }
 
 // TODO: fix
 onBeforeRouteLeave(async (_to, _from) => {
-  if (
-    savedSettings.value != settings.value &&
-    !(await confirm(
-      "You have unsaved changes. Are you sure you want to leave?",
-    ))
-  ) {
-    return false;
-  }
+	if (
+		savedSettings.value != settings.value &&
+		!(await confirm(
+			"You have unsaved changes. Are you sure you want to leave?",
+		))
+	) {
+		return false;
+	}
 });
 </script>
 

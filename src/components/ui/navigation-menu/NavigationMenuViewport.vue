@@ -1,11 +1,11 @@
 <script setup lang="ts">
 import {
-  NavigationMenuViewport,
-  type NavigationMenuViewportProps,
-} from 'radix-vue'
-import { cn } from '@/lib/utils'
+	NavigationMenuViewport,
+	type NavigationMenuViewportProps,
+} from "radix-vue";
+import { cn } from "@/lib/utils";
 
-const props = defineProps<NavigationMenuViewportProps>()
+const props = defineProps<NavigationMenuViewportProps>();
 </script>
 
 <template>

@@ -1,12 +1,12 @@
 <script setup lang="ts">
-import type { ComboboxItemEmits, ComboboxItemProps } from 'radix-vue'
-import { ComboboxItem, useEmitAsProps } from 'radix-vue'
-import { cn } from '@/lib/utils'
+import type { ComboboxItemEmits, ComboboxItemProps } from "radix-vue";
+import { ComboboxItem, useEmitAsProps } from "radix-vue";
+import { cn } from "@/lib/utils";
 
-const props = defineProps<ComboboxItemProps>()
-const emits = defineEmits<ComboboxItemEmits>()
+const props = defineProps<ComboboxItemProps>();
+const emits = defineEmits<ComboboxItemEmits>();
 
-const emitsAsProps = useEmitAsProps(emits)
+const emitsAsProps = useEmitAsProps(emits);
 </script>
 
 <template>

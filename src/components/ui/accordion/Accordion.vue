@@ -1,13 +1,13 @@
 <script setup lang="ts">
 import {
-  AccordionRoot,
-  type AccordionRootEmits,
-  type AccordionRootProps,
-  useEmitAsProps,
-} from 'radix-vue'
+	AccordionRoot,
+	type AccordionRootEmits,
+	type AccordionRootProps,
+	useEmitAsProps,
+} from "radix-vue";
 
-const props = defineProps<AccordionRootProps>()
-const emits = defineEmits<AccordionRootEmits>()
+const props = defineProps<AccordionRootProps>();
+const emits = defineEmits<AccordionRootEmits>();
 </script>
 
 <template>

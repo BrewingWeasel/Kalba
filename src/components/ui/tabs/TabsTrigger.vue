@@ -1,8 +1,8 @@
 <script setup lang="ts">
-import { TabsTrigger, type TabsTriggerProps } from 'radix-vue'
-import { cn } from '@/lib/utils'
+import { TabsTrigger, type TabsTriggerProps } from "radix-vue";
+import { cn } from "@/lib/utils";
 
-const props = defineProps<TabsTriggerProps & { class?: string }>()
+const props = defineProps<TabsTriggerProps & { class?: string }>();
 </script>
 
 <template>

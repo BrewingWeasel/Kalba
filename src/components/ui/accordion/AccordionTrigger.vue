@@ -1,13 +1,13 @@
 <script setup lang="ts">
 import {
-  AccordionHeader,
-  AccordionTrigger,
-  type AccordionTriggerProps,
-} from 'radix-vue'
-import { ChevronDown } from 'lucide-vue-next'
-import { cn } from '@/lib/utils'
+	AccordionHeader,
+	AccordionTrigger,
+	type AccordionTriggerProps,
+} from "radix-vue";
+import { ChevronDown } from "lucide-vue-next";
+import { cn } from "@/lib/utils";
 
-const props = defineProps<AccordionTriggerProps & { class?: string }>()
+const props = defineProps<AccordionTriggerProps & { class?: string }>();
 </script>
 
 <template>

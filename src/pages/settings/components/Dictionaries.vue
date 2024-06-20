@@ -1,22 +1,22 @@
 <script setup lang="ts">
 import {
-  Table,
-  TableBody,
-  TableCaption,
-  TableCell,
-  TableHead,
-  TableHeader,
-  TableRow,
+	Table,
+	TableBody,
+	TableCaption,
+	TableCell,
+	TableHead,
+	TableHeader,
+	TableRow,
 } from "@/components/ui/table";
 import {
-  AlertDialog,
-  AlertDialogAction,
-  AlertDialogCancel,
-  AlertDialogContent,
-  AlertDialogFooter,
-  AlertDialogHeader,
-  AlertDialogTitle,
-  AlertDialogTrigger,
+	AlertDialog,
+	AlertDialogAction,
+	AlertDialogCancel,
+	AlertDialogContent,
+	AlertDialogFooter,
+	AlertDialogHeader,
+	AlertDialogTitle,
+	AlertDialogTrigger,
 } from "@/components/ui/alert-dialog";
 import { Input } from "@/components/ui/input";
 
@@ -26,24 +26,24 @@ import { Dictionary, DictionaryType } from "@/types";
 import { Pencil, X } from "lucide-vue-next";
 
 const dicts = defineModel({
-  type: Array<[string, Dictionary]>,
-  required: true,
+	type: Array<[string, Dictionary]>,
+	required: true,
 });
 
 function addDictionary() {
-  dicts.value.push([
-    "New dictionary",
-    {
-      t: DictionaryType.File,
-      c: [
-        "",
-        {
-          t: "StarDict",
-          c: null,
-        },
-      ],
-    },
-  ]);
+	dicts.value.push([
+		"New dictionary",
+		{
+			t: DictionaryType.File,
+			c: [
+				"",
+				{
+					t: "StarDict",
+					c: null,
+				},
+			],
+		},
+	]);
 }
 </script>
 

@@ -3,16 +3,16 @@ import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
 
 export type SettingsSection =
-  | "Appearance"
-  | "Exporting"
-  | "Word Knowledge"
-  | "Dictionaries"
-  | "Grammar";
+	| "Appearance"
+	| "Exporting"
+	| "Word Knowledge"
+	| "Dictionaries"
+	| "Grammar";
 
 const section = defineModel<SettingsSection>({ required: true });
 
 const props = defineProps<{
-  section: SettingsSection;
+	section: SettingsSection;
 }>();
 </script>
 

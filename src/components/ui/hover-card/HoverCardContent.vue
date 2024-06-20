@@ -1,20 +1,20 @@
 <script setup lang="ts">
 import {
-  HoverCardContent,
-  type HoverCardContentProps,
-  HoverCardPortal,
-  useForwardProps,
-} from 'radix-vue'
-import { cn } from '@/lib/utils'
+	HoverCardContent,
+	type HoverCardContentProps,
+	HoverCardPortal,
+	useForwardProps,
+} from "radix-vue";
+import { cn } from "@/lib/utils";
 
 const props = withDefaults(
-  defineProps<HoverCardContentProps & { class?: string }>(),
-  {
-    sideOffset: 4,
-  },
-)
+	defineProps<HoverCardContentProps & { class?: string }>(),
+	{
+		sideOffset: 4,
+	},
+);
 
-const forwarded = useForwardProps(props)
+const forwarded = useForwardProps(props);
 </script>
 
 <template>
