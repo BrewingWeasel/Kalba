@@ -10,7 +10,7 @@ import {
   DialogClose,
 } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
-import Exporting from "@/components/settings/Exporting.vue";
+import Exporting from "@/components/ExportingConfiguration.vue";
 import { invoke } from "@tauri-apps/api/tauri";
 import { ref, Ref } from "vue";
 import { Settings, ExportDetails } from "@/types";
@@ -62,7 +62,7 @@ function selectWord() {
 <template>
   <Dialog>
     <DialogTrigger as-child>
-      <div class="flex justify-center bottom-0 py-3">
+      <div class="flex bottom-0 justify-center py-3">
         <Button variant="destructive"> Export </Button>
       </div>
     </DialogTrigger>
@@ -94,13 +94,13 @@ function selectWord() {
               <p v-else>
                 {{ exportDetails.sentence }}
               </p>
-              <div class="border-2 border-slate-800 p-2 mt-2 rounded-md">
+              <div class="p-2 mt-2 rounded-md border-2 border-slate-800">
                 <p
                   @mouseup="selectWord"
                   @mousedown="selectWord"
                   @mouseleave="selectWord"
                   id="sentence"
-                  class="selection:bg-pink-300 select-auto"
+                  class="select-auto selection:bg-pink-300"
                 >
                   {{ props.sentence }}
                 </p>
@@ -132,7 +132,7 @@ function selectWord() {
       </Tabs>
       <DialogFooter>
         <DialogClose as-child>
-          <div class="flex justify-center bottom-0 py-3">
+          <div class="flex bottom-0 justify-center py-3">
             <Button @click="exportWord" type="submit"> Export </Button>
           </div>
         </DialogClose>

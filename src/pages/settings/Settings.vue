@@ -6,13 +6,13 @@ import {
   HoverCardTrigger,
 } from "@/components/ui/hover-card";
 import Heading from "@/components/Heading.vue";
-
-import WordKnowledge from "@/components/settings/WordKnowledge.vue";
-import Dictionaries from "@/components/settings/Dictionaries.vue";
 import FilePicker from "@/components/FilePicker.vue";
-import Exporting from "@/components/settings/Exporting.vue";
-import SettingsMenu from "@/components/settings/SettingsMenu.vue";
-import { SettingsSection } from "@/components/settings/SettingsMenu.vue";
+
+import WordKnowledge from "./components/WordKnowledge.vue";
+import Dictionaries from "./components/Dictionaries.vue";
+import Exporting from "@/components/ExportingConfiguration.vue";
+import SettingsMenu from "./components/SettingsMenu.vue";
+import { SettingsSection } from "./components/SettingsMenu.vue";
 import { invoke } from "@tauri-apps/api/tauri";
 import { Ref, ref } from "vue";
 import { Label } from "@/components/ui/label";

@@ -3,21 +3,19 @@ import { createRouter, createWebHistory } from "vue-router";
 import { useDark, useToggle } from '@vueuse/core'
 
 import App from "./App.vue";
-import Settings from "./components/SettingsPage.vue";
-import WordView from "./components/WordView.vue";
-import LoadingPage from "./components/LoadingPage.vue";
+import Settings from "./pages/settings/Index.vue";
+import Reader from "./pages/reader/Index.vue";
 import "./styles.css";
 
 const router = createRouter({
   history: createWebHistory(),
   routes: [
-    { path: "/", component: () => import("./components/Input.vue") },
+    { path: "/", component: Reader },
     {
       path: "/reader",
-      component: () => import("./components/ReaderView.vue"),
+      component: Reader
     },
     { path: "/settings", component: Settings },
-    { path: "/words/:word", component: WordView },
   ],
 });
 

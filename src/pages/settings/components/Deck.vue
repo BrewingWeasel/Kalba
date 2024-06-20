@@ -7,8 +7,8 @@ import {
 } from "@/components/ui/accordion";
 
 import { Button } from "@/components/ui/button";
-import Notes from "@/components/settings/Notes.vue";
-import { Note } from "@/components/settings/Notes.vue";
+import Notes from "./Notes.vue";
+import { Note } from "./Notes.vue";
 import StyledCombobox from "@/components/StyledCombobox.vue";
 
 export interface Deck {
@@ -36,7 +36,7 @@ function addNote() {
 </script>
 
 <template>
-  <div class="pl-5 bg-slate-100 dark:bg-slate-900 rounded-md">
+  <div class="pl-5 rounded-md bg-slate-100 dark:bg-slate-900">
     <div class="py-2">
       <StyledCombobox
         :options="props.decks"

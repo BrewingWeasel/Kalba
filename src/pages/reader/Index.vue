@@ -1,9 +1,9 @@
 <script setup lang="ts">
 import { ref } from "vue";
 import { Textarea } from "@/components/ui/textarea";
-import ReaderView from "@/components/ReaderView.vue";
+import ReaderView from "./Reader.vue";
 import ButtonDialog from "@/components/ButtonDialog.vue";
-import FilePicker from "./FilePicker.vue";
+import FilePicker from "@/components/FilePicker.vue";
 import { readTextFile } from "@tauri-apps/api/fs";
 
 const currentSentence = ref("");
