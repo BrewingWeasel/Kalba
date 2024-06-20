@@ -8,7 +8,7 @@ import {
 
 import { Button } from "@/components/ui/button";
 import Notes from "./Notes.vue";
-import { Note } from "./Notes.vue";
+import type { Note } from "./Notes.vue";
 import StyledCombobox from "@/components/StyledCombobox.vue";
 
 export interface Deck {

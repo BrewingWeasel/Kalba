@@ -1,9 +1,9 @@
 <script setup lang="ts">
-import { Ref, computed, ref } from "vue";
+import { type Ref, computed, ref } from "vue";
 import { invoke } from "@tauri-apps/api/tauri";
 import IndividualWord from "@/components/Word.vue";
 import SelectedWordView from "@/components/SelectedWordView.vue";
-import { Word } from "@/types";
+import type { Word } from "@/types";
 
 const props = defineProps(["sentence"]);
 const words: Ref<[Word] | undefined> = ref(undefined);
@@ -45,7 +45,7 @@ function handle_word_selected(word: Word, index: number) {
 async function changeRating(
 	rating: number,
 	attemptedLemma: string,
-	modifiable: boolean = false,
+	modifiable = false,
 ) {
 	console.log(attemptedLemma);
 	words.value!.forEach((word, i, vals) => {

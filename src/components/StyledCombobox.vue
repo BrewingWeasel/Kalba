@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { ComputedRef, computed, ref } from "vue";
+import { type ComputedRef, computed, ref } from "vue";
 import { CaretSortIcon, CheckIcon } from "@radix-icons/vue";
 
 import { cn } from "@/lib/utils";

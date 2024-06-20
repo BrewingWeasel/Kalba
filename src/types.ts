@@ -1,4 +1,4 @@
-import { Deck } from "@/components/settings/Deck.vue";
+import type { Deck } from "@/components/settings/Deck.vue";
 
 export interface ExportDetails {
 	word: string;

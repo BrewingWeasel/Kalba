@@ -22,7 +22,7 @@ import { Input } from "@/components/ui/input";
 
 import { Button } from "@/components/ui/button";
 import IndividualDict from "./IndividualDict.vue";
-import { Dictionary, DictionaryType } from "@/types";
+import { type Dictionary, DictionaryType } from "@/types";
 import { Pencil, X } from "lucide-vue-next";
 
 const dicts = defineModel({

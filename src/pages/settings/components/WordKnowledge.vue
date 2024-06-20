@@ -8,7 +8,7 @@ import {
 
 import { Button } from "@/components/ui/button";
 import IndividualDeck from "./Deck.vue";
-import { Deck } from "./Deck.vue";
+import type { Deck } from "./Deck.vue";
 
 const props = defineProps<{
 	decks: Deck[];

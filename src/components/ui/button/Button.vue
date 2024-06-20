@@ -1,6 +1,7 @@
 <script setup lang="ts">
 import type { VariantProps } from "class-variance-authority";
 import { Primitive, type PrimitiveProps } from "radix-vue";
+// biome-ignore lint: not actually just for type
 import { buttonVariants } from ".";
 import { cn } from "@/lib/utils";
 

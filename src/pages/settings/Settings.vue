@@ -12,12 +12,12 @@ import WordKnowledge from "./components/WordKnowledge.vue";
 import Dictionaries from "./components/Dictionaries.vue";
 import Exporting from "@/components/ExportingConfiguration.vue";
 import SettingsMenu from "./components/SettingsMenu.vue";
-import { SettingsSection } from "./components/SettingsMenu.vue";
+import type { SettingsSection } from "./components/SettingsMenu.vue";
 import { invoke } from "@tauri-apps/api/tauri";
-import { Ref, ref } from "vue";
+import { type Ref, ref } from "vue";
 import { Label } from "@/components/ui/label";
 import { Input } from "@/components/ui/input";
-import { Settings } from "@/types";
+import type { Settings } from "@/types";
 import { useDark } from "@vueuse/core";
 import {
 	Collapsible,

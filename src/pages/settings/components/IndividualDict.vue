@@ -2,7 +2,7 @@
 import { Input } from "@/components/ui/input";
 import StyledCombobox from "@/components/StyledCombobox.vue";
 import FilePicker from "@/components/FilePicker.vue";
-import { Dictionary, DictionaryType, FileType } from "@/types";
+import { type Dictionary, DictionaryType, type FileType } from "@/types";
 import { watch } from "vue";
 
 const dict = defineModel<Dictionary>({ required: true });
@@ -43,14 +43,14 @@ watch(
 function isWiktionary(
 	dictType: DictionaryType,
 	_contents: any,
-): _contents is [String, String] {
+): _contents is [string, string] {
 	return dictType == "Wiktionary";
 }
 
 function isFile(
 	dictType: DictionaryType,
 	_contents: any,
-): _contents is [String, FileType] {
+): _contents is [string, FileType] {
 	return dictType == "File";
 }
 </script>

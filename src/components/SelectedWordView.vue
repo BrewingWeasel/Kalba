@@ -14,7 +14,7 @@ import { Input } from "@/components/ui/input";
 import ExportButton from "@/components/ExportButton.vue";
 import { invoke } from "@tauri-apps/api/tauri";
 import { computedAsync } from "@vueuse/core";
-import { Word } from "@/types";
+import type { Word } from "@/types";
 
 interface Definition {
 	t: string;
@@ -24,9 +24,7 @@ interface Definition {
 const props = defineProps(["sentence"]);
 const word = defineModel<Word>({ required: true });
 
-const emit = defineEmits<{
-	(e: "set-rating", rating: number, lemma: string, modifiable?: boolean): void;
-}>();
+const emit = defineEmits<(e: "set-rating", rating: number, lemma: string, modifiable?: boolean) => void>();
 
 const definition = computedAsync(async (): Promise<Definition[]> => {
 	return await invoke("get_defs", { lemma: word.value.lemma });
