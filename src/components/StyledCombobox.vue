@@ -30,22 +30,21 @@ const selected = defineModel();
 const selections: ComputedRef<{ value: string; label: string }[]> = computed(
 	() =>
 		props.options.map((option) => {
-			if (typeof option == "string") {
+			if (typeof option === "string") {
 				return {
 					value: option,
 					label: option,
 				};
-			} else {
+			}
 				return {
 					value: option[0],
 					label: option[1],
 				};
-			}
 		}),
 );
 
-const searchPrompt = "Search " + props.itemBeingSelected + "...";
-const selectPrompt = "Select " + props.itemBeingSelected + "...";
+const searchPrompt = `Search ${props.itemBeingSelected}...`;
+const selectPrompt = `Select ${props.itemBeingSelected}...`;
 </script>
 
 <template>

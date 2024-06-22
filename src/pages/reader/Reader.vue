@@ -21,10 +21,10 @@ const sentence = computed(() => {
 		i < selected_index.value + DEFAULT_WORDS_AROUND;
 		i++
 	) {
-		const curWord = words.value![i];
+		const curWord = words.value?.[i];
 		if (curWord) {
 			if (curWord.clickable) {
-				intendedSent += " " + curWord.text;
+				intendedSent += ` ${curWord.text}`;
 			} else {
 				intendedSent += curWord.text;
 			}
@@ -48,9 +48,9 @@ async function changeRating(
 	modifiable = false,
 ) {
 	console.log(attemptedLemma);
-	words.value!.forEach((word, i, vals) => {
-		if (word["lemma"] == attemptedLemma) {
-			vals[i]["rating"] = rating;
+	words.value?.forEach((word, i, vals) => {
+		if (word.lemma === attemptedLemma) {
+			vals[i].rating = rating;
 		}
 	});
 	await invoke("update_word_knowledge", {

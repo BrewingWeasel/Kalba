@@ -44,14 +44,14 @@ function isWiktionary(
 	dictType: DictionaryType,
 	_contents: any,
 ): _contents is [string, string] {
-	return dictType == "Wiktionary";
+	return dictType === "Wiktionary";
 }
 
 function isFile(
 	dictType: DictionaryType,
 	_contents: any,
 ): _contents is [string, FileType] {
-	return dictType == "File";
+	return dictType === "File";
 }
 </script>
 

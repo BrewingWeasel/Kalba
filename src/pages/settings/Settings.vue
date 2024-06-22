@@ -33,7 +33,7 @@ const isDark = useDark();
 
 const settings: Ref<Settings> = ref(await invoke("get_settings"));
 
-var savedSettings: Ref<Settings | null> = ref(null);
+const savedSettings: Ref<Settings | null> = ref(null);
 
 const models: string[] = await invoke("get_all_note_names");
 const deckNames: string[] = await invoke("get_all_deck_names");
@@ -51,7 +51,7 @@ async function saveSettings() {
 // TODO: fix
 onBeforeRouteLeave(async (_to, _from) => {
 	if (
-		savedSettings.value != settings.value &&
+		savedSettings.value !== settings.value &&
 		!(await confirm(
 			"You have unsaved changes. Are you sure you want to leave?",
 		))

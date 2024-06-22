@@ -16,17 +16,16 @@ const rating = computed(() => {
 	if (props.word.text.includes("\n")) {
 		return "basis-full h-0 pb-2";
 	}
-	if (props.rating == 0) {
-		return startingClass + "text-rose-600";
-	} else if (props.word.rating == 1) {
-		return startingClass + "text-red-400";
-	} else if (props.word.rating == 2) {
-		return startingClass + "text-orange-400";
-	} else if (props.word.rating == 3) {
-		return startingClass + "text-amber-300";
-	} else {
-		return startingClass;
+	if (props.rating === 0) {
+		return `${startingClass}text-rose-600`;
+	}if (props.word.rating === 1) {
+		return `${startingClass}text-red-400`;
+	}if (props.word.rating === 2) {
+		return `${startingClass}text-orange-400`;
+	}if (props.word.rating === 3) {
+		return `${startingClass}text-amber-300`;
 	}
+		return startingClass;
 });
 
 function set_selected() {
