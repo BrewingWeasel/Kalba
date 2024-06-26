@@ -10,13 +10,17 @@ export interface ExportDetails {
 }
 
 export interface Settings {
+	dark_mode: boolean;
+	languages: { [key: string]: LanguageSettings };
+}
+
+export interface LanguageSettings {
 	deck: string;
 	note_type: string;
 	note_fields: { [key: string]: string };
 	model: string;
 	anki_parser: Deck[];
 	dicts: [string, Dictionary][];
-	dark_mode: boolean;
 	frequency_list: string;
 	words_known_by_freq: number;
 }
@@ -24,7 +28,7 @@ export interface Settings {
 export interface Word {
 	text: string;
 	lemma: string;
-	morph: any;
+	morph: { [key: string]: string };
 	clickable: boolean;
 	rating: number;
 }

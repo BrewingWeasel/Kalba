@@ -132,17 +132,40 @@ pub async fn get_defs(
     lemma: String,
 ) -> Result<Vec<SakinyjeResult<String>>, String> {
     let mut state = state.0.lock().await;
-    if let Some(v) = state.to_save.cached_defs.get(&lemma) {
+    let language = state
+        .current_language
+        .clone()
+        .expect("current language should already be selected");
+    if let Some(v) = state
+        .to_save
+        .language_specific
+        .get(&language)
+        .expect("language to already have data to save")
+        .cached_defs
+        .get(&lemma)
+    {
         Ok(v.clone())
     } else {
         let mut defs = Vec::new();
-        for (_, dict) in &state.settings.dicts {
+        for (_, dict) in &state
+            .settings
+            .languages
+            .get(&language)
+            .expect("language should exist")
+            .dicts
+        {
             let def = get_def(Arc::clone(&state.dict_info), dict, &lemma)
                 .await
                 .into();
             defs.push(def);
         }
-        state.to_save.cached_defs.insert(lemma, defs.clone());
+        state
+            .to_save
+            .language_specific
+            .get_mut(&language)
+            .expect("language to already have data to save")
+            .cached_defs
+            .insert(lemma, defs.clone());
         Ok(defs)
     }
 }

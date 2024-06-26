@@ -28,16 +28,23 @@ struct SakinyjeState(tauri::async_runtime::Mutex<SharedInfo>);
 struct SharedInfo {
     settings: Settings,
     to_save: ToSave,
-    model: PyObject,
+    model: Option<PyObject>,
+    current_language: Option<String>,
     dict_info: Arc<tauri::async_runtime::Mutex<DictionaryInfo>>,
 }
 
 #[derive(Serialize, Deserialize, Default)]
 struct ToSave {
+    last_launched: DateTime<Utc>,
+    last_language: Option<String>,
+    decks_checked: Vec<String>,
+    language_specific: HashMap<String, LanguageSpecficToSave>,
+}
+
+#[derive(Serialize, Deserialize, Default)]
+struct LanguageSpecficToSave {
     words: HashMap<String, WordInfo>,
     cached_defs: HashMap<String, Vec<SakinyjeResult<String>>>,
-    last_launched: DateTime<Utc>,
-    decks_checked: Vec<String>,
 }
 
 impl Default for SharedInfo {
@@ -60,22 +67,31 @@ impl Default for SharedInfo {
             .num_days()
             + 2;
 
-        for (deck, note_parser) in &mut settings.anki_parser {
-            block_on(get_anki_card_statuses(
-                deck,
-                &note_parser.0,
-                &mut to_save.words,
-                days_passed,
-                !to_save.decks_checked.contains(deck),
-            ))
-            .unwrap();
-            to_save.decks_checked.push(deck.clone());
+        for (language_name, language) in &settings.languages {
+            let to_save_language = to_save
+                .language_specific
+                .entry(language_name.to_owned())
+                .or_default();
+            for (deck, note_parser) in &language.anki_parser {
+                block_on(get_anki_card_statuses(
+                    deck,
+                    &note_parser.0,
+                    &mut to_save_language.words,
+                    days_passed,
+                    // If the deck has not been added, it means this is the first time it is being
+                    // checked, so we should check every card and not just the ones recently
+                    // updated
+                    !to_save.decks_checked.contains(deck),
+                ))
+                .unwrap();
+                to_save.decks_checked.push(deck.to_owned());
+            }
+            update_words_known(
+                &language.frequency_list,
+                language.words_known_by_freq,
+                &mut to_save_language.words,
+            );
         }
-        update_words_known(
-            &settings.frequency_list,
-            settings.words_known_by_freq,
-            &mut to_save.words,
-        );
 
         if let Some(cmds) = &settings.to_run {
             for cmd in cmds {
@@ -83,13 +99,15 @@ impl Default for SharedInfo {
             }
         }
 
-        let model = get_spacy_model(&settings.model).unwrap(); // TODO: model
+        let model = None; // TODO: model
 
         to_save.last_launched = new_time;
+        let current_language = to_save.last_language.clone();
         Self {
             to_save,
             settings,
             model,
+            current_language,
             dict_info: Default::default(),
         }
     }
@@ -125,6 +143,9 @@ fn main() {
             update_word_knowledge,
             remove_deck,
             get_rating,
+            get_language,
+            set_language,
+            get_languages
         ])
         .on_window_event(handle_window_event)
         .run(tauri::generate_context!())
@@ -183,8 +204,15 @@ async fn get_dark_mode(state: State<'_, SakinyjeState>) -> Result<bool, String> 
 #[tauri::command]
 async fn get_rating(lemma: String, state: State<'_, SakinyjeState>) -> Result<i8, String> {
     let mut state = state.0.lock().await;
+    let language = state
+        .current_language
+        .clone()
+        .expect("need a language selected to be able to set rating");
     Ok(state
         .to_save
+        .language_specific
+        .get_mut(&language)
+        .expect("language should exist")
         .words
         .entry(lemma)
         .or_insert(WordInfo {
@@ -192,6 +220,25 @@ async fn get_rating(lemma: String, state: State<'_, SakinyjeState>) -> Result<i8
             method: Method::FromSeen,
         })
         .rating)
+}
+
+#[tauri::command]
+async fn get_languages(state: State<'_, SakinyjeState>) -> Result<Vec<String>, String> {
+    let state = state.0.lock().await;
+    Ok(state.settings.languages.keys().cloned().collect())
+}
+
+#[tauri::command]
+async fn get_language(state: State<'_, SakinyjeState>) -> Result<Option<String>, String> {
+    let state = state.0.lock().await;
+    Ok(state.current_language.to_owned())
+}
+
+#[tauri::command]
+async fn set_language(state: State<'_, SakinyjeState>, language: String) -> Result<(), String> {
+    let mut state = state.0.lock().await;
+    state.current_language = Some(language);
+    Ok(())
 }
 
 #[tauri::command]
@@ -213,7 +260,18 @@ async fn update_word_knowledge(
     modifiable: bool,
 ) -> Result<(), String> {
     let mut state = state.0.lock().await;
-    let word_knowledge = state.to_save.words.get_mut(word).unwrap();
+    let language = state
+        .current_language
+        .clone()
+        .expect("current language should already be chosen");
+    let word_knowledge = state
+        .to_save
+        .language_specific
+        .get_mut(&language)
+        .expect("current language should already have content to save")
+        .words
+        .get_mut(word)
+        .unwrap();
     word_knowledge.rating = rating;
     word_knowledge.method = if modifiable {
         Method::FromAnki

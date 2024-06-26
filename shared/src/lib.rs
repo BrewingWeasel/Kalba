@@ -90,22 +90,35 @@ pub struct Note(
 
 #[derive(Deserialize, Serialize, Clone)]
 pub struct Settings {
+    pub to_run: Option<Vec<String>>,
+    pub dark_mode: bool,
+    pub languages: HashMap<String, LanguageSettings>,
+}
+
+#[derive(Deserialize, Serialize, Clone)]
+pub struct LanguageSettings {
     pub deck: String,
     pub note_type: String,
     pub note_fields: HashMap<String, String>,
     pub model: String,
     pub dicts: Vec<(String, Dictionary)>,
-    pub to_remove: Option<usize>,
-    pub css: Option<String>,
     #[serde(with = "HashMapToArray::<String, Note, DeckKeyValueLabels>")]
     pub anki_parser: HashMap<String, Note>,
-    pub to_run: Option<Vec<String>>,
-    pub dark_mode: bool,
     pub frequency_list: String,
     pub words_known_by_freq: usize,
 }
 
 impl Default for Settings {
+    fn default() -> Self {
+        Self {
+            to_run: None,
+            dark_mode: true,
+            languages: HashMap::new(),
+        }
+    }
+}
+
+impl Default for LanguageSettings {
     fn default() -> Self {
         Self {
             deck: String::from(""),
@@ -116,11 +129,7 @@ impl Default for Settings {
             ]),
             model: String::from("lt_core_news_sm"),
             dicts: Vec::new(),
-            to_remove: None,
-            css: None,
             anki_parser: HashMap::new(),
-            to_run: None,
-            dark_mode: true,
             frequency_list: String::from(""),
             words_known_by_freq: 0,
         }

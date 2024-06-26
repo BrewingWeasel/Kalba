@@ -19,7 +19,12 @@ const router = createRouter({
 	],
 });
 
-const app = createApp(App);
+const SyncApp = {
+	template: "<Suspense><App /></Suspense>",
+	components: { App },
+};
+
+const app = createApp(SyncApp);
 
 app.use(router);
 
