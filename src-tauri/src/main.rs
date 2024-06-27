@@ -162,7 +162,8 @@ fn handle_window_event(event: GlobalWindowEvent) {
             &WindowEvent::Destroyed => {
                 let saved_state_file = dirs::data_dir().unwrap().join("sakinyje_saved_data.toml");
                 let state: State<'_, SakinyjeState> = event.window().state();
-                let locked_state = state.0.lock().await;
+                let mut locked_state = state.0.lock().await;
+                locked_state.to_save.last_language = locked_state.current_language.clone();
                 let conts =
                     toml::to_string(&locked_state.to_save).expect("Error serializing to toml");
                 fs::write(saved_state_file, conts).expect("error writing to file");
