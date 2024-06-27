@@ -6,6 +6,7 @@ use crate::{
     ankiconnect::{get_all_deck_names, get_all_note_names, get_note_field_names, remove_deck},
     dictionary::{get_defs, DictionaryInfo},
     language_parsing::parse_text,
+    new_language_template::new_language_from_template,
 };
 use ankiconnect::get_anki_card_statuses;
 use chrono::{DateTime, Utc};
@@ -22,6 +23,7 @@ mod ankiconnect;
 mod commands;
 mod dictionary;
 mod language_parsing;
+mod new_language_template;
 
 struct SakinyjeState(tauri::async_runtime::Mutex<SharedInfo>);
 
@@ -145,7 +147,8 @@ fn main() {
             get_rating,
             get_language,
             set_language,
-            get_languages
+            get_languages,
+            new_language_from_template,
         ])
         .on_window_event(handle_window_event)
         .run(tauri::generate_context!())

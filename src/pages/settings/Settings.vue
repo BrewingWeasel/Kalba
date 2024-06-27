@@ -26,6 +26,7 @@ import {
 } from "@/components/ui/collapsible";
 import { ChevronDown, Info, X } from "lucide-vue-next";
 import { Button } from "@/components/ui/button";
+import NewLanguage from "@/components/generated/NewLanguage.vue";
 
 const isDark = useDark();
 
@@ -57,28 +58,10 @@ async function saveSettings() {
 	await invoke("write_settings", { settings: settings });
 }
 
-function newLanguage() {
-   let langNumber = 1;
-   while (`Custom Language ${langNumber.toString()}` in settings.languages) {
-      langNumber++;
-   }
-   const langName = `Custom Language ${langNumber.toString()}`;
-   languagesOpen.value[langName] = true;
-   console.log("Adding new language");
-   settings.languages[langName] = {
-      deck: "Default",
-      note_type: "Basic",
-      note_fields: {
-         "Front": "{sentence} ({word})",
-         "Back": "{defs}"
-      },
-      model: "",
-      anki_parser: [],
-      frequency_list: "",
-      dicts: [],
-      words_known_by_freq: 0,
-   };
-   console.log(settings.languages[langName]);
+async function newLanguage(language: string) {
+   await invoke("new_language_from_template", { language })
+   const updated: Settings = await invoke("get_settings");
+   settings.languages = updated.languages;
 }
 
 watch(settings, async (s) => {
@@ -124,7 +107,7 @@ watch(settings, async (s) => {
                </CollapsibleContent>
             </Collapsible>
             <div class="flex justify-center w-full">
-            <Button variant="ghost" class="text-xl text-center" @click="newLanguage">+</Button>
+            <NewLanguage @langSelected="newLanguage" />
             </div>
          </CollapsibleContent>
       </Collapsible>
