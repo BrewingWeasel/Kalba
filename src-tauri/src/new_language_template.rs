@@ -25,7 +25,7 @@ pub async fn new_language_from_template(
     }
     let client = Client::new();
     let template = client.get(format!(
-        "https://raw.githubusercontent.com/brewingweasel/sakinyje/main/data/language_templates/{language}",))
+        "https://raw.githubusercontent.com/brewingweasel/sakinyje/main/data/language_templates/{language}.toml",))
         .send()
         .await
         .unwrap()
