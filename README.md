@@ -55,12 +55,9 @@ In either case, your final build will be in target/release/sakinyje, and the bun
 
 ### First time setup:
 
-Add a spacy model (either download one from https://spacy.io/models or train one)
-Add a dictionary. Here are some suggestions:
+When you first launch the app you will be prompted to create your settings for the new language. If your target language has a template, select that as it will automatically fill out certain settings that you will likely want (though these can be changed later). If there is no existing template, you can simply click custom and then set everything up manually.
 
-- If you're learning Lithuanian I have a good server based one that uses dabartinės kalbos žodynas prebuilt: https://github.com/BrewingWeasel/lithdict/blob/main/uuids
-- https://freedict.org/downloads/ has some decent dictionaries for a fair amount of languages
-- https://github.com/Vuizur/Wiktionary-Dictionaries has a ton of dictionaries based on old wiktionary data. Be sure to download the stardict version though.
+You will be able to chante these settings under the language specific settings on the settings page. Languages generated with a template will have many of these settings filled out, but some must be set by the user according to the instructions on the page.
 
 ### Normal usage:
 
