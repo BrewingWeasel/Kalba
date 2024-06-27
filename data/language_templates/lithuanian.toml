@@ -10,13 +10,11 @@ dicts = [
     { t = "EkalbaDabartines" },
 ],
     [
-    "Wiktionary",
-    { t = "Wiktionary", 
-      c = [
-         "en",
-         "Lithuanian",
-      ] 
-    },
+    "Lithuanian Wiktionary",
+    { t = "Wiktionary", c = [
+    "en",
+    "Lithuanian",
+] },
 ],
 ]
 frequency_list = true
