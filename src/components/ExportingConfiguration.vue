@@ -11,6 +11,7 @@ import {
 	HoverCardContent,
 	HoverCardTrigger,
 } from "@/components/ui/hover-card";
+import { toast } from 'vue-sonner';
 
 const props = defineProps<{
 	models: string[];
@@ -24,10 +25,12 @@ const fields = defineModel<{ [key: string]: string }>("fields", {
 });
 
 const fieldNames = computedAsync(
-	async (): Promise<string[]> =>
-		await invoke("get_note_field_names", {
+	async () =>
+      await invoke<string[]>("get_note_field_names", {
 			model: model.value,
-		}),
+		}).catch((error) => {
+         toast.error(error);
+   }),
 	[],
 );
 

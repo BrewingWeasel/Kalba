@@ -33,8 +33,14 @@ const isDark = useDark();
 
 const settings = reactive<Settings>(await invoke("get_settings"));
 
-const models: string[] = await invoke("get_all_note_names");
-const deckNames: string[] = await invoke("get_all_deck_names");
+const models = await invoke<string[]>("get_all_note_names").catch((error) => {
+      toast.error(error);
+      return [];
+   });
+const deckNames = await invoke<string[]>("get_all_deck_names").catch((error) => {
+      toast.error(error);
+      return [];
+});
 
 const languagesOpen: Ref<{ [key: string]: boolean }> = ref({});
 for (const language in settings.languages) {

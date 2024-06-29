@@ -6,7 +6,7 @@ use serde_json::{json, value::Value};
 use shared::NoteToWordHandling;
 use tauri::State;
 
-use crate::{Method, SakinyjeState, WordInfo};
+use crate::{Method, SakinyjeError, SakinyjeState, WordInfo};
 
 #[derive(Deserialize, Debug)]
 struct AnkiResult<T> {
@@ -14,12 +14,14 @@ struct AnkiResult<T> {
     error: Option<String>,
 }
 
-impl<T> From<AnkiResult<T>> for Result<T, String> {
+impl<T> From<AnkiResult<T>> for Result<T, SakinyjeError> {
     fn from(val: AnkiResult<T>) -> Self {
         if let Some(r) = val.result {
             Ok(r)
         } else {
-            Err(val.error.unwrap())
+            Err(SakinyjeError::AnkiConnectError(
+                val.error.expect("either an error or a value"),
+            ))
         }
     }
 }
@@ -30,7 +32,7 @@ pub async fn get_anki_card_statuses(
     original_words: &mut HashMap<String, WordInfo>,
     days_passed: i64,
     first_time_run: bool,
-) -> Result<(), String> {
+) -> Result<(), SakinyjeError> {
     println!("getting anki card statuses");
     let days_passed_query = if first_time_run {
         String::new()
@@ -43,9 +45,11 @@ pub async fn get_anki_card_statuses(
     let intervals = get_card_or_note_vals("getIntervals", json!({ "cards": &cards })).await?;
     let notes = get_card_or_note_vals("cardsToNotes", json!({ "cards": &cards })).await?;
 
-    let res = generic_anki_connect_action("notesInfo", json!({ "notes": notes })).await;
-    let notes_info = Into::<Result<Vec<NoteInfo>, String>>::into(
-        res.json::<AnkiResult<Vec<NoteInfo>>>().await.unwrap(),
+    let res = generic_anki_connect_action("notesInfo", json!({ "notes": notes })).await?;
+    let notes_info = Into::<Result<Vec<NoteInfo>, SakinyjeError>>::into(
+        res.json::<AnkiResult<Vec<NoteInfo>>>()
+            .await
+            .expect("valid json from anki"),
     )?;
 
     for ((note, interval), note_info) in notes.into_iter().zip(intervals).zip(notes_info) {
@@ -53,7 +57,7 @@ pub async fn get_anki_card_statuses(
             continue;
         };
 
-        println!("word: {} interval: {interval}", word);
+        println!("word: {word} interval: {interval}");
 
         let rating = if interval <= 1 {
             1
@@ -97,7 +101,7 @@ struct FieldInfo {
     value: String,
 }
 
-async fn generic_anki_connect_action(action: &str, data: Value) -> Response {
+async fn generic_anki_connect_action(action: &str, data: Value) -> Result<Response, SakinyjeError> {
     let client = reqwest::Client::new();
     let request = if data == Value::Null {
         json!({
@@ -117,11 +121,11 @@ async fn generic_anki_connect_action(action: &str, data: Value) -> Response {
         .json(&request)
         .send()
         .await
-        .unwrap()
+        .map_err(|_| SakinyjeError::AnkiNotAvailable)
 }
 
-async fn get_card_or_note_vals(action: &str, data: Value) -> Result<Vec<isize>, String> {
-    let res = generic_anki_connect_action(action, data).await;
+async fn get_card_or_note_vals(action: &str, data: Value) -> Result<Vec<isize>, SakinyjeError> {
+    let res = generic_anki_connect_action(action, data).await?;
     res.json::<AnkiResult<Vec<isize>>>().await.unwrap().into()
 }
 
@@ -129,11 +133,14 @@ async fn get_word_from_note(
     note_id: isize,
     note: NoteInfo,
     templates: &HashMap<String, NoteToWordHandling>,
-) -> Result<Option<String>, String> {
+) -> Result<Option<String>, SakinyjeError> {
     if let Some(handler) = templates.get(&note.model_name) {
-        let res = generic_anki_connect_action("getNoteTags", json!({ "note": &note_id })).await;
-        let tags: Result<Vec<String>, String> =
-            res.json::<AnkiResult<Vec<String>>>().await.unwrap().into();
+        let res = generic_anki_connect_action("getNoteTags", json!({ "note": &note_id })).await?;
+        let tags: Result<Vec<String>, SakinyjeError> = res
+            .json::<AnkiResult<Vec<String>>>()
+            .await
+            .expect("Valid json from anki")
+            .into();
 
         if !handler.tags_wanted.is_empty() && !tags?.iter().any(|t| handler.tags_wanted.contains(t))
         {
@@ -149,10 +156,7 @@ async fn get_word_from_note(
             .value;
         Ok(Some(get_word_from_field(selected_field, handler)))
     } else {
-        Err(format!(
-            "Unable to find model handler for {}",
-            note.model_name
-        ))
+        Err(SakinyjeError::NoModelHandler)
     }
 }
 
@@ -182,21 +186,30 @@ fn get_word_from_field(selected_field: String, handler: &NoteToWordHandling) -> 
 }
 
 #[tauri::command]
-pub async fn get_all_deck_names() -> Result<Vec<String>, String> {
-    let res = generic_anki_connect_action("deckNames", Value::Null).await;
-    res.json::<AnkiResult<Vec<String>>>().await.unwrap().into()
+pub async fn get_all_deck_names() -> Result<Vec<String>, SakinyjeError> {
+    let res = generic_anki_connect_action("deckNames", Value::Null).await?;
+    res.json::<AnkiResult<Vec<String>>>()
+        .await
+        .expect("Valid json from anki")
+        .into()
 }
 
 #[tauri::command]
-pub async fn get_all_note_names() -> Result<Vec<String>, String> {
-    let res = generic_anki_connect_action("modelNames", Value::Null).await;
-    res.json::<AnkiResult<Vec<String>>>().await.unwrap().into()
+pub async fn get_all_note_names() -> Result<Vec<String>, SakinyjeError> {
+    let res = generic_anki_connect_action("modelNames", Value::Null).await?;
+    res.json::<AnkiResult<Vec<String>>>()
+        .await
+        .expect("Valid json from anki")
+        .into()
 }
 
 #[tauri::command]
-pub async fn get_note_field_names(model: &str) -> Result<Vec<String>, String> {
-    let res = generic_anki_connect_action("modelFieldNames", json!({ "modelName": model })).await;
-    res.json::<AnkiResult<Vec<String>>>().await.unwrap().into()
+pub async fn get_note_field_names(model: &str) -> Result<Vec<String>, SakinyjeError> {
+    let res = generic_anki_connect_action("modelFieldNames", json!({ "modelName": model })).await?;
+    res.json::<AnkiResult<Vec<String>>>()
+        .await
+        .expect("Valid json from anki")
+        .into()
 }
 
 #[tauri::command]

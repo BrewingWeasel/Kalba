@@ -33,6 +33,12 @@ enum SakinyjeError {
     TomlSer(#[from] toml::ser::Error),
     #[error("No operating system {0} directory was found")]
     MissingDir(String),
+    #[error("Anki is not available. This may be because it is not open or ankiconnect is not installed.")]
+    AnkiNotAvailable,
+    #[error("The selected card has handler that fits its model")]
+    NoModelHandler,
+    #[error("Ankiconnect return an error: {0}")]
+    AnkiConnectError(String),
 }
 
 // we must manually implement serde::Serialize
