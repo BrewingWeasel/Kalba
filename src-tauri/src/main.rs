@@ -25,6 +25,26 @@ mod dictionary;
 mod language_parsing;
 mod new_language_template;
 
+#[derive(Debug, thiserror::Error)]
+enum SakinyjeError {
+    #[error(transparent)]
+    Io(#[from] std::io::Error),
+    #[error(transparent)]
+    TomlSer(#[from] toml::ser::Error),
+    #[error("No operating system {0} directory was found")]
+    MissingDir(String),
+}
+
+// we must manually implement serde::Serialize
+impl serde::Serialize for SakinyjeError {
+    fn serialize<S>(&self, serializer: S) -> Result<S::Ok, S::Error>
+    where
+        S: serde::ser::Serializer,
+    {
+        serializer.serialize_str(self.to_string().as_ref())
+    }
+}
+
 struct SakinyjeState(tauri::async_runtime::Mutex<SharedInfo>);
 
 struct SharedInfo {
@@ -58,7 +78,7 @@ impl Default for SharedInfo {
             .map(|v| toml::from_str(&v).unwrap_or_default())
             .unwrap_or_default();
 
-        let mut settings: Settings = fs::read_to_string(config_file)
+        let settings: Settings = fs::read_to_string(config_file)
             .map(|v| toml::from_str(&v).unwrap()) // TODO: some sort of error handling when invalid
             // toml is used
             .unwrap_or_default();
@@ -246,14 +266,20 @@ async fn set_language(state: State<'_, SakinyjeState>, language: String) -> Resu
 }
 
 #[tauri::command]
-async fn write_settings(state: State<'_, SakinyjeState>, settings: Settings) -> Result<(), String> {
-    let config_file = dirs::config_dir().unwrap().join("sakinyje.toml");
-    let conts = toml::to_string_pretty(&settings).unwrap();
+async fn write_settings(
+    state: State<'_, SakinyjeState>,
+    settings: Settings,
+) -> Result<(), SakinyjeError> {
+    let config_file = dirs::config_dir()
+        .ok_or(SakinyjeError::MissingDir("config".to_string()))?
+        .join("sakinyje.toml");
+    let conts = toml::to_string_pretty(&settings)?;
 
     let mut state = state.0.lock().await;
     state.settings = settings;
 
-    fs::write(config_file, conts).map_err(|e| e.to_string())
+    fs::write(config_file, conts)?;
+    Ok(())
 }
 
 #[tauri::command]

@@ -23,6 +23,7 @@ import {
 import { Settings2 } from "lucide-vue-next";
 import { ref } from "vue";
 import { invoke } from "@tauri-apps/api/tauri";
+import { Toaster } from '@/components/ui/sonner'
 
 const languages = ref<string[]>(await invoke('get_languages'));
 const currentLanguage = ref<string | null>(await invoke('get_language'))
@@ -34,12 +35,13 @@ async function updateLanguages() {
 
 async function setLanguage(language: string) {
    console.log(`setting language to ${language}`);
-   await invoke('set_language', {language});
+   await invoke('set_language', {language})
 }
 
 </script>
 
 <template>
+   <Toaster closeButton richColors />
    <div class="flex w-full">
      <NavigationMenu>
        <NavigationMenuList>

@@ -27,6 +27,7 @@ import {
 import { ChevronDown, Info, X } from "lucide-vue-next";
 import { Button } from "@/components/ui/button";
 import NewLanguage from "@/components/generated/NewLanguage.vue";
+import { toast } from 'vue-sonner';
 
 const isDark = useDark();
 
@@ -55,7 +56,9 @@ console.log(settings);
 async function saveSettings() {
 	console.log("trying to write settings", settings);
    emit('settingsChanged');
-	await invoke("write_settings", { settings: settings });
+	await invoke("write_settings", { settings: settings }).catch((error) => {
+      toast.error(error);
+   });
 }
 
 async function newLanguage(language: string) {

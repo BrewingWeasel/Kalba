@@ -97,6 +97,7 @@ dependencies = [
  "stardict",
  "tauri",
  "tauri-build",
+ "thiserror",
  "toml 0.8.14",
 ]
 
