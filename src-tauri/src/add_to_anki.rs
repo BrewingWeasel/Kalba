@@ -93,7 +93,7 @@ mod test {
             defs: Vec::new(),
             fields: HashMap::from([("Front", "{sentence}"), ("Back", "{word}:")]),
         };
-        let args = get_json(details).unwrap();
+        let args = get_json(details);
         let params = args.get("params").unwrap();
         let note = params.get("note").unwrap();
         assert_eq!(
@@ -126,7 +126,7 @@ mod test {
             ],
             fields: HashMap::from([("Front", "{sentence}"), ("Back", "{word}:{def}")]),
         };
-        let args = get_json(details).unwrap();
+        let args = get_json(details);
         let params = args.get("params").unwrap();
         let note = params.get("note").unwrap();
         assert_eq!(
@@ -161,7 +161,7 @@ def3"})
             ]),
         };
 
-        let args = get_json(details).unwrap();
+        let args = get_json(details);
         let params = args.get("params").unwrap();
         let note = params.get("note").unwrap();
         assert_eq!(
@@ -188,7 +188,7 @@ def3"})
             defs: Vec::new(),
             fields: HashMap::from([("sentence", "{sentence}"), ("sentence", "{sentence}")]),
         };
-        let args = get_json(details).unwrap();
+        let args = get_json(details);
         let params = args.get("params").unwrap();
         let note = params.get("note").unwrap();
         assert_eq!(note.get("fields").unwrap(), &json!({"sentence": "sent"}));
