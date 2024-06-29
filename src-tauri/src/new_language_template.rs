@@ -5,7 +5,7 @@ use serde::Deserialize;
 use shared::{Dictionary, LanguageSettings};
 use tauri::State;
 
-use crate::SakinyjeState;
+use crate::{SakinyjeError, SakinyjeState};
 
 #[derive(Debug, Deserialize, Clone)]
 struct TemplateDetails {
@@ -18,7 +18,7 @@ struct TemplateDetails {
 pub async fn new_language_from_template(
     state: State<'_, SakinyjeState>,
     language: String,
-) -> Result<(), String> {
+) -> Result<(), SakinyjeError> {
     let language = language.to_lowercase();
     if language == "custom" {
         return Ok(Default::default());
@@ -27,15 +27,14 @@ pub async fn new_language_from_template(
     let template = client.get(format!(
         "https://raw.githubusercontent.com/brewingweasel/sakinyje/main/data/language_templates/{language}.toml",))
         .send()
-        .await
-        .unwrap()
+        .await?
         .text()
         .await
-        .unwrap();
+        .expect("githubusercontent to return valid text");
     let details: TemplateDetails = toml::from_str(&template).unwrap();
     let frequency_list = if details.frequency_list {
         let path = dirs::data_dir()
-            .unwrap()
+            .ok_or_else(|| SakinyjeError::MissingDir("data".to_owned()))?
             .join("sakinyje")
             .join("language_data")
             .join(format!("{language}_frequency"));
@@ -43,12 +42,11 @@ pub async fn new_language_from_template(
             let contents = client.get(format!(
                 "https://raw.githubusercontent.com/brewingweasel/sakinyje/main/data/frequency_lists/{language}",))
                 .send()
-                .await
-                .unwrap()
+                .await?
                 .text()
                 .await
-                .unwrap();
-            fs::write(&path, contents).unwrap();
+                .expect("githubusercontent to return valid text");
+            fs::write(&path, contents)?;
         }
         path.to_string_lossy().to_string()
     } else {

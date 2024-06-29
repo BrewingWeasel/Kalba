@@ -2,7 +2,9 @@ use reqwest::Client;
 use serde_json::json;
 use std::collections::HashMap;
 
-fn get_json(export_details: ExportDetails<'_>) -> Result<serde_json::Value, String> {
+use crate::SakinyjeError;
+
+fn get_json(export_details: ExportDetails<'_>) -> serde_json::Value {
     let mut def = String::new();
     for cur_def in &export_details.defs {
         def.push('\n');
@@ -29,7 +31,7 @@ fn get_json(export_details: ExportDetails<'_>) -> Result<serde_json::Value, Stri
         fields.insert(field_name, conts);
     }
 
-    Ok(json!({
+    json!({
         "action": "addNote",
         "version": 6,
         "params": {
@@ -48,7 +50,7 @@ fn get_json(export_details: ExportDetails<'_>) -> Result<serde_json::Value, Stri
                 },
             }
         }
-    }))
+    })
 }
 
 #[derive(serde::Deserialize)]
@@ -62,15 +64,15 @@ pub struct ExportDetails<'a> {
 }
 
 #[tauri::command]
-pub async fn add_to_anki(export_details: ExportDetails<'_>) -> Result<(), String> {
-    let args = get_json(export_details).map_err(|e| e.to_string())?;
+pub async fn add_to_anki(export_details: ExportDetails<'_>) -> Result<(), SakinyjeError> {
+    let args = get_json(export_details);
     let client = Client::new();
     client
         .post("http://localhost:8765/")
         .json(&args)
         .send()
         .await
-        .map_err(|e| e.to_string())?;
+        .map_err(|_| SakinyjeError::AnkiNotAvailable)?;
     Ok(())
 }
 
