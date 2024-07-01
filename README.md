@@ -59,6 +59,12 @@ When you first launch the app you will be prompted to create your settings for t
 
 You will be able to chante these settings under the language specific settings on the settings page. Languages generated with a template will have many of these settings filled out, but some must be set by the user according to the instructions on the page.
 
+### Configuring Anki parsing
+Sakinyje can be configured to automatically link your word knowledge with your Anki decks. To do so, it uses the "Word Knowledge" settings of the individual language to determine how and when cards are transformed into words.
+To start, add the deck you use for learning and a model (the type of note, for example `Basic`). From there, you can select the field of the model where the word is stored and apply any modifications to it. Note that you can add multiple decks and multiple models inside those decks.
+Whenever you open the app again it will update all the notes that match this type that have been reviewed since Sakinyje was last opened.
+
+
 ### Normal usage:
 
 Copy or write a sentence into the input tab, then press submit.
