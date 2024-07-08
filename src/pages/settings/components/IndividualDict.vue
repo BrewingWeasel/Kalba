@@ -7,6 +7,10 @@ import { watch } from "vue";
 
 const dict = defineModel<Dictionary>({ required: true });
 
+const props = defineProps<{
+  currentLanguage: string;
+}>();
+
 watch(
 	() => dict.value.t,
 	async (newT, _) => {
@@ -23,7 +27,7 @@ watch(
 				break;
 			}
 			case DictionaryType.Wiktionary: {
-				dict.value.c = ["en", ""];
+				dict.value.c = ["en", props.currentLanguage];
 				break;
 			}
 			case DictionaryType.EkalbaBendrines:

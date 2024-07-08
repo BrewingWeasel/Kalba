@@ -30,6 +30,10 @@ const dicts = defineModel({
 	required: true,
 });
 
+const props = defineProps<{
+  currentLanguage: string;
+}>();
+
 function addDictionary() {
 	dicts.value.push([
 		"New dictionary",
@@ -71,7 +75,7 @@ function addDictionary() {
               <AlertDialogHeader>
                 <AlertDialogTitle>Edit dictionary</AlertDialogTitle>
               </AlertDialogHeader>
-              <IndividualDict v-model="dicts[index][1]" />
+              <IndividualDict :currentLanguage="props.currentLanguage" v-model="dicts[index][1]" />
               <AlertDialogFooter>
                 <AlertDialogCancel>Cancel</AlertDialogCancel>
                 <AlertDialogAction>Save</AlertDialogAction>

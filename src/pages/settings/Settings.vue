@@ -161,7 +161,7 @@ async function newLanguage(language: string) {
           title="Dictionaries"
           description="Configure dictionaries to use for word lookup"
         />
-        <Dictionaries v-model="settings.languages[selectedLang].dicts" />
+        <Dictionaries :current-language="selectedLang" v-model="settings.languages[selectedLang].dicts" />
       </template>
 
       <template v-else-if="section == 'Grammar' && selectedLang != null">
