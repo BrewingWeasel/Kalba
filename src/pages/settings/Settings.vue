@@ -14,7 +14,7 @@ import Exporting from "@/components/ExportingConfiguration.vue";
 import SettingsMenu from "./components/SettingsMenu.vue";
 import type { SettingsSection } from "./components/SettingsMenu.vue";
 import { invoke } from "@tauri-apps/api/tauri";
-import { type Ref, ref, watch, reactive } from "vue";
+import { type Ref, ref, watch, reactive, nextTick } from "vue";
 import { Label } from "@/components/ui/label";
 import { Input } from "@/components/ui/input";
 import type { Settings } from "@/types";
@@ -62,9 +62,14 @@ console.log(settings);
 async function saveSettings() {
 	console.log("trying to write settings", settings);
   emit('settingsChanged');
-	await invoke("write_settings", { settings: settings }).catch((error) => {
+	await invoke("write_settings", { settings: settings }).catch(async (_) => {
+    // Errors in settings could potentially occur before the contents of a dictionary are updated, 
+    // to handle this we simply try writing the settings again one tick later
+    await nextTick();
+    invoke("write_settings", { settings: settings }).catch(async (error) => {
       toast.error(error);
-   });
+    })
+    });
 }
 watch(settings, saveSettings, { deep: true });
 
