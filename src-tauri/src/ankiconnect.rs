@@ -33,13 +33,14 @@ pub async fn get_anki_card_statuses(
     days_passed: i64,
     first_time_run: bool,
 ) -> Result<(), SakinyjeError> {
-    println!("getting anki card statuses");
+    log::info!("getting anki card statuses");
     let days_passed_query = if first_time_run {
         String::new()
     } else {
         format!("rated:{days_passed}")
     };
     let find_cards_query = format!("\"deck:{deck}\"{days_passed_query}");
+    log::info!("Using query: {find_cards_query}");
 
     let cards = get_card_or_note_vals("findCards", json!({ "query": find_cards_query })).await?;
     let intervals = get_card_or_note_vals("getIntervals", json!({ "cards": &cards })).await?;
@@ -57,7 +58,7 @@ pub async fn get_anki_card_statuses(
             continue;
         };
 
-        println!("word: {word} interval: {interval}");
+        log::trace!("found word {word} with interval {interval}");
 
         let rating = if interval <= 1 {
             1

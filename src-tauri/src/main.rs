@@ -13,6 +13,7 @@ use chrono::{DateTime, Utc};
 use commands::run_command;
 use serde::{Deserialize, Serialize};
 use shared::{SakinyjeResult, Settings};
+use simple_logger::SimpleLogger;
 use std::{collections::HashMap, fs, io::BufReader, process, sync::Arc};
 use tauri::{async_runtime::block_on, GlobalWindowEvent, Manager, State, WindowEvent};
 
@@ -159,6 +160,12 @@ enum Method {
 }
 
 fn main() {
+    SimpleLogger::new()
+        .with_colors(true)
+        .with_level(log::LevelFilter::Info)
+        .env()
+        .init()
+        .unwrap();
     tauri::Builder::default()
         .manage(SakinyjeState(Default::default()))
         .invoke_handler(tauri::generate_handler![
@@ -190,6 +197,7 @@ fn handle_window_event(event: GlobalWindowEvent) {
         #[allow(clippy::single_match)] // Will probably be expanded in the future
         match event.event() {
             &WindowEvent::Destroyed => {
+                log::info!("saving details");
                 let saved_state_file = dirs::data_dir().unwrap().join("sakinyje_saved_data.toml");
                 let state: State<'_, SakinyjeState> = event.window().state();
                 let mut locked_state = state.0.lock().await;
@@ -208,10 +216,11 @@ fn update_words_known(
     words_known: usize,
     original_words: &mut HashMap<String, WordInfo>,
 ) {
-    println!("updating words known");
+    log::info!("updating words known");
     if let Ok(contents) = fs::read_to_string(file_name) {
         original_words.retain(|_, v| v.method != Method::FromFrequency);
         for word in contents.lines().take(words_known) {
+            log::trace!("Checking word: {}", word);
             original_words.insert(
                 word.to_owned(),
                 WordInfo {
@@ -225,6 +234,7 @@ fn update_words_known(
 
 #[tauri::command]
 async fn get_settings(state: State<'_, SakinyjeState>) -> Result<Settings, String> {
+    log::trace!("Settings requested");
     let state = state.0.lock().await;
     Ok(state.settings.clone())
 }
@@ -237,6 +247,7 @@ async fn get_dark_mode(state: State<'_, SakinyjeState>) -> Result<bool, String> 
 
 #[tauri::command]
 async fn get_rating(lemma: String, state: State<'_, SakinyjeState>) -> Result<i8, String> {
+    log::trace!("Getting rating for word: {lemma}");
     let mut state = state.0.lock().await;
     let language = state
         .current_language
@@ -299,6 +310,7 @@ async fn update_word_knowledge(
     rating: i8,
     modifiable: bool,
 ) -> Result<(), String> {
+    log::info!("Word {word} rating set to {rating}");
     let mut state = state.0.lock().await;
     let language = state
         .current_language

@@ -15,7 +15,7 @@ pub async fn parse_text(sent: &str, state: State<'_, SakinyjeState>) -> Result<V
     if sent.is_empty() {
         return Ok(Vec::new());
     }
-    println!("Parsing text: {}", sent);
+    log::info!("Parsing text: {}", sent);
 
     let mut state = state.0.lock().await;
     let language = state
@@ -24,13 +24,12 @@ pub async fn parse_text(sent: &str, state: State<'_, SakinyjeState>) -> Result<V
         .expect("Language to have already been chosen");
 
     if state.language_parser.is_some() {
-        println!("Sending to stanza parser");
+        log::trace!("Sending to stanza parser");
         Ok(stanza_parser(sent, &mut state, language))
     } else {
         Ok(default_tokenizer(sent, language, &mut state))
     }
 }
-
 #[derive(serde::Deserialize, Clone)]
 struct StanzaToken {
     text: String,
@@ -55,7 +54,7 @@ pub async fn start_stanza(state: State<'_, SakinyjeState>) -> Result<(), Sakinyj
         .stdin(process::Stdio::piped())
         .stdout(process::Stdio::piped())
         .spawn()?;
-    println!("Started stanza");
+    log::info!("Started stanza");
 
     let language = state
         .current_language
@@ -73,14 +72,13 @@ pub async fn start_stanza(state: State<'_, SakinyjeState>) -> Result<(), Sakinyj
     let mut stdin = std::mem::take(&mut process.stdin).expect("stdin to be piped");
 
     stdin.write(format!("{model}\n").as_bytes())?;
-    println!("Model written to");
-
+    log::info!("Loading stanza model {model} for language {language}");
     let mut buf = [0; 5];
     stdout.read_exact(&mut buf)?;
     if buf != "done\n".as_bytes() {
         panic!("Starting stanza failed {}", String::from_utf8_lossy(&buf))
     }
-    println!("Model loaded");
+    log::info!("Stanza model loaded");
 
     state.language_parser = Some(LanguageParser { stdin, stdout });
     Ok(())
@@ -95,7 +93,7 @@ fn stanza_parser(sent: &str, state: &mut MutexGuard<SharedInfo>, language: Strin
         .stdin
         .write(format!("{sent}\n").as_bytes())
         .expect("to write to stdin");
-    println!("sentence written");
+    log::trace!("sentence written");
     let mut contents = String::new();
     loop {
         let mut specific_contents = String::new();
@@ -112,7 +110,7 @@ fn stanza_parser(sent: &str, state: &mut MutexGuard<SharedInfo>, language: Strin
         }
     }
     let details = serde_json::from_str::<Vec<StanzaToken>>(&contents).unwrap();
-    println!("response parsed");
+    log::trace!("response parsed");
     details
         .into_iter()
         .map(|token| {

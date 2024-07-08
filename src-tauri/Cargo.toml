@@ -32,6 +32,11 @@ lol_html = "1.2.1"
 select = "0.6.0"
 thiserror = "1.0.61"
 tokio = { version = "1.29.1", features = ["sync"] }
+log = "0.4.22"
+
+[dependencies.simple_logger]
+version = "5.0.0"
+features = ["colors", "stderr"]
 
 
 [features]
