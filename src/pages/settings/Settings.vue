@@ -61,21 +61,18 @@ console.log(settings);
 
 async function saveSettings() {
 	console.log("trying to write settings", settings);
-   emit('settingsChanged');
+  emit('settingsChanged');
 	await invoke("write_settings", { settings: settings }).catch((error) => {
       toast.error(error);
    });
 }
+watch(settings, saveSettings, { deep: true });
 
 async function newLanguage(language: string) {
    await invoke("new_language_from_template", { language })
    const updated: Settings = await invoke("get_settings");
    settings.languages = updated.languages;
 }
-
-watch(settings, async (s) => {
-   console.log(s.languages);
-} );
 
 </script>
 
@@ -210,10 +207,6 @@ watch(settings, async (s) => {
       </template>
 
       <br />
-
-      <Button class="mt-2" variant="destructive" @click="saveSettings"
-        >Save</Button
-      >
     </div>
   </div>
 </template>
