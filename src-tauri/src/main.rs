@@ -5,17 +5,15 @@ use crate::{
     add_to_anki::add_to_anki,
     ankiconnect::{get_all_deck_names, get_all_note_names, get_note_field_names, remove_deck},
     dictionary::{get_defs, DictionaryInfo},
-    language_parsing::parse_text,
+    language_parsing::{parse_text, start_stanza},
     new_language_template::new_language_from_template,
 };
 use ankiconnect::get_anki_card_statuses;
 use chrono::{DateTime, Utc};
 use commands::run_command;
-use pyo3::PyObject;
 use serde::{Deserialize, Serialize};
 use shared::{SakinyjeResult, Settings};
-use spacy_parsing::get_spacy_model;
-use std::{collections::HashMap, fs, sync::Arc};
+use std::{collections::HashMap, fs, io::BufReader, process, sync::Arc};
 use tauri::{async_runtime::block_on, GlobalWindowEvent, Manager, State, WindowEvent};
 
 mod add_to_anki;
@@ -58,9 +56,14 @@ struct SakinyjeState(tauri::async_runtime::Mutex<SharedInfo>);
 struct SharedInfo {
     settings: Settings,
     to_save: ToSave,
-    model: Option<PyObject>,
+    language_parser: Option<LanguageParser>,
     current_language: Option<String>,
     dict_info: Arc<tauri::async_runtime::Mutex<DictionaryInfo>>,
+}
+
+struct LanguageParser {
+    stdin: process::ChildStdin,
+    stdout: BufReader<process::ChildStdout>,
 }
 
 #[derive(Serialize, Deserialize, Default)]
@@ -129,14 +132,12 @@ impl Default for SharedInfo {
             }
         }
 
-        let model = None; // TODO: model
-
         to_save.last_launched = new_time;
         let current_language = to_save.last_language.clone();
         Self {
             to_save,
             settings,
-            model,
+            language_parser: None,
             current_language,
             dict_info: Default::default(),
         }
@@ -177,6 +178,7 @@ fn main() {
             set_language,
             get_languages,
             new_language_from_template,
+            start_stanza,
         ])
         .on_window_event(handle_window_event)
         .run(tauri::generate_context!())

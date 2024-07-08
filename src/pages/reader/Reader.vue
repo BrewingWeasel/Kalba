@@ -10,6 +10,9 @@ const words: Ref<[Word] | undefined> = ref(undefined);
 const selected_word: Ref<Word | undefined> = ref(undefined);
 const selected_index: Ref<number> = ref(0);
 
+await invoke("start_stanza");
+console.log("done");
+
 set_words();
 
 const DEFAULT_WORDS_AROUND = 25;
