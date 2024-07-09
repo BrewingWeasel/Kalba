@@ -8,15 +8,15 @@ import { cn } from "@/lib/utils";
 interface ButtonVariantProps extends VariantProps<typeof buttonVariants> {}
 
 interface Props extends PrimitiveProps {
-	variant?: ButtonVariantProps["variant"];
-	size?: ButtonVariantProps["size"];
-	as?: string;
+  variant?: ButtonVariantProps["variant"];
+  size?: ButtonVariantProps["size"];
+  as?: string;
 }
 
 withDefaults(defineProps<Props>(), {
-	variant: "default",
-	size: "default",
-	as: "button",
+  variant: "default",
+  size: "default",
+  as: "button",
 });
 </script>
 

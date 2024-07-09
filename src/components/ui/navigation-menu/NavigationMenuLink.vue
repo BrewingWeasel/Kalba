@@ -1,9 +1,9 @@
 <script setup lang="ts">
 import {
-	NavigationMenuLink,
-	type NavigationMenuLinkEmits,
-	type NavigationMenuLinkProps,
-	useEmitAsProps,
+  NavigationMenuLink,
+  type NavigationMenuLinkEmits,
+  type NavigationMenuLinkProps,
+  useEmitAsProps,
 } from "radix-vue";
 
 const props = defineProps<NavigationMenuLinkProps>();

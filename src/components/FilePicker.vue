@@ -6,10 +6,10 @@ import { Upload } from "lucide-vue-next";
 const file = defineModel<string>({ required: true });
 
 async function getFile() {
-	const selected = await open({ multiple: false });
-	if (selected && !Array.isArray(selected)) {
-		file.value = selected;
-	}
+  const selected = await open({ multiple: false });
+  if (selected && !Array.isArray(selected)) {
+    file.value = selected;
+  }
 }
 console.log(file);
 </script>

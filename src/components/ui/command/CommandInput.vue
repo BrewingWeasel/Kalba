@@ -9,7 +9,7 @@ const props = defineProps<ComboboxInputProps>();
 <script lang="ts">
 export default {
   inheritAttrs: false,
-}
+};
 </script>
 
 <template>
@@ -18,7 +18,12 @@ export default {
     <ComboboxInput
       v-bind="{ ...props, ...$attrs }"
       auto-focus
-      :class="cn('flex h-11 w-full rounded-md bg-transparent py-3 text-sm outline-none placeholder:text-muted-foreground disabled:cursor-not-allowed disabled:opacity-50', $attrs.class ?? '')"
+      :class="
+        cn(
+          'flex h-11 w-full rounded-md bg-transparent py-3 text-sm outline-none placeholder:text-muted-foreground disabled:cursor-not-allowed disabled:opacity-50',
+          $attrs.class ?? '',
+        )
+      "
     />
   </div>
 </template>

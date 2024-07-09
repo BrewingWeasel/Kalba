@@ -1,18 +1,18 @@
 <script setup lang="ts">
 import {
-	PopoverContent,
-	type PopoverContentEmits,
-	type PopoverContentProps,
-	PopoverPortal,
-	useForwardPropsEmits,
+  PopoverContent,
+  type PopoverContentEmits,
+  type PopoverContentProps,
+  PopoverPortal,
+  useForwardPropsEmits,
 } from "radix-vue";
 import { cn } from "@/lib/utils";
 
 const props = withDefaults(
-	defineProps<PopoverContentProps & { class?: string }>(),
-	{
-		sideOffset: 4,
-	},
+  defineProps<PopoverContentProps & { class?: string }>(),
+  {
+    sideOffset: 4,
+  },
 );
 const emits = defineEmits<PopoverContentEmits>();
 

@@ -1,11 +1,11 @@
 <script setup lang="ts">
 import {
-	Card,
-	CardContent,
-	CardDescription,
-	CardFooter,
-	CardHeader,
-	CardTitle,
+  Card,
+  CardContent,
+  CardDescription,
+  CardFooter,
+  CardHeader,
+  CardTitle,
 } from "@/components/ui/card";
 import RatingButtons from "@/components/RatingButtons.vue";
 import GrammarDetails from "@/components/GrammarDetails.vue";
@@ -17,24 +17,32 @@ import { computedAsync } from "@vueuse/core";
 import type { Word } from "@/types";
 
 interface Definition {
-	t: string;
-	conts: string;
+  t: string;
+  conts: string;
 }
 
 const props = defineProps(["sentence"]);
 const word = defineModel<Word>({ required: true });
 
-const emit = defineEmits<(e: "set-rating", rating: number, lemma: string, modifiable?: boolean) => void>();
+const emit =
+  defineEmits<
+    (
+      e: "set-rating",
+      rating: number,
+      lemma: string,
+      modifiable?: boolean,
+    ) => void
+  >();
 
 const definition = computedAsync(async (): Promise<Definition[]> => {
-	return await invoke("get_defs", { lemma: word.value.lemma });
+  return await invoke("get_defs", { lemma: word.value.lemma });
 }, []);
 
 async function updateLemma() {
-	const rating: number = await invoke("get_rating", {
-		lemma: word.value.lemma,
-	});
-	emit("set-rating", rating, word.value.lemma);
+  const rating: number = await invoke("get_rating", {
+    lemma: word.value.lemma,
+  });
+  emit("set-rating", rating, word.value.lemma);
 }
 </script>
 

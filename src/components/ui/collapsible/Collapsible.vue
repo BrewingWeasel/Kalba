@@ -7,7 +7,10 @@ const emits = defineEmits<CollapsibleRootEmits>();
 </script>
 
 <template>
-  <CollapsibleRoot v-slot="{ open }" v-bind="{ ...props, ...useEmitAsProps(emits) }">
+  <CollapsibleRoot
+    v-slot="{ open }"
+    v-bind="{ ...props, ...useEmitAsProps(emits) }"
+  >
     <slot :open="open" />
   </CollapsibleRoot>
 </template>

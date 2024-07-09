@@ -1,9 +1,9 @@
 <script setup lang="ts">
 import { Switch } from "@/components/ui/switch";
 import {
-	HoverCard,
-	HoverCardContent,
-	HoverCardTrigger,
+  HoverCard,
+  HoverCardContent,
+  HoverCardTrigger,
 } from "@/components/ui/hover-card";
 import Heading from "@/components/Heading.vue";
 import FilePicker from "@/components/FilePicker.vue";
@@ -20,65 +20,66 @@ import { Input } from "@/components/ui/input";
 import type { Settings } from "@/types";
 import { useDark } from "@vueuse/core";
 import {
-	Collapsible,
-	CollapsibleContent,
-	CollapsibleTrigger,
+  Collapsible,
+  CollapsibleContent,
+  CollapsibleTrigger,
 } from "@/components/ui/collapsible";
 import { ChevronDown, Info, X } from "lucide-vue-next";
 import { Button } from "@/components/ui/button";
 import NewLanguage from "@/components/generated/NewLanguage.vue";
-import { toast } from 'vue-sonner';
+import { toast } from "vue-sonner";
 
 const isDark = useDark();
 
 const settings = reactive<Settings>(await invoke("get_settings"));
 
 const models = await invoke<string[]>("get_all_note_names").catch((error) => {
-      toast.error(error);
-      return [];
-   });
-const deckNames = await invoke<string[]>("get_all_deck_names").catch((error) => {
-      toast.error(error);
-      return [];
+  toast.error(error);
+  return [];
 });
+const deckNames = await invoke<string[]>("get_all_deck_names").catch(
+  (error) => {
+    toast.error(error);
+    return [];
+  },
+);
 
 const languagesOpen: Ref<{ [key: string]: boolean }> = ref({});
 for (const language in settings.languages) {
-   languagesOpen.value[language] = false;
+  languagesOpen.value[language] = false;
 }
 
 const allLanguageMenuOpen = ref(true);
 const section: Ref<SettingsSection> = ref("Appearance");
 const selectedLang: Ref<string | null> = ref(null);
 
-const emit = defineEmits(['settingsChanged']);
+const emit = defineEmits(["settingsChanged"]);
 
 const props = defineProps<{
-   currentLanguage: string | null
+  currentLanguage: string | null;
 }>();
 
 console.log(settings);
 
 async function saveSettings() {
-	console.log("trying to write settings", settings);
-  emit('settingsChanged');
-	await invoke("write_settings", { settings: settings }).catch(async (_) => {
-    // Errors in settings could potentially occur before the contents of a dictionary are updated, 
+  console.log("trying to write settings", settings);
+  emit("settingsChanged");
+  await invoke("write_settings", { settings: settings }).catch(async (_) => {
+    // Errors in settings could potentially occur before the contents of a dictionary are updated,
     // to handle this we simply try writing the settings again one tick later
     await nextTick();
     invoke("write_settings", { settings: settings }).catch(async (error) => {
       toast.error(error);
-    })
     });
+  });
 }
 watch(settings, saveSettings, { deep: true });
 
 async function newLanguage(language: string) {
-   await invoke("new_language_from_template", { language })
-   const updated: Settings = await invoke("get_settings");
-   settings.languages = updated.languages;
+  await invoke("new_language_from_template", { language });
+  const updated: Settings = await invoke("get_settings");
+  settings.languages = updated.languages;
 }
-
 </script>
 
 <template>
@@ -86,41 +87,65 @@ async function newLanguage(language: string) {
     <div class="pr-10 w-1/3">
       <SettingsMenu v-model="section" section="Appearance" />
       <Collapsible class="px-4" v-model:open="allLanguageMenuOpen">
-         <div class="flex justify-between items-center">
-            <h4 class="font-semibold">Languages</h4>
-            <CollapsibleTrigger as-child>
-               <Button variant="ghost" size="sm" class="p-0 w-9">
+        <div class="flex justify-between items-center">
+          <h4 class="font-semibold">Languages</h4>
+          <CollapsibleTrigger as-child>
+            <Button variant="ghost" size="sm" class="p-0 w-9">
+              <ChevronDown class="w-4 h-4" />
+              <span class="sr-only">Toggle</span>
+            </Button>
+          </CollapsibleTrigger>
+        </div>
+        <CollapsibleContent class="pl-4">
+          <Collapsible
+            v-for="(_language_settings, language) in settings.languages"
+            class="px-4"
+            v-model:open="languagesOpen[language]"
+          >
+            <div class="flex justify-between items-center">
+              <h4
+                class="font-semibold grow"
+                :class="
+                  language == props.currentLanguage ? 'text-rose-300' : ''
+                "
+              >
+                {{ language }}
+              </h4>
+              <Button
+                variant="ghost"
+                size="sm"
+                class="p-0 w-9"
+                @click="delete settings.languages[language]"
+              >
+                <X class="w-4 h-4" />
+                <span class="sr-only">Remove</span>
+              </Button>
+              <CollapsibleTrigger as-child>
+                <Button variant="ghost" size="sm" class="p-0 w-9">
                   <ChevronDown class="w-4 h-4" />
                   <span class="sr-only">Toggle</span>
-               </Button>
-            </CollapsibleTrigger>
-         </div>
-         <CollapsibleContent class="pl-4">
-            <Collapsible v-for="(_language_settings, language) in settings.languages" class="px-4" v-model:open="languagesOpen[language]">
-               <div class="flex justify-between items-center">
-                  <h4 class="font-semibold grow" :class="(language == props.currentLanguage) ? 'text-rose-300' : ''">{{ language }}</h4>
-                  <Button variant="ghost" size="sm" class="p-0 w-9" @click="delete settings.languages[language]">
-                     <X class="w-4 h-4" />
-                     <span class="sr-only">Remove</span>
-                  </Button>
-                  <CollapsibleTrigger as-child>
-                  <Button variant="ghost" size="sm" class="p-0 w-9">
-                     <ChevronDown class="w-4 h-4" />
-                     <span class="sr-only">Toggle</span>
-                  </Button>
-                  </CollapsibleTrigger>
-               </div>
-               <CollapsibleContent class="pl-4" v-if="typeof language === 'string'" @click="() => { selectedLang = language; }">
-                  <SettingsMenu v-model="section" section="Exporting" />
-                  <SettingsMenu v-model="section" section="Word Knowledge" />
-                  <SettingsMenu v-model="section" section="Dictionaries" />
-                  <SettingsMenu v-model="section" section="Grammar" />
-               </CollapsibleContent>
-            </Collapsible>
-            <div class="flex justify-center w-full">
-            <NewLanguage @langSelected="newLanguage" />
+                </Button>
+              </CollapsibleTrigger>
             </div>
-         </CollapsibleContent>
+            <CollapsibleContent
+              class="pl-4"
+              v-if="typeof language === 'string'"
+              @click="
+                () => {
+                  selectedLang = language;
+                }
+              "
+            >
+              <SettingsMenu v-model="section" section="Exporting" />
+              <SettingsMenu v-model="section" section="Word Knowledge" />
+              <SettingsMenu v-model="section" section="Dictionaries" />
+              <SettingsMenu v-model="section" section="Grammar" />
+            </CollapsibleContent>
+          </Collapsible>
+          <div class="flex justify-center w-full">
+            <NewLanguage @langSelected="newLanguage" />
+          </div>
+        </CollapsibleContent>
       </Collapsible>
     </div>
     <div class="w-full lg:pr-1/3">
@@ -156,7 +181,11 @@ async function newLanguage(language: string) {
           description="Automatically synchronize the words you know with Anki"
         />
         <Suspense>
-          <WordKnowledge :decks="settings.languages[selectedLang].anki_parser" :models :deckNames />
+          <WordKnowledge
+            :decks="settings.languages[selectedLang].anki_parser"
+            :models
+            :deckNames
+          />
         </Suspense>
       </template>
 
@@ -166,7 +195,10 @@ async function newLanguage(language: string) {
           title="Dictionaries"
           description="Configure dictionaries to use for word lookup"
         />
-        <Dictionaries :current-language="selectedLang" v-model="settings.languages[selectedLang].dicts" />
+        <Dictionaries
+          :current-language="selectedLang"
+          v-model="settings.languages[selectedLang].dicts"
+        />
       </template>
 
       <template v-else-if="section == 'Grammar' && selectedLang != null">
@@ -208,7 +240,11 @@ async function newLanguage(language: string) {
             </p>
           </HoverCardContent>
         </HoverCard>
-        <Input id="freq" type="number" v-model="settings.languages[selectedLang].words_known_by_freq" />
+        <Input
+          id="freq"
+          type="number"
+          v-model="settings.languages[selectedLang].words_known_by_freq"
+        />
       </template>
 
       <br />

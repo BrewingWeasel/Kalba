@@ -1,9 +1,9 @@
 <script setup lang="ts">
 import {
-	Accordion,
-	AccordionContent,
-	AccordionItem,
-	AccordionTrigger,
+  Accordion,
+  AccordionContent,
+  AccordionItem,
+  AccordionTrigger,
 } from "@/components/ui/accordion";
 
 import { Button } from "@/components/ui/button";
@@ -12,26 +12,26 @@ import type { Note } from "./Notes.vue";
 import StyledCombobox from "@/components/StyledCombobox.vue";
 
 export interface Deck {
-	name: string;
-	notes: Note[];
+  name: string;
+  notes: Note[];
 }
 
 const props = defineProps<{
-	deck: Deck;
-	models: string[];
-	decks: string[];
+  deck: Deck;
+  models: string[];
+  decks: string[];
 }>();
 
 function addNote() {
-	props.deck.notes.push({
-		model: "",
-		handling: {
-			field_to_use: "",
-			only_first_word_or_line: false,
-			remove_everything_in_parens: false,
-			tags_wanted: [],
-		},
-	});
+  props.deck.notes.push({
+    model: "",
+    handling: {
+      field_to_use: "",
+      only_first_word_or_line: false,
+      remove_everything_in_parens: false,
+      tags_wanted: [],
+    },
+  });
 }
 </script>
 

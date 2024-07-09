@@ -5,19 +5,19 @@ import TableCell from "./TableCell.vue";
 import { cn } from "@/lib/utils";
 
 const props = withDefaults(
-	defineProps<{
-		class?: HTMLAttributes["class"];
-		colspan?: number;
-	}>(),
-	{
-		colspan: 1,
-	},
+  defineProps<{
+    class?: HTMLAttributes["class"];
+    colspan?: number;
+  }>(),
+  {
+    colspan: 1,
+  },
 );
 
 const delegatedProps = computed(() => {
-	const { class: _, ...delegated } = props;
+  const { class: _, ...delegated } = props;
 
-	return delegated;
+  return delegated;
 });
 </script>
 

@@ -1,22 +1,22 @@
 <script setup lang="ts">
 import {
-	Table,
-	TableBody,
-	TableCaption,
-	TableCell,
-	TableHead,
-	TableHeader,
-	TableRow,
+  Table,
+  TableBody,
+  TableCaption,
+  TableCell,
+  TableHead,
+  TableHeader,
+  TableRow,
 } from "@/components/ui/table";
 import {
-	AlertDialog,
-	AlertDialogAction,
-	AlertDialogCancel,
-	AlertDialogContent,
-	AlertDialogFooter,
-	AlertDialogHeader,
-	AlertDialogTitle,
-	AlertDialogTrigger,
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+  AlertDialogTrigger,
 } from "@/components/ui/alert-dialog";
 import { Input } from "@/components/ui/input";
 
@@ -26,8 +26,8 @@ import { type Dictionary, DictionaryType } from "@/types";
 import { Pencil, X } from "lucide-vue-next";
 
 const dicts = defineModel({
-	type: Array<[string, Dictionary]>,
-	required: true,
+  type: Array<[string, Dictionary]>,
+  required: true,
 });
 
 const props = defineProps<{
@@ -35,19 +35,19 @@ const props = defineProps<{
 }>();
 
 function addDictionary() {
-	dicts.value.push([
-		"New dictionary",
-		{
-			t: DictionaryType.File,
-			c: [
-				"",
-				{
-					t: "StarDict",
-					c: null,
-				},
-			],
-		},
-	]);
+  dicts.value.push([
+    "New dictionary",
+    {
+      t: DictionaryType.File,
+      c: [
+        "",
+        {
+          t: "StarDict",
+          c: null,
+        },
+      ],
+    },
+  ]);
 }
 </script>
 
@@ -75,7 +75,10 @@ function addDictionary() {
               <AlertDialogHeader>
                 <AlertDialogTitle>Edit dictionary</AlertDialogTitle>
               </AlertDialogHeader>
-              <IndividualDict :currentLanguage="props.currentLanguage" v-model="dicts[index][1]" />
+              <IndividualDict
+                :currentLanguage="props.currentLanguage"
+                v-model="dicts[index][1]"
+              />
               <AlertDialogFooter>
                 <AlertDialogCancel>Cancel</AlertDialogCancel>
                 <AlertDialogAction>Save</AlertDialogAction>

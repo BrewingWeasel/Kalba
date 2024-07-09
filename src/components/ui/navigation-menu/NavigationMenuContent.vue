@@ -1,9 +1,9 @@
 <script setup lang="ts">
 import {
-	NavigationMenuContent,
-	type NavigationMenuContentEmits,
-	type NavigationMenuContentProps,
-	useEmitAsProps,
+  NavigationMenuContent,
+  type NavigationMenuContentEmits,
+  type NavigationMenuContentProps,
+  useEmitAsProps,
 } from "radix-vue";
 import { cn } from "@/lib/utils";
 

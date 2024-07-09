@@ -8,20 +8,20 @@ import Reader from "./pages/reader/Index.vue";
 import "./styles.css";
 
 const router = createRouter({
-	history: createWebHistory(),
-	routes: [
-		{ path: "/", component: Reader },
-		{
-			path: "/reader",
-			component: Reader,
-		},
-		{ path: "/settings", component: Settings },
-	],
+  history: createWebHistory(),
+  routes: [
+    { path: "/", component: Reader },
+    {
+      path: "/reader",
+      component: Reader,
+    },
+    { path: "/settings", component: Settings },
+  ],
 });
 
 const SyncApp = {
-	template: "<Suspense><App /></Suspense>",
-	components: { App },
+  template: "<Suspense><App /></Suspense>",
+  components: { App },
 };
 
 const app = createApp(SyncApp);

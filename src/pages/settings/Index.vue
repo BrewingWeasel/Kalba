@@ -3,9 +3,8 @@ import { Suspense } from "vue";
 import Settings from "./Settings.vue";
 
 const props = defineProps<{
-   currentLanguage: string | null
+  currentLanguage: string | null;
 }>();
-
 </script>
 
 <template>

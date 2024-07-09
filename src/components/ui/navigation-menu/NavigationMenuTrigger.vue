@@ -1,7 +1,7 @@
 <script setup lang="ts">
 import {
-	NavigationMenuTrigger,
-	type NavigationMenuTriggerProps,
+  NavigationMenuTrigger,
+  type NavigationMenuTriggerProps,
 } from "radix-vue";
 import { ChevronDown } from "lucide-vue-next";
 import { navigationMenuTriggerStyle } from ".";
