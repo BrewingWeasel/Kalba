@@ -18,6 +18,11 @@ impl KeyValueLabels for NoteKeyValueLabels {
     const VALUE: &'static str = "handling";
 }
 
+#[derive(Clone, serde::Serialize)]
+pub struct ToasterPayload<'a> {
+    pub message: Option<&'a str>,
+}
+
 #[derive(Clone, Serialize, Deserialize, Debug)]
 pub struct Word {
     pub text: String,

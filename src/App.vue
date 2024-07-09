@@ -43,10 +43,11 @@ async function setLanguage(language: string) {
 const toasters: Ref<Map<string, number | null>> = ref(
   new Map([
     ["stanza_loading", null],
-    ["stanza_parsing", null],
+    ["refresh_anki", null],
   ]),
 );
 for (const toasterEvent of toasters.value.keys()) {
+  console.log(toasterEvent);
   listen<{ message: string | null }>(toasterEvent, (event) => {
     console.log(event);
     if (event.payload.message) {

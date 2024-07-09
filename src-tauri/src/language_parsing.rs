@@ -37,11 +37,6 @@ struct StanzaToken {
     feats: Option<String>,
 }
 
-#[derive(Clone, serde::Serialize)]
-struct ToasterPayload<'a> {
-    message: Option<&'a str>,
-}
-
 #[tauri::command]
 pub async fn start_stanza(
     state: State<'_, SakinyjeState>,

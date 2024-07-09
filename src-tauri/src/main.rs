@@ -12,10 +12,10 @@ use ankiconnect::get_anki_card_statuses;
 use chrono::{DateTime, Utc};
 use commands::run_command;
 use serde::{Deserialize, Serialize};
-use shared::{SakinyjeResult, Settings};
+use shared::{LanguageSettings, SakinyjeResult, Settings, ToasterPayload};
 use simple_logger::SimpleLogger;
 use std::{collections::HashMap, fs, io::BufReader, process, sync::Arc};
-use tauri::{async_runtime::block_on, GlobalWindowEvent, Manager, State, WindowEvent};
+use tauri::{async_runtime::block_on, GlobalWindowEvent, Manager, State, Window, WindowEvent};
 
 mod add_to_anki;
 mod ankiconnect;
@@ -97,37 +97,7 @@ impl Default for SharedInfo {
             // toml is used
             .unwrap_or_default();
 
-        let new_time = Utc::now();
-        let days_passed = new_time
-            .signed_duration_since(to_save.last_launched)
-            .num_days()
-            + 2;
-
-        for (language_name, language) in &settings.languages {
-            let to_save_language = to_save
-                .language_specific
-                .entry(language_name.to_owned())
-                .or_default();
-            for (deck, note_parser) in &language.anki_parser {
-                block_on(get_anki_card_statuses(
-                    deck,
-                    &note_parser.0,
-                    &mut to_save_language.words,
-                    days_passed,
-                    // If the deck has not been added, it means this is the first time it is being
-                    // checked, so we should check every card and not just the ones recently
-                    // updated
-                    !to_save.decks_checked.contains(deck),
-                ))
-                .unwrap();
-                to_save.decks_checked.push(deck.to_owned());
-            }
-            update_words_known(
-                &language.frequency_list,
-                language.words_known_by_freq,
-                &mut to_save_language.words,
-            );
-        }
+        set_word_knowledge_from_anki(&mut to_save, &settings.languages);
 
         if let Some(cmds) = &settings.to_run {
             for cmd in cmds {
@@ -135,7 +105,6 @@ impl Default for SharedInfo {
             }
         }
 
-        to_save.last_launched = new_time;
         let current_language = to_save.last_language.clone();
         Self {
             to_save,
@@ -188,10 +157,69 @@ fn main() {
             get_languages,
             new_language_from_template,
             start_stanza,
+            refresh_anki
         ])
         .on_window_event(handle_window_event)
         .run(tauri::generate_context!())
         .expect("error while running tauri application");
+}
+
+#[tauri::command]
+async fn refresh_anki(state: State<'_, SakinyjeState>, window: Window) -> Result<(), String> {
+    window
+        .emit(
+            "refresh_anki",
+            ToasterPayload {
+                message: Some("Loading anki data"),
+            },
+        )
+        .unwrap();
+    let mut state = state.0.lock().await;
+    let languages = state.settings.languages.clone();
+
+    set_word_knowledge_from_anki(&mut state.to_save, &languages);
+    window
+        .emit("refresh_anki", ToasterPayload { message: None })
+        .unwrap();
+    Ok(())
+}
+
+fn set_word_knowledge_from_anki(
+    to_save: &mut ToSave,
+    languages: &HashMap<String, LanguageSettings>,
+) {
+    let new_time = Utc::now();
+    let days_passed = new_time
+        .signed_duration_since(to_save.last_launched)
+        .num_days()
+        + 2;
+
+    for (language_name, language) in languages {
+        let to_save_language = to_save
+            .language_specific
+            .entry(language_name.to_owned())
+            .or_default();
+        for (deck, note_parser) in &language.anki_parser {
+            block_on(get_anki_card_statuses(
+                deck,
+                &note_parser.0,
+                &mut to_save_language.words,
+                days_passed,
+                // If the deck has not been added, it means this is the first time it is being
+                // checked, so we should check every card and not just the ones recently
+                // updated
+                !to_save.decks_checked.contains(deck),
+            ))
+            .unwrap();
+            to_save.decks_checked.push(deck.to_owned());
+        }
+        update_words_known(
+            &language.frequency_list,
+            language.words_known_by_freq,
+            &mut to_save_language.words,
+        );
+    }
+    to_save.last_launched = new_time;
 }
 
 fn handle_window_event(event: GlobalWindowEvent) {
