@@ -4,14 +4,17 @@ import { invoke } from "@tauri-apps/api/tauri";
 import IndividualWord from "@/components/Word.vue";
 import SelectedWordView from "@/components/SelectedWordView.vue";
 import type { Word } from "@/types";
+import { toast } from "vue-sonner";
 
 const props = defineProps(["sentence"]);
-const words: Ref<[Word] | undefined> = ref(undefined);
+const words: Ref<Word[] | undefined> = ref(undefined);
 const selected_word: Ref<Word | undefined> = ref(undefined);
 const selected_index: Ref<number> = ref(0);
 
-await invoke("start_stanza");
-console.log("done");
+await invoke("start_stanza").catch((error) => {
+  toast.error(error);
+});
+console.log("Stanza loaded");
 
 set_words();
 
@@ -37,7 +40,12 @@ const sentence = computed(() => {
 });
 
 async function set_words() {
-  words.value = await invoke("parse_text", { sent: props.sentence });
+  words.value = await invoke<Word[]>("parse_text", {
+    sent: props.sentence,
+  }).catch((error) => {
+    toast.error(error);
+    return [];
+  });
 }
 
 function handle_word_selected(word: Word, index: number) {

@@ -23,6 +23,7 @@ mod commands;
 mod dictionary;
 mod language_parsing;
 mod new_language_template;
+mod spyglys_integration;
 
 #[derive(Debug, thiserror::Error)]
 enum SakinyjeError {
@@ -32,6 +33,10 @@ enum SakinyjeError {
     TomlSer(#[from] toml::ser::Error),
     #[error(transparent)]
     Tauri(#[from] tauri::Error),
+    #[error(transparent)]
+    Spyglys(#[from] spyglys::SpyglysError),
+    #[error(transparent)]
+    SpyglysRuntime(#[from] spyglys::interpreter::RuntimeError),
     #[error("No operating system {0} directory was found")]
     MissingDir(String),
     #[error("Anki is not available. This may be because it is not open or ankiconnect is not installed.")]
@@ -157,7 +162,7 @@ fn main() {
             get_languages,
             new_language_from_template,
             start_stanza,
-            refresh_anki
+            refresh_anki,
         ])
         .on_window_event(handle_window_event)
         .run(tauri::generate_context!())

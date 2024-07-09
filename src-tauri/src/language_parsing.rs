@@ -4,13 +4,20 @@ use std::{
     process,
 };
 
-use crate::{LanguageParser, SakinyjeError, SakinyjeState, SharedInfo};
+use crate::{
+    spyglys_integration::{handle_lemma, load_spyglys},
+    LanguageParser, SakinyjeError, SakinyjeState, SharedInfo,
+};
 use shared::*;
+use spyglys::interpreter::Interpreter;
 use tauri::{State, Window};
 use tokio::sync::MutexGuard;
 
 #[tauri::command]
-pub async fn parse_text(sent: &str, state: State<'_, SakinyjeState>) -> Result<Vec<Word>, String> {
+pub async fn parse_text(
+    sent: &str,
+    state: State<'_, SakinyjeState>,
+) -> Result<Vec<Word>, SakinyjeError> {
     if sent.is_empty() {
         return Ok(Vec::new());
     }
@@ -21,12 +28,13 @@ pub async fn parse_text(sent: &str, state: State<'_, SakinyjeState>) -> Result<V
         .current_language
         .clone()
         .expect("Language to have already been chosen");
+    let interpreter = load_spyglys(&mut state)?;
 
     if state.language_parser.is_some() {
         log::trace!("Sending to stanza parser");
-        Ok(stanza_parser(sent, &mut state, language))
+        stanza_parser(sent, &mut state, language, &interpreter)
     } else {
-        Ok(default_tokenizer(sent, language, &mut state))
+        default_tokenizer(sent, language, &mut state, &interpreter)
     }
 }
 #[derive(serde::Deserialize, Clone)]
@@ -94,7 +102,12 @@ pub async fn start_stanza(
     Ok(())
 }
 
-fn stanza_parser(sent: &str, state: &mut MutexGuard<SharedInfo>, language: String) -> Vec<Word> {
+fn stanza_parser(
+    sent: &str,
+    state: &mut MutexGuard<SharedInfo>,
+    language: String,
+    interpreter: &Interpreter,
+) -> Result<Vec<Word>, SakinyjeError> {
     let language_parser = state
         .language_parser
         .as_mut()
@@ -126,13 +139,14 @@ fn stanza_parser(sent: &str, state: &mut MutexGuard<SharedInfo>, language: Strin
     details
         .into_iter()
         .map(|token| {
+            let lemma = handle_lemma(&token.lemma, interpreter)?;
             let rating = state
                 .to_save
                 .language_specific
                 .get_mut(&language)
                 .expect("language to be chosen")
                 .words
-                .entry(token.lemma.clone())
+                .entry(lemma.clone())
                 .or_insert(crate::WordInfo {
                     rating: 0,
                     method: crate::Method::FromSeen,
@@ -154,22 +168,23 @@ fn stanza_parser(sent: &str, state: &mut MutexGuard<SharedInfo>, language: Strin
                 })
                 .unwrap_or_default();
 
-            Word {
+            Ok(Word {
                 text: token.text,
-                lemma: token.lemma,
+                lemma,
                 rating,
                 morph,
                 clickable: token.upos != "PUNCT",
-            }
+            })
         })
-        .collect()
+        .collect::<Result<Vec<Word>, SakinyjeError>>()
 }
 
 fn default_tokenizer(
     sent: &str,
     language: String,
     state: &mut MutexGuard<SharedInfo>,
-) -> Vec<Word> {
+    _interpreter: &Interpreter,
+) -> Result<Vec<Word>, SakinyjeError> {
     let mut words = Vec::new();
     let mut currently_building = String::new();
     let mut chars = sent.chars().peekable();
@@ -179,6 +194,7 @@ fn default_tokenizer(
         } else {
             if !currently_building.is_empty() {
                 let word = std::mem::take(&mut currently_building);
+                // let lemma = handle_lemma(&token.lemma, interpreter)?;
                 let rating = state
                     .to_save
                     .language_specific
@@ -218,5 +234,5 @@ fn default_tokenizer(
             })
         }
     }
-    words
+    Ok(words)
 }

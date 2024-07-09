@@ -111,6 +111,7 @@ pub struct LanguageSettings {
     pub anki_parser: HashMap<String, Note>,
     pub frequency_list: String,
     pub words_known_by_freq: usize,
+    pub grammar_parser: String,
 }
 
 impl Default for Settings {
@@ -137,6 +138,7 @@ impl Default for LanguageSettings {
             anki_parser: HashMap::new(),
             frequency_list: String::from(""),
             words_known_by_freq: 0,
+            grammar_parser: String::new(),
         }
     }
 }
