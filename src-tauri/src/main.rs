@@ -30,6 +30,8 @@ enum SakinyjeError {
     Io(#[from] std::io::Error),
     #[error(transparent)]
     TomlSer(#[from] toml::ser::Error),
+    #[error(transparent)]
+    Tauri(#[from] tauri::Error),
     #[error("No operating system {0} directory was found")]
     MissingDir(String),
     #[error("Anki is not available. This may be because it is not open or ankiconnect is not installed.")]

@@ -21,9 +21,11 @@ import {
   PopoverTrigger,
 } from "@/components/ui/popover";
 import { Settings2 } from "lucide-vue-next";
-import { ref } from "vue";
+import { Ref, ref } from "vue";
 import { invoke } from "@tauri-apps/api/tauri";
 import { Toaster } from "@/components/ui/sonner";
+import { listen } from "@tauri-apps/api/event";
+import { toast } from "vue-sonner";
 
 const languages = ref<string[]>(await invoke("get_languages"));
 const currentLanguage = ref<string | null>(await invoke("get_language"));
@@ -36,6 +38,31 @@ async function updateLanguages() {
 async function setLanguage(language: string) {
   console.log(`setting language to ${language}`);
   await invoke("set_language", { language });
+}
+
+const toasters: Ref<Map<string, number | null>> = ref(
+  new Map([
+    ["stanza_loading", null],
+    ["stanza_parsing", null],
+  ]),
+);
+for (const toasterEvent of toasters.value.keys()) {
+  listen<{ message: string | null }>(toasterEvent, (event) => {
+    console.log(event);
+    if (event.payload.message) {
+      const startedToaster = toast.info(event.payload.message, {
+        duration: 0,
+      });
+      if (typeof startedToaster == "number") {
+        toasters.value.set(toasterEvent, startedToaster);
+      }
+    } else {
+      const toasterId = toasters.value.get(toasterEvent);
+      if (toasterId) {
+        Toaster.close(toasterId);
+      }
+    }
+  });
 }
 </script>
 

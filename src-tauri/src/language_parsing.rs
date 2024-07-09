@@ -2,13 +2,12 @@ use std::{
     collections::HashMap,
     io::{BufRead, BufReader, Read, Write},
     process,
-    time::Duration,
 };
 
 use crate::{LanguageParser, SakinyjeError, SakinyjeState, SharedInfo};
 use shared::*;
-use tauri::State;
-use tokio::{sync::MutexGuard, time::sleep};
+use tauri::{State, Window};
+use tokio::sync::MutexGuard;
 
 #[tauri::command]
 pub async fn parse_text(sent: &str, state: State<'_, SakinyjeState>) -> Result<Vec<Word>, String> {
@@ -38,8 +37,16 @@ struct StanzaToken {
     feats: Option<String>,
 }
 
+#[derive(Clone, serde::Serialize)]
+struct ToasterPayload<'a> {
+    message: Option<&'a str>,
+}
+
 #[tauri::command]
-pub async fn start_stanza(state: State<'_, SakinyjeState>) -> Result<(), SakinyjeError> {
+pub async fn start_stanza(
+    state: State<'_, SakinyjeState>,
+    window: Window,
+) -> Result<(), SakinyjeError> {
     let mut state = state.0.lock().await;
     if state.language_parser.is_some() {
         return Ok(());
@@ -73,12 +80,20 @@ pub async fn start_stanza(state: State<'_, SakinyjeState>) -> Result<(), Sakinyj
 
     stdin.write(format!("{model}\n").as_bytes())?;
     log::info!("Loading stanza model {model} for language {language}");
+    window.emit(
+        "stanza_loading",
+        Some(ToasterPayload {
+            message: Some(&format!("Loading model {model}")),
+        }),
+    )?;
+
     let mut buf = [0; 5];
     stdout.read_exact(&mut buf)?;
     if buf != "done\n".as_bytes() {
         panic!("Starting stanza failed {}", String::from_utf8_lossy(&buf))
     }
     log::info!("Stanza model loaded");
+    window.emit("stanza_loading", Some(ToasterPayload { message: None }))?;
 
     state.language_parser = Some(LanguageParser { stdin, stdout });
     Ok(())
@@ -94,6 +109,7 @@ fn stanza_parser(sent: &str, state: &mut MutexGuard<SharedInfo>, language: Strin
         .write(format!("{sent}\n").as_bytes())
         .expect("to write to stdin");
     log::trace!("sentence written");
+
     let mut contents = String::new();
     loop {
         let mut specific_contents = String::new();
@@ -111,6 +127,7 @@ fn stanza_parser(sent: &str, state: &mut MutexGuard<SharedInfo>, language: Strin
     }
     let details = serde_json::from_str::<Vec<StanzaToken>>(&contents).unwrap();
     log::trace!("response parsed");
+
     details
         .into_iter()
         .map(|token| {
