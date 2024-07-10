@@ -139,7 +139,7 @@ fn stanza_parser(
     details
         .into_iter()
         .map(|token| {
-            let lemma = handle_lemma(&token.lemma, interpreter)?;
+            let lemma = handle_lemma(&token.lemma, interpreter, state)?;
             let rating = state
                 .to_save
                 .language_specific

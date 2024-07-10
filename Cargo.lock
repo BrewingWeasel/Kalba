@@ -3073,9 +3073,9 @@ dependencies = [
 
 [[package]]
 name = "spyglys"
-version = "0.1.1"
+version = "0.2.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "6119afa45fc18501bf3d9fea8720f1f9fd802e494c428bb6a7efe07344933be8"
+checksum = "74321727c617de5925f882d767de713547e829daecadf37c891308ce406cbaa4"
 dependencies = [
  "pretty",
  "regex",

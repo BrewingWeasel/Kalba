@@ -112,6 +112,8 @@ pub struct LanguageSettings {
     pub frequency_list: String,
     pub words_known_by_freq: usize,
     pub grammar_parser: String,
+    pub run_on_lemmas: Vec<String>,
+    pub suggest_on_lemmas: Vec<String>,
 }
 
 impl Default for Settings {
@@ -139,6 +141,8 @@ impl Default for LanguageSettings {
             frequency_list: String::from(""),
             words_known_by_freq: 0,
             grammar_parser: String::new(),
+            suggest_on_lemmas: Vec::new(),
+            run_on_lemmas: Vec::new(),
         }
     }
 }
