@@ -6,7 +6,7 @@ import SelectedWordView from "@/components/SelectedWordView.vue";
 import type { Word } from "@/types";
 import { toast } from "vue-sonner";
 
-const props = defineProps(["sentence"]);
+const props = defineProps<{ sentence: string; currentLanguage: string }>();
 const words: Ref<Word[] | undefined> = ref(undefined);
 const selected_word: Ref<Word | undefined> = ref(undefined);
 const selected_index: Ref<number> = ref(0);
@@ -79,6 +79,7 @@ async function changeRating(
       v-if="selected_word"
       v-model="words![selected_index]"
       :sentence
+      :currentLanguage
       @set-rating="changeRating"
     />
   </Suspense>

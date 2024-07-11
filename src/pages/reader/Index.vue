@@ -48,7 +48,7 @@ function set_sentence() {
       </ButtonDialog>
     </div>
     <div v-else>
-      <ReaderView :sentence />
+      <ReaderView :sentence :currentLanguage />
     </div>
   </div>
   <div v-else>

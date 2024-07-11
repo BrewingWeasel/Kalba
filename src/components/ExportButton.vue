@@ -28,6 +28,7 @@ const props = defineProps<{
   word: string;
   sentence: string;
   defs: string[];
+  currentLanguage: string;
 }>();
 
 const settings: Settings | undefined = await invoke<Settings>(
@@ -55,10 +56,10 @@ const emit = defineEmits(["change-rating"]);
 const exportDetails: Ref<ExportDetails> = ref({
   word: props.word,
   defs: props.defs,
-  deck: settings.deck,
-  model: settings.note_type,
+  deck: settings?.languages[props.currentLanguage].deck ?? "",
+  model: settings?.languages[props.currentLanguage].model ?? "Basic",
   sentence: "",
-  fields: settings.note_fields,
+  fields: settings?.languages[props.currentLanguage].note_fields ?? {},
 });
 
 async function exportWord() {

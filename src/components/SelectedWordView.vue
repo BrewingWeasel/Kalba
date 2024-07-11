@@ -24,7 +24,7 @@ interface Definition {
   conts: string;
 }
 
-const props = defineProps(["sentence"]);
+const props = defineProps<{ sentence: string; currentLanguage: string }>();
 const word = defineModel<Word>({ required: true });
 console.log(word.value);
 
@@ -149,6 +149,7 @@ async function updateLemma() {
         :defs="definition.map((v) => v.conts)"
         :word="word.lemma"
         :sentence="props.sentence"
+        :currentLanguage
         @change-rating="
           (r) => {
             $emit('set-rating', r, word.lemma, true);
