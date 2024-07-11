@@ -30,6 +30,7 @@ pub struct Word {
     pub rating: i8,
     pub morph: HashMap<String, String>,
     pub clickable: bool,
+    pub other_forms: Vec<String>,
 }
 
 #[derive(Serialize, Deserialize, PartialEq, Clone, Eq, Debug)]

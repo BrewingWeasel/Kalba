@@ -5,7 +5,7 @@ use std::{
 };
 
 use crate::{
-    spyglys_integration::{handle_lemma, load_spyglys},
+    spyglys_integration::{get_alternate_forms, handle_lemma, load_spyglys},
     LanguageParser, SakinyjeError, SakinyjeState, SharedInfo,
 };
 use shared::*;
@@ -170,10 +170,11 @@ fn stanza_parser(
 
             Ok(Word {
                 text: token.text,
-                lemma,
+                lemma: lemma.clone(),
                 rating,
                 morph,
                 clickable: token.upos != "PUNCT",
+                other_forms: get_alternate_forms(&lemma, interpreter, state)?,
             })
         })
         .collect::<Result<Vec<Word>, SakinyjeError>>()
@@ -183,7 +184,7 @@ fn default_tokenizer(
     sent: &str,
     language: String,
     state: &mut MutexGuard<SharedInfo>,
-    _interpreter: &Interpreter,
+    interpreter: &Interpreter,
 ) -> Result<Vec<Word>, SakinyjeError> {
     let mut words = Vec::new();
     let mut currently_building = String::new();
@@ -210,9 +211,10 @@ fn default_tokenizer(
                 words.push(Word {
                     text: word.clone(),
                     clickable: true,
-                    lemma: word,
+                    lemma: word.clone(),
                     rating,
                     morph: HashMap::new(),
+                    other_forms: get_alternate_forms(&word, interpreter, state)?,
                 })
             }
             while let Some(possible_whitespace) = chars.peek() {
@@ -231,6 +233,7 @@ fn default_tokenizer(
                 lemma: c.to_string(),
                 rating: 4,
                 morph: HashMap::new(),
+                other_forms: Vec::new(),
             })
         }
     }

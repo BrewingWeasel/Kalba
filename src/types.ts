@@ -31,6 +31,7 @@ export interface Word {
   morph: { [key: string]: string };
   clickable: boolean;
   rating: number;
+  other_forms: string[];
 }
 
 export interface FileType {

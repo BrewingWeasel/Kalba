@@ -15,6 +15,7 @@ import ExportButton from "@/components/ExportButton.vue";
 import { invoke } from "@tauri-apps/api/tauri";
 import { computedAsync } from "@vueuse/core";
 import type { Word } from "@/types";
+import { Button } from "@/components/ui/button";
 
 interface Definition {
   t: string;
@@ -23,6 +24,7 @@ interface Definition {
 
 const props = defineProps(["sentence"]);
 const word = defineModel<Word>({ required: true });
+console.log(word.value);
 
 const emit =
   defineEmits<
@@ -54,8 +56,21 @@ async function updateLemma() {
           @change="updateLemma"
           class="text-lg text-center border-0 hover:border-2 focus:border-2"
           v-model="word.lemma"
-        ></Input
-      ></CardTitle>
+        />
+        <div class="flex justify-center gap-3 items-center">
+          <Button
+            variant="outline"
+            class="text-sm"
+            size="sm"
+            v-for="form in word.other_forms"
+            @click="
+              word.lemma = form;
+              updateLemma();
+            "
+            >{{ form }}</Button
+          >
+        </div>
+      </CardTitle>
       <CardDescription class="text-center"
         ><i>{{ word.text }}</i></CardDescription
       >

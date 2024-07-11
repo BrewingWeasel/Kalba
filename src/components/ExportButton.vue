@@ -22,6 +22,7 @@ import {
   CardHeader,
   CardTitle,
 } from "@/components/ui/card";
+import { toast } from "vue-sonner";
 
 const props = defineProps<{
   word: string;
@@ -29,10 +30,25 @@ const props = defineProps<{
   defs: string[];
 }>();
 
-const settings: Settings = await invoke("get_settings");
+const settings: Settings | undefined = await invoke<Settings>(
+  "get_settings",
+).catch((e) => {
+  toast.error(e);
+  return undefined;
+});
 
-const models: string[] = await invoke("get_all_note_names");
-const deckNames: string[] = await invoke("get_all_deck_names");
+const models: string[] = await invoke<string[]>("get_all_note_names").catch(
+  (e) => {
+    toast.error(e);
+    return [];
+  },
+);
+const deckNames: string[] = await invoke<string[]>("get_all_deck_names").catch(
+  (e) => {
+    toast.error(e);
+    return [];
+  },
+);
 
 const emit = defineEmits(["change-rating"]);
 
@@ -47,7 +63,11 @@ const exportDetails: Ref<ExportDetails> = ref({
 
 async function exportWord() {
   emit("change-rating", 1, props.word, true);
-  await invoke("add_to_anki", { exportDetails: exportDetails.value });
+  await invoke("add_to_anki", { exportDetails: exportDetails.value }).catch(
+    (e) => {
+      toast.error(e);
+    },
+  );
 }
 
 function selectWord() {

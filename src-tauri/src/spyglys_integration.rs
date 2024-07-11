@@ -1,4 +1,4 @@
-use spyglys::interpreter::{Interpreter, Value};
+use spyglys::interpreter::{Interpreter, RuntimeError, Value};
 use tokio::sync::MutexGuard;
 
 use crate::{SakinyjeError, SharedInfo};
@@ -28,6 +28,38 @@ pub fn handle_lemma(
         }
     }
     Ok(lemma.to_string())
+}
+
+pub fn get_alternate_forms(
+    lemma: &str,
+    interpreter: &Interpreter,
+    state: &mut MutexGuard<SharedInfo>,
+) -> Result<Vec<String>, SakinyjeError> {
+    let language = state
+        .current_language
+        .as_ref()
+        .expect("language to already be selected");
+    Ok(state
+        .settings
+        .languages
+        .get(language)
+        .expect("language to exist")
+        .suggest_on_lemmas
+        .iter()
+        .filter_map(|modifier| {
+            let response = match interpreter.run_function(modifier, lemma) {
+                Ok(v) => v,
+                Err(e) => return Some(Err(e)),
+            };
+            log::trace!("Suggestion: {:?} with function {modifier}", response);
+            if let Value::Str(s) = response {
+                if s != lemma {
+                    return Some(Ok(s));
+                }
+            }
+            None
+        })
+        .collect::<Result<Vec<String>, RuntimeError>>()?)
 }
 
 pub fn load_spyglys(state: &mut MutexGuard<SharedInfo>) -> Result<Interpreter, SakinyjeError> {
