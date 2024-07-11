@@ -17,7 +17,7 @@ import { computedAsync } from "@vueuse/core";
 import type { Word } from "@/types";
 import { Button } from "@/components/ui/button";
 import { ref, watch } from "vue";
-import { Redo2, Undo2 } from "lucide-vue-next";
+import { Loader2, Redo2, Undo2 } from "lucide-vue-next";
 
 interface Definition {
   t: string;
@@ -48,9 +48,15 @@ watch(
   },
 );
 
-const definition = computedAsync(async (): Promise<Definition[]> => {
-  return await invoke("get_defs", { lemma: word.value.lemma });
-}, []);
+const isComputingDefinition = ref(false);
+
+const definition = computedAsync(
+  async (): Promise<Definition[]> => {
+    return await invoke("get_defs", { lemma: word.value.lemma });
+  },
+  [],
+  isComputingDefinition,
+);
 
 async function updateLemma() {
   const rating: number = await invoke("get_rating", {
@@ -129,9 +135,10 @@ async function updateLemma() {
         "
       />
       <Suspense>
-        <DefinitionView :definition />
+        <DefinitionView v-if="!isComputingDefinition" :definition />
+        <div v-else><Loader2 class="animate-spin" /></div>
 
-        <template #fallback> Loading... </template>
+        <template #fallback><Loader2 class="animate-spin" /></template>
       </Suspense>
     </CardContent>
     <CardFooter>
