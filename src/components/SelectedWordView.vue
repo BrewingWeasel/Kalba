@@ -16,6 +16,8 @@ import { invoke } from "@tauri-apps/api/tauri";
 import { computedAsync } from "@vueuse/core";
 import type { Word } from "@/types";
 import { Button } from "@/components/ui/button";
+import { ref, watch } from "vue";
+import { Redo2, Undo2 } from "lucide-vue-next";
 
 interface Definition {
   t: string;
@@ -36,6 +38,16 @@ const emit =
     ) => void
   >();
 
+const word_history = ref([word.value.lemma]);
+const word_history_index = ref(0);
+watch(
+  () => word.value.text,
+  () => {
+    word_history.value = [];
+    word_history_index.value = 0;
+  },
+);
+
 const definition = computedAsync(async (): Promise<Definition[]> => {
   return await invoke("get_defs", { lemma: word.value.lemma });
 }, []);
@@ -51,12 +63,41 @@ async function updateLemma() {
 <template>
   <Card>
     <CardHeader>
-      <CardTitle
-        ><Input
-          @change="updateLemma"
-          class="text-lg text-center border-0 hover:border-2 focus:border-2"
-          v-model="word.lemma"
-        />
+      <CardTitle>
+        <div class="flex justify-center gap-1 items-center">
+          <Button
+            variant="outline"
+            size="icon"
+            :disabled="word_history.length === 1 || word_history_index === 0"
+            @click="
+              word_history_index--;
+              word.lemma = word_history[word_history_index];
+              updateLemma();
+            "
+          >
+            <Undo2 />
+          </Button>
+          <Input
+            @change="updateLemma"
+            class="text-lg text-center border-0 hover:border-2 focus:border-2"
+            v-model="word.lemma"
+          />
+          <Button
+            variant="outline"
+            size="icon"
+            :disabled="
+              word_history.length === 1 ||
+              word_history_index === word_history.length - 1
+            "
+            @click="
+              word_history_index++;
+              word.lemma = word_history[word_history_index];
+              updateLemma();
+            "
+          >
+            <Redo2 />
+          </Button>
+        </div>
         <div class="flex justify-center gap-3 items-center">
           <Button
             variant="outline"
@@ -64,16 +105,19 @@ async function updateLemma() {
             size="sm"
             v-for="form in word.other_forms"
             @click="
+              word_history.push(form);
+              word_history_index++;
               word.lemma = form;
               updateLemma();
             "
-            >{{ form }}</Button
           >
+            {{ form }}
+          </Button>
         </div>
       </CardTitle>
-      <CardDescription class="text-center"
-        ><i>{{ word.text }}</i></CardDescription
-      >
+      <CardDescription class="text-center">
+        <i>{{ word.text }}</i>
+      </CardDescription>
     </CardHeader>
     <CardContent>
       <RatingButtons
