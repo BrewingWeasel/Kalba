@@ -39,7 +39,7 @@ pub fn get_alternate_forms(
         .current_language
         .as_ref()
         .expect("language to already be selected");
-    Ok(state
+    let mut responses = state
         .settings
         .languages
         .get(language)
@@ -59,7 +59,10 @@ pub fn get_alternate_forms(
             }
             None
         })
-        .collect::<Result<Vec<String>, RuntimeError>>()?)
+        .collect::<Result<Vec<String>, RuntimeError>>()?;
+    responses.sort();
+    responses.dedup();
+    Ok(responses)
 }
 
 pub fn load_spyglys(state: &mut MutexGuard<SharedInfo>) -> Result<Interpreter, SakinyjeError> {
