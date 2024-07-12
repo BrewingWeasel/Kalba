@@ -1,20 +1,20 @@
 # Indo-European | Baltic | Full Support
 model = "lt_core_news_sm"
 dicts = [
-    [
+  [
     "Main",
     { t = "EkalbaBendrines" },
-],
-    [
+  ],
+  [
     "Secondary",
     { t = "EkalbaDabartines" },
-],
-    [
+  ],
+  [
     "Lithuanian Wiktionary",
     { t = "Wiktionary", c = [
-    "en",
-    "Lithuanian",
-] },
-],
+      "en",
+      "Lithuanian",
+    ] },
+  ],
 ]
 frequency_list = true

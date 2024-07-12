@@ -1,0 +1,22 @@
+let universal_prefix = '^(?<univeral_prefix>ne|te)?(?<universal_be>be)?';
+let root_verb_form = '(?<stem>\w*)ti';
+
+let verb_prefixes = ["ap", "apy", "ati", "iš", "į", "nu", "pa", "pri", "pra", "su", "už"];
+
+let verb_prefix = $re:named($re:any(verb_prefixes), "prefix") + '(?<reflexive>si)?';
+
+def remove_universal_prefix (universal_prefix + '(?<rest>\w+$)'):
+    rest
+end
+
+def remove_verb_prefix ($re:only(verb_prefix + root_verb_form)):
+    stem + "ti" + $replace_some(reflexive, "s")
+end
+
+def unreflexify (root_verb_form + 's$'):
+    stem + "ti"
+end
+
+def root_verb ($re:only(verb_prefix + root_verb_form)):
+    $try_map(remove_verb_prefix( matched), "unreflexify")
+end
