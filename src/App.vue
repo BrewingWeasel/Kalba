@@ -30,6 +30,7 @@ import { toast } from "vue-sonner";
 const languages = ref<string[]>(await invoke("get_languages"));
 const currentLanguage = ref<string | null>(await invoke("get_language"));
 console.log(currentLanguage.value);
+console.log(languages.value);
 
 async function updateLanguages() {
   languages.value = await invoke("get_languages");
@@ -116,11 +117,11 @@ for (const toasterEvent of toasters.value.keys()) {
           <Label for="current-language">Current language:</Label>
           <Select
             id="current-language"
-            :modelValue="currentLanguage ?? undefined"
+            :modelValue="currentLanguage ?? ''"
             @update:model-value="
               ($event) => {
-                setLanguage($event.value);
-                currentLanguage = $event.value;
+                setLanguage($event);
+                currentLanguage = $event;
               }
             "
           >
