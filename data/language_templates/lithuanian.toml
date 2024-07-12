@@ -18,3 +18,6 @@ dicts = [
   ],
 ]
 frequency_list = true
+spyglys_details = true
+run_on_lemmas = ["remove_universal_prefix"]
+suggest_on_lemmas = ["root_verb", "unreflexify", "remove_verb_prefix"]
