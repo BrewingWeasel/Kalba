@@ -12,6 +12,9 @@ struct TemplateDetails {
     model: String,
     dicts: Vec<(String, Dictionary)>,
     frequency_list: bool,
+    spyglys_details: bool,
+    run_on_lemmas: Vec<String>,
+    suggest_on_lemmas: Vec<String>,
 }
 
 #[tauri::command]
@@ -52,11 +55,25 @@ pub async fn new_language_from_template(
     } else {
         String::new()
     };
+    let grammar_parser = if details.spyglys_details {
+        client.get(format!(
+                "https://raw.githubusercontent.com/brewingweasel/sakinyje/main/data/spyglys/{language}.spyglys",))
+                .send()
+                .await?
+                .text()
+                .await
+                .expect("githubusercontent to return valid text")
+    } else {
+        String::new()
+    };
     let mut state = state.0.lock().await;
     let lang_settings = LanguageSettings {
         model: details.model,
         frequency_list,
         dicts: details.dicts,
+        grammar_parser,
+        run_on_lemmas: details.run_on_lemmas,
+        suggest_on_lemmas: details.suggest_on_lemmas,
         ..Default::default()
     };
     if state.settings.languages.contains_key(&language) {
