@@ -14,6 +14,7 @@ use commands::run_command;
 use serde::{Deserialize, Serialize};
 use shared::{LanguageSettings, SakinyjeResult, Settings, ToasterPayload};
 use simple_logger::SimpleLogger;
+use spyglys_integration::{format_spyglys, get_spyglys_functions};
 use std::{collections::HashMap, fs, io::BufReader, process, sync::Arc};
 use tauri::{async_runtime::block_on, GlobalWindowEvent, Manager, State, Window, WindowEvent};
 
@@ -163,6 +164,8 @@ fn main() {
             new_language_from_template,
             start_stanza,
             refresh_anki,
+            format_spyglys,
+            get_spyglys_functions
         ])
         .on_window_event(handle_window_event)
         .run(tauri::generate_context!())

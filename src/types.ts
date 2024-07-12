@@ -23,6 +23,9 @@ export interface LanguageSettings {
   dicts: [string, Dictionary][];
   frequency_list: string;
   words_known_by_freq: number;
+  grammar_parser: string;
+  run_on_lemmas: string[];
+  suggest_on_lemmas: string[];
 }
 
 export interface Word {

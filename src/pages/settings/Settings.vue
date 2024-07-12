@@ -28,6 +28,7 @@ import { ChevronDown, Info, X } from "lucide-vue-next";
 import { Button } from "@/components/ui/button";
 import NewLanguage from "@/components/generated/NewLanguage.vue";
 import { toast } from "vue-sonner";
+import Grammar from "./components/Grammar.vue";
 
 const isDark = useDark();
 
@@ -62,7 +63,6 @@ const props = defineProps<{
 console.log(settings);
 
 async function saveSettings() {
-  console.log("trying to write settings", settings);
   emit("settingsChanged");
   await invoke("write_settings", { settings: settings }).catch(async (_) => {
     // Errors in settings could potentially occur before the contents of a dictionary are updated,
@@ -245,8 +245,15 @@ async function newLanguage(language: string) {
           type="number"
           v-model="settings.languages[selectedLang].words_known_by_freq"
         />
+        <br />
+        <Grammar
+          v-model:parser="settings.languages[selectedLang].grammar_parser"
+          v-model:runOnLemmas="settings.languages[selectedLang].run_on_lemmas"
+          v-model:suggestOnLemmas="
+            settings.languages[selectedLang].suggest_on_lemmas
+          "
+        />
       </template>
-
       <br />
     </div>
   </div>

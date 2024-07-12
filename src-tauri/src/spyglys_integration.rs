@@ -1,7 +1,8 @@
 use spyglys::interpreter::{Interpreter, RuntimeError, Value};
+use tauri::State;
 use tokio::sync::MutexGuard;
 
-use crate::{SakinyjeError, SharedInfo};
+use crate::{SakinyjeError, SakinyjeState, SharedInfo};
 
 pub fn handle_lemma(
     lemma: &str,
@@ -78,4 +79,31 @@ pub fn load_spyglys(state: &mut MutexGuard<SharedInfo>) -> Result<Interpreter, S
         .grammar_parser;
     let interpreter = spyglys::contents_to_interpreter(spyglys_grammar)?;
     Ok(interpreter)
+}
+
+#[tauri::command]
+pub async fn get_spyglys_functions(
+    state: State<'_, SakinyjeState>,
+) -> Result<Vec<String>, SakinyjeError> {
+    let current_interpreter = load_spyglys(&mut state.0.lock().await)?;
+    Ok(current_interpreter.get_functions())
+}
+
+#[tauri::command]
+pub async fn format_spyglys(state: State<'_, SakinyjeState>) -> Result<String, SakinyjeError> {
+    let state = state.0.lock().await;
+    let current_language = state
+        .current_language
+        .as_ref()
+        .expect("language to already be selected");
+    let parsed = spyglys::parse_string(
+        &state
+            .settings
+            .languages
+            .get(current_language)
+            .expect("language to exist")
+            .grammar_parser,
+    )?;
+
+    Ok(spyglys::formatter::pretty_file(&parsed))
 }
