@@ -1,5 +1,5 @@
 # Indo-European | Baltic | Full Support
-model = "lt_core_news_sm"
+model = "lt"
 dicts = [
   [
     "Main",
