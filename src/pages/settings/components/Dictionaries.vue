@@ -24,6 +24,7 @@ import { Button } from "@/components/ui/button";
 import IndividualDict from "./IndividualDict.vue";
 import { type Dictionary, DictionaryType } from "@/types";
 import { Pencil, X } from "lucide-vue-next";
+import { ref } from "vue";
 
 const dicts = defineModel({
   type: Array<[string, Dictionary]>,
@@ -33,6 +34,11 @@ const dicts = defineModel({
 const props = defineProps<{
   currentLanguage: string;
 }>();
+
+const dictSettings = ref<{ [key: string]: boolean }>({});
+for (const dict of dicts.value) {
+  dictSettings.value[dict[0]] = false;
+}
 
 function addDictionary() {
   dicts.value.push([
@@ -48,6 +54,7 @@ function addDictionary() {
       ],
     },
   ]);
+  dictSettings.value["New dictionary"] = true;
 }
 </script>
 
@@ -69,7 +76,7 @@ function addDictionary() {
         <TableCell><Input v-model="dict[0]" /></TableCell>
         <TableCell>{{ dict[1].t }}</TableCell>
         <TableCell class="text-right">
-          <AlertDialog>
+          <AlertDialog v-model:open="dictSettings[dict[0]]">
             <AlertDialogTrigger><Pencil :size="16" /></AlertDialogTrigger>
             <AlertDialogContent>
               <AlertDialogHeader>
