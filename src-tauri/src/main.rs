@@ -9,13 +9,14 @@ use crate::{
     new_language_template::new_language_from_template,
 };
 use ankiconnect::get_anki_card_statuses;
-use chrono::{DateTime, Utc};
+use chrono::{DateTime, TimeDelta, Utc};
 use commands::run_command;
 use serde::{Deserialize, Serialize};
 use shared::{LanguageSettings, SakinyjeResult, Settings, ToasterPayload};
 use simple_logger::SimpleLogger;
 use spyglys_integration::{format_spyglys, get_spyglys_functions};
-use std::{collections::HashMap, fs, io::BufReader, process, sync::Arc};
+use stats::time_spent;
+use std::{collections::HashMap, fs, io::BufReader, process, sync::Arc, time::Duration};
 use tauri::{async_runtime::block_on, GlobalWindowEvent, Manager, State, Window, WindowEvent};
 
 mod add_to_anki;
@@ -25,6 +26,7 @@ mod dictionary;
 mod language_parsing;
 mod new_language_template;
 mod spyglys_integration;
+mod stats;
 
 #[derive(Debug, thiserror::Error)]
 enum SakinyjeError {
@@ -81,6 +83,7 @@ struct ToSave {
     last_language: Option<String>,
     decks_checked: Vec<String>,
     language_specific: HashMap<String, LanguageSpecficToSave>,
+    sessions: Vec<(DateTime<Utc>, Duration)>,
 }
 
 #[derive(Serialize, Deserialize, Default)]
@@ -112,6 +115,7 @@ impl Default for SharedInfo {
         }
 
         let current_language = to_save.last_language.clone();
+        to_save.sessions.push((Utc::now(), Duration::new(0, 0)));
         Self {
             to_save,
             settings,
@@ -165,7 +169,8 @@ fn main() {
             start_stanza,
             refresh_anki,
             format_spyglys,
-            get_spyglys_functions
+            get_spyglys_functions,
+            time_spent,
         ])
         .on_window_event(handle_window_event)
         .run(tauri::generate_context!())
@@ -240,6 +245,13 @@ fn handle_window_event(event: GlobalWindowEvent) {
                 let state: State<'_, SakinyjeState> = event.window().state();
                 let mut locked_state = state.0.lock().await;
                 locked_state.to_save.last_language = locked_state.current_language.clone();
+                let session = locked_state
+                    .to_save
+                    .sessions
+                    .last_mut()
+                    .expect("sessions should exist");
+                session.1 =
+                    TimeDelta::to_std(&(Utc::now() - session.0)).expect("time should be valid");
                 let conts =
                     toml::to_string(&locked_state.to_save).expect("Error serializing to toml");
                 fs::write(saved_state_file, conts).expect("error writing to file");

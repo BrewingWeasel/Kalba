@@ -1,4 +1,4 @@
-use std::collections::HashMap;
+use std::{collections::HashMap, time::Duration};
 
 use serde::{Deserialize, Serialize};
 
@@ -31,6 +31,21 @@ pub struct Word {
     pub morph: HashMap<String, String>,
     pub clickable: bool,
     pub other_forms: Vec<String>,
+}
+
+#[derive(Clone, Serialize, Deserialize, Debug)]
+pub struct TimeSpentPoint {
+    pub name: String,
+    pub duration: i64,
+}
+
+#[derive(Clone, Serialize, Deserialize, Debug)]
+pub struct TimeSpentStats {
+    pub days_this_week: Vec<TimeSpentPoint>,
+    pub total_this_week: (String, String),
+    pub this_month: (String, String),
+    pub this_year: (String, String),
+    pub total: (String, String),
 }
 
 #[derive(Serialize, Deserialize, PartialEq, Clone, Eq, Debug)]
