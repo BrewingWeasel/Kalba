@@ -13,6 +13,7 @@ const section = defineModel<SettingsSection>({ required: true });
 
 const props = defineProps<{
   section: SettingsSection;
+  rightLanguage: boolean;
 }>();
 </script>
 
@@ -21,7 +22,9 @@ const props = defineProps<{
     :class="
       cn(
         'justify-start w-full text-md text-left',
-        section === props.section && 'text-rose-500 bg-accent',
+        section === props.section &&
+          props.rightLanguage &&
+          'text-accent-foreground bg-accent',
       )
     "
     variant="ghost"

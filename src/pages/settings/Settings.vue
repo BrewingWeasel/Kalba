@@ -102,7 +102,11 @@ async function newLanguage(language: string) {
 <template>
   <div class="flex px-6">
     <div class="pr-10 w-1/3">
-      <SettingsMenu v-model="section" section="Appearance" />
+      <SettingsMenu
+        v-model="section"
+        section="Appearance"
+        :rightLanguage="true"
+      />
       <Collapsible class="px-4" v-model:open="allLanguageMenuOpen">
         <div class="flex justify-between items-center">
           <h4 class="font-semibold">Languages</h4>
@@ -148,10 +152,26 @@ async function newLanguage(language: string) {
                 }
               "
             >
-              <SettingsMenu v-model="section" section="Exporting" />
-              <SettingsMenu v-model="section" section="Word Knowledge" />
-              <SettingsMenu v-model="section" section="Dictionaries" />
-              <SettingsMenu v-model="section" section="Grammar" />
+              <SettingsMenu
+                v-model="section"
+                :rightLanguage="selectedLang === language"
+                section="Exporting"
+              />
+              <SettingsMenu
+                v-model="section"
+                :rightLanguage="selectedLang === language"
+                section="Word Knowledge"
+              />
+              <SettingsMenu
+                v-model="section"
+                :rightLanguage="selectedLang === language"
+                section="Dictionaries"
+              />
+              <SettingsMenu
+                v-model="section"
+                :rightLanguage="selectedLang === language"
+                section="Grammar"
+              />
             </CollapsibleContent>
           </Collapsible>
           <div class="flex justify-center w-full">
