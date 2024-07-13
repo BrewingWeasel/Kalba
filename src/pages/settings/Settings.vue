@@ -47,9 +47,17 @@ const deckNames = await invoke<string[]>("get_all_deck_names").catch(
   },
 );
 
+const props = defineProps<{
+  currentLanguage: string | null;
+}>();
+
 const languagesOpen: Ref<{ [key: string]: boolean }> = ref({});
 for (const language in settings.languages) {
-  languagesOpen.value[language] = false;
+  if (props.currentLanguage === language) {
+    languagesOpen.value[language] = true;
+  } else {
+    languagesOpen.value[language] = false;
+  }
 }
 
 const allLanguageMenuOpen = ref(true);
@@ -68,10 +76,6 @@ watch(
 );
 
 const emit = defineEmits(["settingsChanged"]);
-
-const props = defineProps<{
-  currentLanguage: string | null;
-}>();
 
 console.log(settings);
 
@@ -116,12 +120,7 @@ async function newLanguage(language: string) {
             v-model:open="languagesOpen[language]"
           >
             <div class="flex justify-between items-center">
-              <h4
-                class="font-semibold grow"
-                :class="
-                  language == props.currentLanguage ? 'text-rose-300' : ''
-                "
-              >
+              <h4 class="font-semibold grow">
                 {{ language }}
               </h4>
               <Button
