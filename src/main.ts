@@ -5,6 +5,7 @@ import { useDark } from "@vueuse/core";
 import App from "./App.vue";
 import Settings from "./pages/settings/Index.vue";
 import Reader from "./pages/reader/Index.vue";
+import ComingSoon from "./pages/ComingSoon.vue";
 import "./styles.css";
 
 const router = createRouter({
@@ -20,6 +21,11 @@ const router = createRouter({
       path: "/settings",
       component: Settings,
       alias: ["/settings/:tab", "/settings/:language/:tab"],
+    },
+    {
+      path: "/coming-soon",
+      component: ComingSoon,
+      alias: ["/browse", "/stats"],
     },
   ],
 });
