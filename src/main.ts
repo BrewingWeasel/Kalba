@@ -5,22 +5,21 @@ import { useDark } from "@vueuse/core";
 import App from "./App.vue";
 import Settings from "./pages/settings/Index.vue";
 import Reader from "./pages/reader/Index.vue";
+import Dashboard from "./pages/dashboard/Index.vue";
 import ComingSoon from "./pages/ComingSoon.vue";
 import "./styles.css";
 
 const router = createRouter({
   history: createWebHistory(),
   routes: [
-    { path: "/", component: Reader },
+    { path: "/dashboard", component: Dashboard, alias: "/" },
     {
-      path: "/reader",
+      path: "/reader/:_file?/:_?",
       component: Reader,
-      alias: ["/reader/:id", "/reader/file/:file"],
     },
     {
-      path: "/settings",
+      path: "/settings/:_lang?/:_?",
       component: Settings,
-      alias: ["/settings/:tab", "/settings/:language/:tab"],
     },
     {
       path: "/coming-soon",

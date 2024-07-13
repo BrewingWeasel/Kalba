@@ -53,7 +53,12 @@ console.log(languages.value);
 const router = useRoute();
 const pageNames = computed(() => {
   const path = router.path;
-  return path.split("/").filter((part) => part !== "");
+  const pathParts = path.split("/").filter((part) => part !== "");
+  if (pathParts.length === 0) {
+    return ["dashboard"];
+  } else {
+    return pathParts;
+  }
 });
 
 async function updateLanguages() {
@@ -103,7 +108,7 @@ for (const toasterEvent of toasters.value.keys()) {
           <Tooltip>
             <TooltipTrigger as-child>
               <a
-                href="#"
+                href="/"
                 class="flex h-9 w-9 items-center justify-center rounded-lg text-muted-foreground transition-colors hover:text-foreground md:h-8 md:w-8"
               >
                 <Home class="h-5 w-5" />
