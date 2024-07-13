@@ -29,8 +29,10 @@ import { Button } from "@/components/ui/button";
 import NewLanguage from "@/components/generated/NewLanguage.vue";
 import { toast } from "vue-sonner";
 import Grammar from "./components/Grammar.vue";
+import { useRouter } from "vue-router";
 
 const isDark = useDark();
+const router = useRouter();
 
 const settings = reactive<Settings>(await invoke("get_settings"));
 
@@ -53,6 +55,17 @@ for (const language in settings.languages) {
 const allLanguageMenuOpen = ref(true);
 const section: Ref<SettingsSection> = ref("Appearance");
 const selectedLang: Ref<string | null> = ref(null);
+
+watch(
+  () => [selectedLang.value, section.value],
+  ([newLang, newSection]) => {
+    if (newLang !== null) {
+      router.replace(`/settings/${newLang}/${newSection}`);
+    } else {
+      router.replace(`/settings/${newSection}`);
+    }
+  },
+);
 
 const emit = defineEmits(["settingsChanged"]);
 

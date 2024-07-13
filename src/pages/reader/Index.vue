@@ -5,12 +5,15 @@ import ReaderView from "./Reader.vue";
 import ButtonDialog from "@/components/ButtonDialog.vue";
 import FilePicker from "@/components/FilePicker.vue";
 import { readTextFile } from "@tauri-apps/api/fs";
+import { useRouter } from "vue-router";
 
 const currentSentence = ref("");
 const sentence = ref("");
 
 const props = defineProps<{ currentLanguage: string }>();
 
+const router = useRouter();
+router.replace("/reader/input");
 function set_sentence() {
   sentence.value = currentSentence.value;
 }
@@ -25,7 +28,10 @@ function set_sentence() {
       <ButtonDialog
         class="flex-1 my-2 max-w-md"
         title="User Input"
-        @submitted="set_sentence"
+        @submitted="
+          router.replace('/reader/custom');
+          set_sentence();
+        "
         button-name="Input content"
       >
         <Textarea
@@ -39,6 +45,7 @@ function set_sentence() {
         button-name="Select file"
         @submitted="
           async () => {
+            router.replace(`/reader/file/${currentSentence}`);
             currentSentence = await readTextFile(currentSentence);
             set_sentence();
           }

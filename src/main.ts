@@ -14,8 +14,13 @@ const router = createRouter({
     {
       path: "/reader",
       component: Reader,
+      alias: ["/reader/:id", "/reader/file/:file"],
     },
-    { path: "/settings", component: Settings },
+    {
+      path: "/settings",
+      component: Settings,
+      alias: ["/settings/:tab", "/settings/:language/:tab"],
+    },
   ],
 });
 

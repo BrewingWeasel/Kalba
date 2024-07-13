@@ -1,12 +1,5 @@
 <script setup lang="ts">
 import {
-  NavigationMenu,
-  NavigationMenuItem,
-  NavigationMenuLink,
-  NavigationMenuList,
-  navigationMenuTriggerStyle,
-} from "@/components/ui/navigation-menu";
-import {
   Select,
   SelectContent,
   SelectGroup,
@@ -20,17 +13,48 @@ import {
   PopoverContent,
   PopoverTrigger,
 } from "@/components/ui/popover";
-import { Settings2 } from "lucide-vue-next";
-import { Ref, ref } from "vue";
+
+import {
+  Breadcrumb,
+  BreadcrumbItem,
+  BreadcrumbLink,
+  BreadcrumbList,
+  BreadcrumbSeparator,
+} from "@/components/ui/breadcrumb";
+
+import {
+  BookOpenText,
+  Home,
+  LineChart,
+  Search,
+  Settings,
+  Settings2,
+} from "lucide-vue-next";
+import { Ref, computed, ref } from "vue";
 import { invoke } from "@tauri-apps/api/tauri";
 import { Toaster } from "@/components/ui/sonner";
 import { listen } from "@tauri-apps/api/event";
 import { toast } from "vue-sonner";
+import {
+  Tooltip,
+  TooltipContent,
+  TooltipProvider,
+  TooltipTrigger,
+} from "@/components/ui/tooltip";
+import { Separator } from "@/components/ui/separator";
+
+import { useRoute } from "vue-router";
 
 const languages = ref<string[]>(await invoke("get_languages"));
 const currentLanguage = ref<string | null>(await invoke("get_language"));
 console.log(currentLanguage.value);
 console.log(languages.value);
+
+const router = useRoute();
+const pageNames = computed(() => {
+  const path = router.path;
+  return path.split("/").filter((part) => part !== "");
+});
 
 async function updateLanguages() {
   languages.value = await invoke("get_languages");
@@ -70,80 +94,163 @@ for (const toasterEvent of toasters.value.keys()) {
 
 <template>
   <Toaster closeButton richColors />
-  <div class="flex w-full">
-    <NavigationMenu>
-      <NavigationMenuList>
-        <NavigationMenuItem>
-          <NavigationMenuLink href="/" :class="navigationMenuTriggerStyle()">
-            Reader
-          </NavigationMenuLink>
-        </NavigationMenuItem>
-        <NavigationMenuItem>
-          <NavigationMenuLink
-            href="/words"
-            :class="navigationMenuTriggerStyle()"
-          >
-            Dictionary
-          </NavigationMenuLink>
-        </NavigationMenuItem>
-        <NavigationMenuItem>
-          <NavigationMenuLink
-            href="/corpus"
-            :class="navigationMenuTriggerStyle()"
-          >
-            Corpus
-          </NavigationMenuLink>
-        </NavigationMenuItem>
-        <NavigationMenuItem>
-          <NavigationMenuLink
-            href="/settings"
-            :class="navigationMenuTriggerStyle()"
-          >
-            Settings
-          </NavigationMenuLink>
-        </NavigationMenuItem>
-      </NavigationMenuList>
-    </NavigationMenu>
-    <div class="pt-1 pr-8 ml-auto">
-      <Popover>
-        <PopoverTrigger>
-          <div class="flex items-center px-2 rounded-md bg-accent">
-            <Settings2 :size="16" class="mr-1" />
-            {{ currentLanguage ?? "Select a language" }}
-          </div>
-        </PopoverTrigger>
-        <PopoverContent class="w-60">
-          <h4 class="pb-2 font-medium leading-none">Quick Settings</h4>
-          <Label for="current-language">Current language:</Label>
-          <Select
-            id="current-language"
-            :modelValue="currentLanguage ?? ''"
-            @update:model-value="
-              ($event) => {
-                setLanguage($event);
-                currentLanguage = $event;
-              }
-            "
-          >
-            <SelectTrigger class="w-[180px]">
-              <SelectValue placeholder="Select a language" />
-            </SelectTrigger>
-            <SelectContent>
-              <SelectGroup>
-                <SelectItem v-for="language in languages" :value="language">
-                  {{ language }}
-                </SelectItem>
-              </SelectGroup>
-            </SelectContent>
-          </Select>
-        </PopoverContent>
-      </Popover>
+  <div class="flex min-h-screen w-full flex-col bg-muted/40">
+    <aside
+      class="fixed inset-y-0 left-0 z-10 hidden w-14 flex-col border-r bg-background sm:flex"
+    >
+      <nav class="flex flex-col items-center gap-4 px-2 sm:py-5">
+        <TooltipProvider>
+          <Tooltip>
+            <TooltipTrigger as-child>
+              <a
+                href="#"
+                class="flex h-9 w-9 items-center justify-center rounded-lg text-muted-foreground transition-colors hover:text-foreground md:h-8 md:w-8"
+              >
+                <Home class="h-5 w-5" />
+                <span class="sr-only">Dashboard</span>
+              </a>
+            </TooltipTrigger>
+            <TooltipContent side="right"> Dashboard </TooltipContent>
+          </Tooltip>
+        </TooltipProvider>
+        <TooltipProvider>
+          <Tooltip>
+            <TooltipTrigger as-child>
+              <a
+                href="/reader"
+                class="flex h-9 w-9 items-center justify-center rounded-lg text-muted-foreground transition-colors hover:text-foreground md:h-8 md:w-8"
+              >
+                <BookOpenText class="h-5 w-5" />
+                <span class="sr-only">Reader</span>
+              </a>
+            </TooltipTrigger>
+            <TooltipContent side="right"> Reader </TooltipContent>
+          </Tooltip>
+        </TooltipProvider>
+        <TooltipProvider>
+          <Tooltip>
+            <TooltipTrigger as-child>
+              <a
+                href="#"
+                class="flex h-9 w-9 items-center justify-center rounded-lg text-muted-foreground transition-colors hover:text-foreground md:h-8 md:w-8"
+              >
+                <Search class="h-5 w-5" />
+                <span class="sr-only">Browse</span>
+              </a>
+            </TooltipTrigger>
+            <TooltipContent side="right"> Browse </TooltipContent>
+          </Tooltip>
+        </TooltipProvider>
+        <TooltipProvider>
+          <Tooltip>
+            <TooltipTrigger as-child>
+              <a
+                href="#"
+                class="flex h-9 w-9 items-center justify-center rounded-lg text-muted-foreground transition-colors hover:text-foreground md:h-8 md:w-8"
+              >
+                <LineChart class="h-5 w-5" />
+                <span class="sr-only">Stats</span>
+              </a>
+            </TooltipTrigger>
+            <TooltipContent side="right"> Stats </TooltipContent>
+          </Tooltip>
+        </TooltipProvider>
+      </nav>
+      <nav class="mt-auto flex flex-col items-center gap-4 px-2 sm:py-5">
+        <TooltipProvider>
+          <Tooltip>
+            <TooltipTrigger as-child>
+              <a
+                href="/settings"
+                class="flex h-9 w-9 items-center justify-center rounded-lg text-muted-foreground transition-colors hover:text-foreground md:h-8 md:w-8"
+              >
+                <Settings
+                  class="h-5 w-5 hover:rotate-[60deg] ease-in-out duration-300"
+                />
+                <span class="sr-only">Settings</span>
+              </a>
+            </TooltipTrigger>
+            <TooltipContent side="right"> Settings </TooltipContent>
+          </Tooltip>
+        </TooltipProvider>
+      </nav>
+    </aside>
+    <div class="flex flex-col sm:gap-4 sm:py-4 sm:pl-14">
+      <header
+        class="sticky top-0 z-30 flex h-4 items-center gap-4 border-b bg-background px-4 sm:static sm:h-auto sm:border-0 sm:bg-transparent sm:px-6"
+      >
+        <Breadcrumb>
+          <BreadcrumbList>
+            <BreadcrumbItem>
+              <BreadcrumbLink class="capitalize">{{
+                pageNames[0]
+              }}</BreadcrumbLink>
+            </BreadcrumbItem>
+            <template v-for="page in pageNames.slice(1)">
+              <BreadcrumbSeparator />
+              <BreadcrumbItem>
+                <BreadcrumbLink class="capitalize">{{ page }}</BreadcrumbLink>
+              </BreadcrumbItem>
+            </template>
+          </BreadcrumbList>
+        </Breadcrumb>
+
+        <div class="pr-4 ml-auto">
+          <Popover>
+            <PopoverTrigger>
+              <div class="flex items-center px-2 rounded-md bg-accent">
+                <Settings2 :size="16" class="mr-1" />
+                {{ currentLanguage ?? "Select a language" }}
+              </div>
+            </PopoverTrigger>
+            <PopoverContent class="w-60">
+              <h4 class="pb-2 font-medium leading-none">Quick Settings</h4>
+              <Label for="current-language">Current language:</Label>
+              <Select
+                id="current-language"
+                :modelValue="currentLanguage ?? ''"
+                @update:model-value="
+                  ($event) => {
+                    setLanguage($event);
+                    currentLanguage = $event;
+                  }
+                "
+              >
+                <SelectTrigger class="w-[180px]">
+                  <SelectValue placeholder="Select a language" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectGroup>
+                    <SelectItem v-for="language in languages" :value="language">
+                      {{ language }}
+                    </SelectItem>
+                  </SelectGroup>
+                </SelectContent>
+              </Select>
+            </PopoverContent>
+          </Popover>
+        </div>
+      </header>
+      <Separator />
+
+      <main class="pt-1 px-4">
+        <Suspense>
+          <router-view
+            :currentLanguage="currentLanguage"
+            @settingsChanged="updateLanguages"
+          ></router-view>
+        </Suspense>
+      </main>
     </div>
   </div>
-  <Suspense>
-    <router-view
-      :currentLanguage="currentLanguage"
-      @settingsChanged="updateLanguages"
-    ></router-view>
-  </Suspense>
 </template>
+
+<!-- <div class="flex w-full h-screen"> -->
+<!--   <div -->
+<!--     class="flex flex-col w-12 bg-accent pt-2 border-r border-primary items-center" -->
+<!--   > -->
+<!--     <Button variant="ghost" size="icon"><BookOpenText /></Button> -->
+<!--   </div> -->
+<!--   <div> -->
+<!--   </div> -->
+<!-- </div> -->
