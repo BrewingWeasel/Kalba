@@ -46,6 +46,7 @@ pub struct TimeSpentStats {
     pub this_month: (String, String),
     pub this_year: (String, String),
     pub total: (String, String),
+    pub streak: i64,
 }
 
 #[derive(Serialize, Deserialize, PartialEq, Clone, Eq, Debug)]

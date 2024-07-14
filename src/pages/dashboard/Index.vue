@@ -3,12 +3,12 @@ import {
   Card,
   CardContent,
   CardDescription,
-  CardFooter,
   CardHeader,
   CardTitle,
 } from "@/components/ui/card";
 
 import { BarChart } from "@/components/ui/chart-bar";
+import Separator from "@/components/ui/separator/Separator.vue";
 
 import { invoke } from "@tauri-apps/api";
 
@@ -18,6 +18,7 @@ interface TimeSpent {
   this_month: [string, string];
   this_year: [string, string];
   total: [string, string];
+  streak: number;
 }
 
 const timeSpent = await invoke<TimeSpent>("time_spent");
@@ -28,9 +29,22 @@ console.log(timeSpent);
   <Card class="w-80">
     <CardHeader>
       <CardTitle>Activity</CardTitle>
-      <!-- <CardDescription></CardDescription> -->
+      <CardDescription>Time spent learning the language</CardDescription>
     </CardHeader>
     <CardContent>
+      <div class="flex items-center justify-center">
+        <div
+          class="p-12 w-48 h-48 bg-accent mb-3 rounded-full flex items-center justify-center flex-col ease-in-out duration-200 hover:scale-110"
+        >
+          <h1 class="text-center text-5xl font-black text-teal-600">
+            {{ timeSpent.streak }}
+          </h1>
+          <h3 class="text-center text-xl">day streak</h3>
+        </div>
+      </div>
+
+      <h4 class="text-xl font-bold mb-1 mt-3">This week</h4>
+
       <BarChart
         :data="timeSpent.days_this_week"
         :categories="['duration']"
@@ -40,48 +54,47 @@ console.log(timeSpent);
         :showYAxis="true"
       />
 
-      <div
-        class="flex justify-between items-baseline px-2 py-1 rounded-md hover:bg-accent"
-      >
-        <h4>This Week</h4>
-        <div class="flex items-baseline">
-          <h2 class="text-xl font-bold px-0.5">
-            {{ timeSpent.total_this_week[0] }}
-          </h2>
-          <h4>{{ timeSpent.total_this_week[1] }}</h4>
-        </div>
+      <div class="flex items-baseline justify-center mb-4">
+        <h2 class="font-bold">
+          {{ timeSpent.total_this_week[0] }}
+        </h2>
+        <h4>{{ timeSpent.total_this_week[1] }}</h4>
+        <h4>&nbsp;spent learning total</h4>
       </div>
-      <div
-        class="flex justify-between items-baseline px-2 py-1 rounded-md hover:bg-accent"
-      >
-        <h4>This Month</h4>
-        <div class="flex items-baseline">
-          <h2 class="text-xl font-bold px-0.5">
-            {{ timeSpent.this_month[0] }}
-          </h2>
-          <h4>{{ timeSpent.this_month[1] }}</h4>
+
+      <div class="bg-accent rounded-md">
+        <div
+          class="flex justify-between items-baseline px-2 py-1 rounded-md hover:bg-background"
+        >
+          <h4>This month</h4>
+          <div class="flex items-baseline">
+            <h2 class="text-xl font-bold px-0.5">
+              {{ timeSpent.this_month[0] }}
+            </h2>
+            <h4>{{ timeSpent.this_month[1] }}</h4>
+          </div>
         </div>
-      </div>
-      <div
-        class="flex justify-between items-baseline px-2 py-1 rounded-md hover:bg-accent"
-      >
-        <h4>This Year</h4>
-        <div class="flex items-baseline">
-          <h2 class="text-xl font-bold px-0.5">
-            {{ timeSpent.this_year[0] }}
-          </h2>
-          <h4>{{ timeSpent.this_year[1] }}</h4>
+        <div
+          class="flex justify-between items-baseline px-2 py-1 rounded-md hover:bg-background"
+        >
+          <h4>This year</h4>
+          <div class="flex items-baseline">
+            <h2 class="text-xl font-bold px-0.5">
+              {{ timeSpent.this_year[0] }}
+            </h2>
+            <h4>{{ timeSpent.this_year[1] }}</h4>
+          </div>
         </div>
-      </div>
-      <div
-        class="flex justify-between items-baseline px-2 py-1 rounded-md hover:bg-accent"
-      >
-        <h4>All time</h4>
-        <div class="flex items-baseline">
-          <h2 class="text-xl font-bold px-0.5">
-            {{ timeSpent.total[0] }}
-          </h2>
-          <h4>{{ timeSpent.total[1] }}</h4>
+        <div
+          class="flex justify-between items-baseline px-2 py-1 rounded-md hover:bg-background"
+        >
+          <h4>All time</h4>
+          <div class="flex items-baseline">
+            <h2 class="text-xl font-bold px-0.5">
+              {{ timeSpent.total[0] }}
+            </h2>
+            <h4>{{ timeSpent.total[1] }}</h4>
+          </div>
         </div>
       </div>
     </CardContent>
