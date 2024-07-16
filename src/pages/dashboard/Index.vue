@@ -148,6 +148,7 @@ console.log(wordsLevels);
             :data="wordsLevels"
             :showTooltip="true"
             :show-legend="true"
+            :colors="['#ef5350', '#ffa726', '#ffd54f', 'black']"
           />
         </CardContent>
       </Card>
