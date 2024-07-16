@@ -1,5 +1,6 @@
 use std::collections::HashMap;
 
+use chrono::Utc;
 use reqwest::Response;
 use serde::Deserialize;
 use serde_json::{json, value::Value};
@@ -82,6 +83,7 @@ pub async fn get_anki_card_statuses(
                 WordInfo {
                     rating,
                     method: Method::FromAnki,
+                    history: vec![(Utc::now(), Method::FromAnki, rating)],
                 },
             );
         }

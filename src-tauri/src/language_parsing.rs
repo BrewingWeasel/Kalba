@@ -150,6 +150,7 @@ fn stanza_parser(
                 .or_insert(crate::WordInfo {
                     rating: 0,
                     method: crate::Method::FromSeen,
+                    history: vec![(chrono::Utc::now(), crate::Method::FromSeen, 0)],
                 })
                 .rating;
 
@@ -206,6 +207,7 @@ fn default_tokenizer(
                     .or_insert(crate::WordInfo {
                         rating: 0,
                         method: crate::Method::FromSeen,
+                        history: vec![(chrono::Utc::now(), crate::Method::FromSeen, 0)],
                     })
                     .rating;
                 words.push(Word {

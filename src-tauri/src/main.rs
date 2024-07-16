@@ -90,6 +90,8 @@ struct ToSave {
 struct LanguageSpecficToSave {
     words: HashMap<String, WordInfo>,
     cached_defs: HashMap<String, Vec<SakinyjeResult<String>>>,
+    previous_file: Option<String>,
+    previous_amount: usize,
 }
 
 impl Default for SharedInfo {
@@ -130,9 +132,10 @@ impl Default for SharedInfo {
 struct WordInfo {
     rating: i8,
     method: Method,
+    history: Vec<(DateTime<Utc>, Method, i8)>,
 }
 
-#[derive(Serialize, Deserialize, PartialEq, Eq)]
+#[derive(Serialize, Deserialize, PartialEq, Eq, Clone, Copy)]
 enum Method {
     FromAnki,
     FromSeen,
@@ -227,11 +230,18 @@ fn set_word_knowledge_from_anki(
             .unwrap();
             to_save.decks_checked.push(deck.to_owned());
         }
-        update_words_known(
-            &language.frequency_list,
-            language.words_known_by_freq,
-            &mut to_save_language.words,
-        );
+
+        if Some(&language.frequency_list) != to_save_language.previous_file.as_ref()
+            || language.words_known_by_freq != to_save_language.previous_amount
+        {
+            to_save_language.previous_file = Some(language.frequency_list.clone());
+            to_save_language.previous_amount = language.words_known_by_freq;
+            update_words_known(
+                &language.frequency_list,
+                language.words_known_by_freq,
+                &mut to_save_language.words,
+            );
+        }
     }
     to_save.last_launched = new_time;
 }
@@ -277,6 +287,7 @@ fn update_words_known(
                 WordInfo {
                     rating: 5,
                     method: Method::FromFrequency,
+                    history: vec![(Utc::now(), Method::FromFrequency, 5)],
                 },
             );
         }
@@ -314,6 +325,7 @@ async fn get_rating(lemma: String, state: State<'_, SakinyjeState>) -> Result<i8
         .or_insert(WordInfo {
             rating: 0,
             method: Method::FromSeen,
+            history: vec![(Utc::now(), Method::FromSeen, 0)],
         })
         .rating)
 }
@@ -375,11 +387,15 @@ async fn update_word_knowledge(
         .words
         .get_mut(word)
         .unwrap();
-    word_knowledge.rating = rating;
-    word_knowledge.method = if modifiable {
+
+    let method = if modifiable {
         Method::FromAnki
     } else {
         Method::Specified
     };
+
+    word_knowledge.history.push((Utc::now(), method, rating));
+    word_knowledge.rating = rating;
+    word_knowledge.method = method;
     Ok(())
 }
