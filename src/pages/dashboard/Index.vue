@@ -9,7 +9,7 @@ import {
 } from "@/components/ui/card";
 
 import { BarChart } from "@/components/ui/chart-bar";
-import Separator from "@/components/ui/separator/Separator.vue";
+import { DonutChart } from "@/components/ui/chart-donut";
 import { GithubLogoIcon } from "@radix-icons/vue";
 
 import { invoke } from "@tauri-apps/api";
@@ -26,6 +26,11 @@ interface TimeSpent {
 
 const timeSpent = await invoke<TimeSpent>("time_spent");
 console.log(timeSpent);
+
+const wordsLevels = await invoke<{ rating: string; amount: number }[]>(
+  "get_words_known_at_levels",
+);
+console.log(wordsLevels);
 </script>
 
 <template>
@@ -103,30 +108,49 @@ console.log(timeSpent);
         </div>
       </CardContent>
     </Card>
-    <Card class="w-80 h-fit">
-      <CardHeader>
-        <CardTitle>Getting Started</CardTitle>
-        <CardDescription>Important links</CardDescription>
-      </CardHeader>
-      <CardContent>
-        <div class="flex flex-col items-center justify-center gap-1">
-          <a target="_blank" href="https://github.com/BrewingWeasel/sakinyje">
-            <Button class="w-48" variant="outline">
-              <GithubLogoIcon />
-              <h2 class="ml-1">Repository</h2>
-            </Button>
-          </a>
-          <a
-            target="_blank"
-            href="https://github.com/BrewingWeasel/sakinyje/wiki"
+    <div class="flex flex-col gap-3">
+      <Card class="w-80 h-fit">
+        <CardHeader>
+          <CardTitle>Getting Started</CardTitle>
+          <CardDescription>Important links</CardDescription>
+        </CardHeader>
+        <CardContent>
+          <div class="flex flex-col items-center justify-center gap-1">
+            <a target="_blank" href="https://github.com/BrewingWeasel/sakinyje">
+              <Button class="w-48" variant="outline">
+                <GithubLogoIcon />
+                <h2 class="ml-1">Repository</h2>
+              </Button>
+            </a>
+            <a
+              target="_blank"
+              href="https://github.com/BrewingWeasel/sakinyje/wiki"
+            >
+              <Button class="w-48" variant="outline">
+                <BookText />
+                <h2 class="ml-1">Docs</h2>
+              </Button>
+            </a>
+          </div>
+        </CardContent>
+      </Card>
+      <Card class="w-80 h-fit">
+        <CardHeader>
+          <CardTitle>Words Known</CardTitle>
+          <CardDescription
+            >Percentages of words at different ratings</CardDescription
           >
-            <Button class="w-48" variant="outline">
-              <BookText />
-              <h2 class="ml-1">Docs</h2>
-            </Button>
-          </a>
-        </div>
-      </CardContent>
-    </Card>
+        </CardHeader>
+        <CardContent>
+          <DonutChart
+            index="rating"
+            category="amount"
+            :data="wordsLevels"
+            :showTooltip="true"
+            :show-legend="true"
+          />
+        </CardContent>
+      </Card>
+    </div>
   </div>
 </template>

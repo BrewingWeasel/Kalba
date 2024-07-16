@@ -15,7 +15,7 @@ use serde::{Deserialize, Serialize};
 use shared::{LanguageSettings, SakinyjeResult, Settings, ToasterPayload};
 use simple_logger::SimpleLogger;
 use spyglys_integration::{format_spyglys, get_spyglys_functions};
-use stats::time_spent;
+use stats::{get_words_known_at_levels, time_spent};
 use std::{collections::HashMap, fs, io::BufReader, process, sync::Arc, time::Duration};
 use tauri::{async_runtime::block_on, GlobalWindowEvent, Manager, State, Window, WindowEvent};
 
@@ -171,6 +171,7 @@ fn main() {
             format_spyglys,
             get_spyglys_functions,
             time_spent,
+            get_words_known_at_levels
         ])
         .on_window_event(handle_window_event)
         .run(tauri::generate_context!())

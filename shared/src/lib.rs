@@ -1,4 +1,4 @@
-use std::{collections::HashMap, time::Duration};
+use std::collections::HashMap;
 
 use serde::{Deserialize, Serialize};
 
@@ -37,6 +37,12 @@ pub struct Word {
 pub struct TimeSpentPoint {
     pub name: String,
     pub duration: i64,
+}
+
+#[derive(Clone, Serialize, Deserialize, Debug)]
+pub struct NumWordsKnown {
+    pub rating: String,
+    pub amount: usize,
 }
 
 #[derive(Clone, Serialize, Deserialize, Debug)]

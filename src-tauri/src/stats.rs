@@ -1,5 +1,5 @@
 use chrono::{Datelike, TimeDelta, Utc};
-use shared::{TimeSpentPoint, TimeSpentStats};
+use shared::{NumWordsKnown, TimeSpentPoint, TimeSpentStats};
 use tauri::State;
 
 use crate::SakinyjeState;
@@ -58,6 +58,37 @@ pub async fn time_spent(state: State<'_, SakinyjeState>) -> Result<TimeSpentStat
         total: formatted_duration(&total_time_spent),
         streak,
     })
+}
+
+#[tauri::command]
+pub async fn get_words_known_at_levels(
+    state: State<'_, SakinyjeState>,
+) -> Result<Vec<NumWordsKnown>, String> {
+    let state = state.0.lock().await;
+    let current_language = state.current_language.as_ref().expect("language to be set");
+    let words = &state
+        .to_save
+        .language_specific
+        .get(current_language)
+        .expect("language to include")
+        .words;
+    let mut words_at_rating = vec![0; 5];
+    for info in words.values() {
+        match info.rating {
+            -1 | 0 => (),
+            v => {
+                words_at_rating[v as usize] += 1;
+            }
+        }
+    }
+    Ok(words_at_rating
+        .iter()
+        .enumerate()
+        .map(|(rating, amount)| NumWordsKnown {
+            rating: format!("words rated {rating}"),
+            amount: *amount,
+        })
+        .collect())
 }
 
 fn formatted_duration(duration: &TimeDelta) -> (String, String) {
