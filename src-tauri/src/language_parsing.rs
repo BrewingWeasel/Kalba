@@ -30,12 +30,23 @@ pub async fn parse_text(
         .expect("Language to have already been chosen");
     let interpreter = load_spyglys(&mut state)?;
 
-    if state.language_parser.is_some() {
+    let words = if state.language_parser.is_some() {
         log::trace!("Sending to stanza parser");
-        stanza_parser(sent, &mut state, language, &interpreter)
+        stanza_parser(sent, &mut state, language.clone(), &interpreter)
     } else {
-        default_tokenizer(sent, language, &mut state, &interpreter)
-    }
+        default_tokenizer(sent, language.clone(), &mut state, &interpreter)
+    }?;
+    state
+        .to_save
+        .language_specific
+        .get_mut(&language)
+        .expect("language to have state")
+        .words_seen
+        .push((
+            chrono::Utc::now(),
+            words.iter().filter(|v| v.clickable).count(),
+        ));
+    Ok(words)
 }
 #[derive(serde::Deserialize, Clone)]
 struct StanzaToken {

@@ -92,6 +92,7 @@ struct LanguageSpecficToSave {
     cached_defs: HashMap<String, Vec<SakinyjeResult<String>>>,
     previous_file: Option<String>,
     previous_amount: usize,
+    words_seen: Vec<(DateTime<Utc>, usize)>,
 }
 
 impl Default for SharedInfo {
