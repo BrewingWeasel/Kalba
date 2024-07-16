@@ -30,7 +30,7 @@ import {
   Settings,
   Settings2,
 } from "lucide-vue-next";
-import { Ref, computed, ref } from "vue";
+import { Ref, computed, onMounted, ref } from "vue";
 import { invoke } from "@tauri-apps/api/tauri";
 import { Toaster } from "@/components/ui/sonner";
 import { listen } from "@tauri-apps/api/event";
@@ -76,25 +76,33 @@ const toasters: Ref<Map<string, number | null>> = ref(
     ["refresh_anki", null],
   ]),
 );
-for (const toasterEvent of toasters.value.keys()) {
-  console.log(toasterEvent);
-  listen<{ message: string | null }>(toasterEvent, (event) => {
-    console.log(event);
-    if (event.payload.message) {
-      const startedToaster = toast.info(event.payload.message, {
-        duration: 0,
-      });
-      if (typeof startedToaster == "number") {
-        toasters.value.set(toasterEvent, startedToaster);
-      }
-    } else {
-      const toasterId = toasters.value.get(toasterEvent);
-      if (toasterId) {
-        Toaster.close(toasterId);
-      }
+
+onMounted(async () => {
+  await invoke("check_startup_errors").catch((errors) => {
+    for (const error of errors) {
+      console.log(error);
+      toast.error(`${error} (state and settings will not be saved)`);
     }
   });
-}
+
+  for (const toasterEvent of toasters.value.keys()) {
+    listen<{ message: string | null }>(toasterEvent, (event) => {
+      if (event.payload.message) {
+        const startedToaster = toast.info(event.payload.message, {
+          duration: 0,
+        });
+        if (typeof startedToaster == "number") {
+          toasters.value.set(toasterEvent, startedToaster);
+        }
+      } else {
+        const toasterId = toasters.value.get(toasterEvent);
+        if (toasterId) {
+          Toaster.close(toasterId);
+        }
+      }
+    });
+  }
+});
 </script>
 
 <template>

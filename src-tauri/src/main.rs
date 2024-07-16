@@ -35,6 +35,8 @@ enum SakinyjeError {
     #[error(transparent)]
     TomlSer(#[from] toml::ser::Error),
     #[error(transparent)]
+    TomlDe(#[from] toml::de::Error),
+    #[error(transparent)]
     Tauri(#[from] tauri::Error),
     #[error(transparent)]
     Spyglys(#[from] spyglys::SpyglysError),
@@ -70,6 +72,8 @@ struct SharedInfo {
     language_parser: Option<LanguageParser>,
     current_language: Option<String>,
     dict_info: Arc<tauri::async_runtime::Mutex<DictionaryInfo>>,
+    errors: Vec<SakinyjeError>,
+    can_save: bool,
 }
 
 struct LanguageParser {
@@ -97,17 +101,39 @@ struct LanguageSpecficToSave {
 
 impl Default for SharedInfo {
     fn default() -> Self {
-        let saved_state_file = dirs::data_dir().unwrap().join("sakinyje_saved_data.toml");
-        let config_file = dirs::config_dir().unwrap().join("sakinyje.toml");
+        let mut errors = Vec::new();
 
-        let mut to_save: ToSave = fs::read_to_string(saved_state_file)
-            .map(|v| toml::from_str(&v).unwrap_or_default())
-            .unwrap_or_default();
+        let mut to_save: ToSave = match dirs::data_dir()
+            .ok_or_else(|| SakinyjeError::MissingDir(String::from("data")))
+            .and_then(|saved_state_file| {
+                fs::read_to_string(saved_state_file.join("sakinyje_saved_data.toml"))
+                    .map_err(SakinyjeError::Io)
+                    .and_then(|v| toml::from_str(&v).map_err(SakinyjeError::TomlDe))
+            }) {
+            Ok(v) => v,
+            Err(e) => {
+                if !matches!(e, SakinyjeError::Io(_)) {
+                    errors.push(e);
+                }
+                ToSave::default()
+            }
+        };
 
-        let settings: Settings = fs::read_to_string(config_file)
-            .map(|v| toml::from_str(&v).unwrap()) // TODO: some sort of error handling when invalid
-            // toml is used
-            .unwrap_or_default();
+        let settings: Settings = match dirs::config_dir()
+            .ok_or_else(|| SakinyjeError::MissingDir(String::from("config")))
+            .and_then(|config_file| {
+                fs::read_to_string(config_file.join("sakinyje.toml"))
+                    .map_err(SakinyjeError::Io)
+                    .and_then(|v| toml::from_str(&v).map_err(SakinyjeError::TomlDe))
+            }) {
+            Ok(v) => v,
+            Err(e) => {
+                if !matches!(e, SakinyjeError::Io(_)) {
+                    errors.push(e);
+                }
+                Settings::default()
+            }
+        };
 
         set_word_knowledge_from_anki(&mut to_save, &settings.languages);
 
@@ -117,14 +143,22 @@ impl Default for SharedInfo {
             }
         }
 
-        let current_language = to_save.last_language.clone();
+        let current_language = to_save
+            .last_language
+            .clone()
+            .or_else(|| settings.languages.keys().next().cloned());
         to_save.sessions.push((Utc::now(), Duration::new(0, 0)));
+
+        let can_save = errors.is_empty();
+
         Self {
+            errors,
             to_save,
             settings,
             language_parser: None,
             current_language,
             dict_info: Default::default(),
+            can_save,
         }
     }
 }
@@ -175,7 +209,8 @@ fn main() {
             format_spyglys,
             get_spyglys_functions,
             time_spent,
-            get_words_known_at_levels
+            get_words_known_at_levels,
+            check_startup_errors,
         ])
         .on_window_event(handle_window_event)
         .run(tauri::generate_context!())
@@ -200,6 +235,17 @@ async fn refresh_anki(state: State<'_, SakinyjeState>, window: Window) -> Result
         .emit("refresh_anki", ToasterPayload { message: None })
         .unwrap();
     Ok(())
+}
+
+#[tauri::command]
+async fn check_startup_errors(state: State<'_, SakinyjeState>) -> Result<(), Vec<SakinyjeError>> {
+    let mut state = state.0.lock().await;
+    let errs = std::mem::take(&mut state.errors);
+    if errs.is_empty() {
+        Ok(())
+    } else {
+        Err(errs)
+    }
 }
 
 fn set_word_knowledge_from_anki(
@@ -252,21 +298,24 @@ fn handle_window_event(event: GlobalWindowEvent) {
         #[allow(clippy::single_match)] // Will probably be expanded in the future
         match event.event() {
             &WindowEvent::Destroyed => {
-                log::info!("saving details");
-                let saved_state_file = dirs::data_dir().unwrap().join("sakinyje_saved_data.toml");
                 let state: State<'_, SakinyjeState> = event.window().state();
                 let mut locked_state = state.0.lock().await;
-                locked_state.to_save.last_language = locked_state.current_language.clone();
-                let session = locked_state
-                    .to_save
-                    .sessions
-                    .last_mut()
-                    .expect("sessions should exist");
-                session.1 =
-                    TimeDelta::to_std(&(Utc::now() - session.0)).expect("time should be valid");
-                let conts =
-                    toml::to_string(&locked_state.to_save).expect("Error serializing to toml");
-                fs::write(saved_state_file, conts).expect("error writing to file");
+                if locked_state.can_save {
+                    log::info!("saving details");
+                    let saved_state_file =
+                        dirs::data_dir().unwrap().join("sakinyje_saved_data.toml");
+                    locked_state.to_save.last_language = locked_state.current_language.clone();
+                    let session = locked_state
+                        .to_save
+                        .sessions
+                        .last_mut()
+                        .expect("sessions should exist");
+                    session.1 =
+                        TimeDelta::to_std(&(Utc::now() - session.0)).expect("time should be valid");
+                    let conts =
+                        toml::to_string(&locked_state.to_save).expect("Error serializing to toml");
+                    fs::write(saved_state_file, conts).expect("error writing to file");
+                }
             }
             _ => (),
         }
