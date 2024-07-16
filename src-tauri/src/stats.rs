@@ -72,12 +72,12 @@ pub async fn get_words_known_at_levels(
         .get(current_language)
         .expect("language to include")
         .words;
-    let mut words_at_rating = vec![0; 5];
+    let mut words_at_rating = vec![0; 4];
     for info in words.values() {
         match info.rating {
             -1 | 0 => (),
             v => {
-                words_at_rating[v as usize] += 1;
+                words_at_rating[v as usize - 1] += 1;
             }
         }
     }
@@ -85,7 +85,7 @@ pub async fn get_words_known_at_levels(
         .iter()
         .enumerate()
         .map(|(rating, amount)| NumWordsKnown {
-            rating: format!("words rated {rating}"),
+            name: format!("words rated {}", rating + 1),
             amount: *amount,
         })
         .collect())

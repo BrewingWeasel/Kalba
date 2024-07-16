@@ -27,7 +27,7 @@ interface TimeSpent {
 const timeSpent = await invoke<TimeSpent>("time_spent");
 console.log(timeSpent);
 
-const wordsLevels = await invoke<{ rating: string; amount: number }[]>(
+const wordsLevels = await invoke<{ name: string; amount: number }[]>(
   "get_words_known_at_levels",
 );
 console.log(wordsLevels);
@@ -143,7 +143,7 @@ console.log(wordsLevels);
         </CardHeader>
         <CardContent>
           <DonutChart
-            index="rating"
+            index="name"
             category="amount"
             :data="wordsLevels"
             :showTooltip="true"

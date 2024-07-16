@@ -41,7 +41,7 @@ pub struct TimeSpentPoint {
 
 #[derive(Clone, Serialize, Deserialize, Debug)]
 pub struct NumWordsKnown {
-    pub rating: String,
+    pub name: String,
     pub amount: usize,
 }
 
