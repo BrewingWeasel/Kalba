@@ -3,36 +3,46 @@ import { type Ref, computed, ref } from "vue";
 import { invoke } from "@tauri-apps/api/tauri";
 import IndividualWord from "@/components/Word.vue";
 import SelectedWordView from "@/components/SelectedWordView.vue";
-import type { Word } from "@/types";
+import type { Word, Section } from "@/types";
 import { toast } from "vue-sonner";
 
-const props = defineProps<{ sentence: string; currentLanguage: string }>();
-const words: Ref<Word[] | undefined> = ref(undefined);
-const selected_word: Ref<Word | undefined> = ref(undefined);
-const selected_index: Ref<number> = ref(0);
+const props = defineProps<{
+  sentence: string;
+  currentLanguage: string;
+  isUrl: boolean;
+}>();
+const sections: Ref<Section[] | undefined> = ref(undefined);
+const selectedWord: Ref<Word | undefined> = ref(undefined);
+const selectedSectionIndex: Ref<number> = ref(0);
+const selectedWordIndex: Ref<number> = ref(0);
 
 await invoke("start_stanza").catch((error) => {
   toast.error(error);
 });
 console.log("Stanza loaded");
 
-set_words();
+await set_words();
+console.log(sections);
 
 const DEFAULT_WORDS_AROUND = 25;
 
 const sentence = computed(() => {
   let intendedSent = "";
-  for (
-    let i = selected_index.value - DEFAULT_WORDS_AROUND;
-    i < selected_index.value + DEFAULT_WORDS_AROUND;
-    i++
-  ) {
-    const curWord = words.value?.[i];
-    if (curWord) {
-      if (curWord.clickable) {
-        intendedSent += ` ${curWord.text}`;
-      } else {
-        intendedSent += curWord.text;
+
+  const section = sections.value?.[selectedSectionIndex.value];
+  if (section && typeof section.c != "string") {
+    for (
+      let i = selectedWordIndex.value - DEFAULT_WORDS_AROUND;
+      i < selectedWordIndex.value + DEFAULT_WORDS_AROUND;
+      i++
+    ) {
+      const curWord = section.c[i];
+      if (curWord) {
+        if (curWord.clickable) {
+          intendedSent += ` ${curWord.text}`;
+        } else {
+          intendedSent += curWord.text;
+        }
       }
     }
   }
@@ -40,17 +50,27 @@ const sentence = computed(() => {
 });
 
 async function set_words() {
-  words.value = await invoke<Word[]>("parse_text", {
-    sent: props.sentence,
-  }).catch((error) => {
-    toast.error(error);
-    return [];
-  });
+  if (props.isUrl) {
+    sections.value = await invoke<Section[]>("parse_url", {
+      url: props.sentence,
+    }).catch((error) => {
+      toast.error(error);
+      return [];
+    });
+  } else {
+    sections.value = await invoke<Section[]>("parse_text", {
+      sent: props.sentence,
+    }).catch((error) => {
+      toast.error(error);
+      return [];
+    });
+  }
 }
 
-function handle_word_selected(word: Word, index: number) {
-  selected_word.value = word;
-  selected_index.value = index;
+function handle_word_selected(word: Word, s_index: number, w_index: number) {
+  selectedWord.value = word;
+  selectedSectionIndex.value = s_index;
+  selectedWordIndex.value = w_index;
 }
 
 async function changeRating(
@@ -59,37 +79,57 @@ async function changeRating(
   modifiable = false,
 ) {
   console.log(attemptedLemma);
-  words.value?.forEach((word, i, vals) => {
-    if (word.lemma === attemptedLemma) {
-      vals[i].rating = rating;
+  sections.value?.forEach((section) => {
+    if (typeof section.c !== "string") {
+      section.c.forEach((word, i, vals) => {
+        if (word.lemma === attemptedLemma) {
+          vals[i].rating = rating;
+        }
+      });
     }
   });
+
   await invoke("update_word_knowledge", {
     word: attemptedLemma,
     rating,
     modifiable,
   });
 }
+
+const sectionStyling = new Map<string, string>([
+  ["Paragraph", "m-1"],
+  ["Title", "text-2xl"],
+  ["Subtitle", "text-lg font-bold pt-2 pb-1"],
+  ["Caption", "text-sm mb-1"],
+]);
 </script>
 
 <template>
   <Suspense>
     <SelectedWordView
       class="float-right m-3 w-96"
-      v-if="selected_word"
-      v-model="words![selected_index]"
+      v-if="selectedWord"
+      v-model="sections![selectedWordIndex]"
       :sentence
       :currentLanguage
       @set-rating="changeRating"
     />
   </Suspense>
-  <div class="flex flex-wrap py-3 px-6">
-    <IndividualWord
-      v-for="(word, index) in words"
-      :word="word"
-      :rating="word.rating"
-      @selected="(w) => handle_word_selected(w, index)"
-      @set-rating="changeRating"
-    />
+  <div class="py-3 px-6">
+    <div v-for="(section, s_index) in sections">
+      <div v-if="section.t == 'Image' && typeof section.c == 'string'">
+        <img :src="section.c" class="mt-1" />
+      </div>
+      <div v-else :class="sectionStyling.get(section.t)" class="flex flex-wrap">
+        <IndividualWord
+          v-if="typeof section.c != 'string'"
+          v-for="(word, w_index) in section.c"
+          :word="word"
+          :rating="word.rating"
+          @selected="(w) => handle_word_selected(w, s_index, w_index)"
+          @set-rating="changeRating"
+        />
+      </div>
+    </div>
   </div>
 </template>

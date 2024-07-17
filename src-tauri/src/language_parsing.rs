@@ -2,28 +2,208 @@ use std::{
     collections::HashMap,
     io::{BufRead, BufReader, Read, Write},
     process,
+    sync::Arc,
 };
 
 use crate::{
     spyglys_integration::{get_alternate_forms, handle_lemma, load_spyglys},
     LanguageParser, SakinyjeError, SakinyjeState, SharedInfo,
 };
+use log::{info, trace};
+use lol_html::{element, text, RewriteStrSettings};
 use shared::*;
 use spyglys::interpreter::Interpreter;
 use tauri::{State, Window};
-use tokio::sync::MutexGuard;
+use tokio::{
+    runtime::{Handle, Runtime},
+    sync::{Mutex, MutexGuard},
+    task,
+};
+use url::Url;
+
+#[tauri::command]
+pub async fn parse_url(
+    url: &str,
+    state: State<'_, SakinyjeState>,
+) -> Result<Vec<Section>, SakinyjeError> {
+    let parsed_url = Url::parse(url).unwrap();
+    let root_url = parsed_url.host_str().unwrap().strip_prefix("www.").unwrap();
+
+    let site_config = {
+        let locked_state = state.0.lock().await;
+        info!("Root url: {}", root_url);
+        trace!(
+            "Site configurations: {:?}",
+            locked_state.settings.site_configurations
+        );
+        locked_state
+            .settings
+            .site_configurations
+            .get(root_url)
+            .unwrap()
+            .clone()
+    };
+    let response = reqwest::get(url)
+        .await?
+        .text()
+        .await
+        .expect("to get valid bytes");
+
+    let sections = Arc::new(Mutex::new(Vec::new()));
+    let state = Arc::new(state);
+
+    let section_handlers = vec![
+        text!(
+            format!(
+                "{} {}",
+                site_config.main_section, site_config.title_selector
+            ),
+            |text| {
+                if text.as_str().trim().is_empty() {
+                    return Ok(());
+                }
+                let title_state = Arc::clone(&state);
+                let title_sections = Arc::clone(&sections);
+                let handle = Handle::current();
+                task::block_in_place(|| {
+                    handle.block_on(async move {
+                        let mut sections = title_sections.lock().await;
+                        sections.push(Section::Title(
+                            words_from_string(text.as_str(), title_state).await?,
+                        ));
+                        Ok::<(), SakinyjeError>(())
+                    })
+                })?;
+                Ok(())
+            }
+        ),
+        text!(
+            format!(
+                "{} {}",
+                site_config.main_section, site_config.subtitle_selector
+            ),
+            |text| {
+                if text.as_str().trim().is_empty() {
+                    return Ok(());
+                }
+                let subtitle_state = Arc::clone(&state);
+                let subtitle_sections = Arc::clone(&sections);
+                let handle = Handle::current();
+                task::block_in_place(|| {
+                    handle.block_on(async move {
+                        let mut sections = subtitle_sections.lock().await;
+                        sections.push(Section::Subtitle(
+                            words_from_string(text.as_str(), subtitle_state).await?,
+                        ));
+                        Ok::<(), SakinyjeError>(())
+                    })
+                })?;
+                Ok(())
+            }
+        ),
+        text!(
+            format!(
+                "{} {}",
+                site_config.main_section, site_config.caption_selector,
+            ),
+            |text| {
+                if text.as_str().trim().is_empty() {
+                    return Ok(());
+                }
+                log::info!("Caption text: {}", text.as_str());
+                let caption_state = Arc::clone(&state);
+                let caption_sections = Arc::clone(&sections);
+                let handle = Handle::current();
+                task::block_in_place(|| {
+                    handle.block_on(async move {
+                        let mut sections = caption_sections.lock().await;
+                        sections.push(Section::Caption(
+                            words_from_string(text.as_str(), caption_state).await?,
+                        ));
+                        Ok::<(), SakinyjeError>(())
+                    })
+                })?;
+                Ok(())
+            }
+        ),
+        text!(
+            format!(
+                "{} {}",
+                site_config.main_section, site_config.paragraph_selector
+            ),
+            |text| {
+                log::info!("Paragraph text: {}", text.as_str());
+                if text.as_str().trim().is_empty() {
+                    return Ok(());
+                }
+                let paragraph_state = Arc::clone(&state);
+                let paragraph_sections = Arc::clone(&sections);
+                let handle = Handle::current();
+                task::block_in_place(|| {
+                    handle.block_on(async move {
+                        let mut sections = paragraph_sections.lock().await;
+                        sections.push(Section::Paragraph(
+                            words_from_string(text.as_str(), paragraph_state).await?,
+                        ));
+                        Ok::<(), SakinyjeError>(())
+                    })
+                })?;
+                Ok(())
+            }
+        ),
+        element!(
+            format!(
+                "{} {}",
+                site_config.main_section, site_config.image_selector
+            ),
+            |el| {
+                let image_sections = Arc::clone(&sections);
+                let handle = Handle::current();
+                task::block_in_place(|| {
+                    handle.block_on(async move {
+                        if let Some(src) = el.get_attribute("src") {
+                            let mut sections = image_sections.lock().await;
+                            sections.push(Section::Image(format!("https://www.{root_url}/{src}")));
+                        }
+                    })
+                });
+                Ok(())
+            }
+        ),
+    ];
+    lol_html::rewrite_str(
+        &response,
+        RewriteStrSettings {
+            element_content_handlers: section_handlers,
+            ..Default::default()
+        },
+    )
+    .unwrap();
+    let owned_sections = Arc::into_inner(sections).unwrap();
+    Ok(owned_sections.into_inner())
+}
 
 #[tauri::command]
 pub async fn parse_text(
     sent: &str,
     state: State<'_, SakinyjeState>,
+) -> Result<Vec<Section>, SakinyjeError> {
+    Ok(vec![Section::Paragraph(
+        words_from_string(sent, Arc::new(state)).await?,
+    )])
+}
+
+pub async fn words_from_string(
+    sent: &str,
+    state: Arc<State<'_, SakinyjeState>>,
 ) -> Result<Vec<Word>, SakinyjeError> {
+    let mut state = state.0.lock().await;
+
     if sent.is_empty() {
         return Ok(Vec::new());
     }
     log::info!("Parsing text: {}", sent);
 
-    let mut state = state.0.lock().await;
     let language = state
         .current_language
         .clone()
@@ -48,6 +228,7 @@ pub async fn parse_text(
         ));
     Ok(words)
 }
+
 #[derive(serde::Deserialize, Clone)]
 struct StanzaToken {
     text: String,

@@ -42,6 +42,11 @@ export interface FileType {
   c: string | null;
 }
 
+export interface Section {
+  t: "Paragraph" | "Title" | "Subtitle" | "Image" | "Caption";
+  c: Word[] | string;
+}
+
 export enum DictionaryType {
   File = "File",
   Url = "Url",

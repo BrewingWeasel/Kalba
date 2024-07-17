@@ -9,11 +9,13 @@ import { useRouter } from "vue-router";
 
 const currentSentence = ref("");
 const sentence = ref("");
+const isUrl = ref(false);
 
 const props = defineProps<{ currentLanguage: string }>();
 
 const router = useRouter();
 router.replace("/reader/input");
+
 function set_sentence() {
   sentence.value = currentSentence.value;
 }
@@ -53,9 +55,21 @@ function set_sentence() {
       >
         <FilePicker v-model="currentSentence" />
       </ButtonDialog>
+      <ButtonDialog
+        class="flex-1 my-2 max-w-md"
+        title="Url"
+        @submitted="
+          router.replace('/reader/url');
+          isUrl = true;
+          set_sentence();
+        "
+        button-name="Enter a url"
+      >
+        <Textarea placeholder="Enter url to use" v-model="currentSentence" />
+      </ButtonDialog>
     </div>
     <div v-else>
-      <ReaderView :sentence :currentLanguage />
+      <ReaderView :sentence :currentLanguage :isUrl />
     </div>
   </div>
   <div v-else>

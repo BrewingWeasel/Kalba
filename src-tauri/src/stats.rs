@@ -72,7 +72,7 @@ pub async fn get_words_known_at_levels(
         .get(current_language)
         .expect("language to include")
         .words;
-    let mut words_at_rating = vec![0; 4];
+    let mut words_at_rating = vec![0; 5];
     for info in words.values() {
         match info.rating {
             -1 | 0 => (),

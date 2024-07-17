@@ -5,7 +5,7 @@ use crate::{
     add_to_anki::add_to_anki,
     ankiconnect::{get_all_deck_names, get_all_note_names, get_note_field_names, remove_deck},
     dictionary::{get_defs, DictionaryInfo},
-    language_parsing::{parse_text, start_stanza},
+    language_parsing::{parse_text, parse_url, start_stanza},
     new_language_template::new_language_from_template,
 };
 use ankiconnect::get_anki_card_statuses;
@@ -211,6 +211,7 @@ fn main() {
             time_spent,
             get_words_known_at_levels,
             check_startup_errors,
+            parse_url,
         ])
         .on_window_event(handle_window_event)
         .run(tauri::generate_context!())

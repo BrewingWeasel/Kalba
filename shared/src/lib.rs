@@ -116,10 +116,32 @@ pub struct Note(
     pub  HashMap<String, NoteToWordHandling>,
 );
 
+#[derive(Deserialize, Serialize, Clone, Debug)]
+pub struct SiteConfiguration {
+    pub name: String,
+    pub main_section: String,
+    pub title_selector: String,
+    pub subtitle_selector: String,
+    pub image_selector: String,
+    pub caption_selector: String,
+    pub paragraph_selector: String,
+}
+
+#[derive(Deserialize, Serialize, Clone)]
+#[serde(tag = "t", content = "c")]
+pub enum Section {
+    Title(Vec<Word>),
+    Subtitle(Vec<Word>),
+    Image(String),
+    Caption(Vec<Word>),
+    Paragraph(Vec<Word>),
+}
+
 #[derive(Deserialize, Serialize, Clone)]
 pub struct Settings {
     pub to_run: Option<Vec<String>>,
     pub dark_mode: bool,
+    pub site_configurations: HashMap<String, SiteConfiguration>,
     pub languages: HashMap<String, LanguageSettings>,
 }
 
@@ -145,6 +167,18 @@ impl Default for Settings {
             to_run: None,
             dark_mode: true,
             languages: HashMap::new(),
+            site_configurations: HashMap::from([(
+                String::from("lrt.lt"),
+                SiteConfiguration {
+                    name: String::from("lrt"),
+                    main_section: String::from(".article-block"),
+                    title_selector: String::from(".title-block__heading"),
+                    subtitle_selector: String::from("p strong"),
+                    image_selector: String::from("img"),
+                    caption_selector: String::from(".media-block__description"),
+                    paragraph_selector: String::from(".article-content p"),
+                },
+            )]),
         }
     }
 }
