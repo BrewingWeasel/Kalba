@@ -124,6 +124,7 @@ pub struct SiteConfiguration {
     pub subtitle_selector: String,
     pub image_selector: String,
     pub caption_selector: String,
+    pub caption_separator: Option<String>,
     pub paragraph_selector: String,
 }
 
@@ -176,6 +177,7 @@ impl Default for Settings {
                     subtitle_selector: String::from("p strong"),
                     image_selector: String::from("img"),
                     caption_selector: String::from(".media-block__description"),
+                    caption_separator: Some(String::from("/")),
                     paragraph_selector: String::from(".article-content p"),
                 },
             )]),

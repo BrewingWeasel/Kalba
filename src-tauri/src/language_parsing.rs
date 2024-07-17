@@ -110,7 +110,16 @@ pub async fn parse_url(
                 if text.as_str().trim().is_empty() {
                     return Ok(());
                 }
-                log::info!("Caption text: {}", text.as_str());
+                let text = if let Some(separator) = site_config.caption_separator.as_ref() {
+                    if let Some((main_caption, _)) = text.as_str().split_once(separator) {
+                        main_caption
+                    } else {
+                        text.as_str()
+                    }
+                } else {
+                    text.as_str()
+                };
+                log::info!("Caption text: {}", text);
                 let caption_state = Arc::clone(&state);
                 let caption_sections = Arc::clone(&sections);
                 let handle = Handle::current();
@@ -118,7 +127,7 @@ pub async fn parse_url(
                     handle.block_on(async move {
                         let mut sections = caption_sections.lock().await;
                         sections.push(Section::Caption(
-                            words_from_string(text.as_str(), caption_state).await?,
+                            words_from_string(text, caption_state).await?,
                         ));
                         Ok::<(), SakinyjeError>(())
                     })
