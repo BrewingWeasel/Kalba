@@ -128,7 +128,7 @@ pub struct SiteConfiguration {
     pub paragraph_selector: String,
 }
 
-#[derive(Deserialize, Serialize, Clone)]
+#[derive(Deserialize, Serialize, Clone, Debug)]
 #[serde(tag = "t", content = "c")]
 pub enum Section {
     Title(Vec<Word>),

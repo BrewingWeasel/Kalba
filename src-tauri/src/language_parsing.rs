@@ -1,5 +1,5 @@
 use std::{
-    collections::HashMap,
+    collections::{HashMap, HashSet},
     io::{BufRead, BufReader, Read, Write},
     process,
     sync::Arc,
@@ -10,7 +10,7 @@ use crate::{
     LanguageParser, SakinyjeError, SakinyjeState, SharedInfo,
 };
 use log::{info, trace};
-use lol_html::{element, text, RewriteStrSettings};
+use lol_html::{element, html_content::UserData, text, RewriteStrSettings};
 use shared::*;
 use spyglys::interpreter::Interpreter;
 use tauri::{State, Window};
@@ -49,7 +49,7 @@ pub async fn parse_url(
         .await
         .expect("to get valid bytes");
 
-    let sections = Arc::new(Mutex::new(Vec::new()));
+    let sections = Arc::new(Mutex::new((HashSet::new(), Vec::new())));
     let state = Arc::new(state);
 
     let section_handlers = vec![
@@ -67,7 +67,7 @@ pub async fn parse_url(
                 let handle = Handle::current();
                 task::block_in_place(|| {
                     handle.block_on(async move {
-                        let mut sections = title_sections.lock().await;
+                        let sections = &mut title_sections.lock().await.1;
                         sections.push(Section::Title(
                             words_from_string(text.as_str(), title_state).await?,
                         ));
@@ -86,13 +86,15 @@ pub async fn parse_url(
                 if text.as_str().trim().is_empty() {
                     return Ok(());
                 }
+                log::info!("Subtitle text: {}", text.as_str());
                 let subtitle_state = Arc::clone(&state);
                 let subtitle_sections = Arc::clone(&sections);
                 let handle = Handle::current();
                 task::block_in_place(|| {
                     handle.block_on(async move {
-                        let mut sections = subtitle_sections.lock().await;
-                        sections.push(Section::Subtitle(
+                        let mut section_details = subtitle_sections.lock().await;
+                        section_details.0.insert(text.as_str().to_owned());
+                        section_details.1.push(Section::Subtitle(
                             words_from_string(text.as_str(), subtitle_state).await?,
                         ));
                         Ok::<(), SakinyjeError>(())
@@ -119,13 +121,12 @@ pub async fn parse_url(
                 } else {
                     text.as_str()
                 };
-                log::info!("Caption text: {}", text);
                 let caption_state = Arc::clone(&state);
                 let caption_sections = Arc::clone(&sections);
                 let handle = Handle::current();
                 task::block_in_place(|| {
                     handle.block_on(async move {
-                        let mut sections = caption_sections.lock().await;
+                        let sections = &mut caption_sections.lock().await.1;
                         sections.push(Section::Caption(
                             words_from_string(text, caption_state).await?,
                         ));
@@ -141,7 +142,6 @@ pub async fn parse_url(
                 site_config.main_section, site_config.paragraph_selector
             ),
             |text| {
-                log::info!("Paragraph text: {}", text.as_str());
                 if text.as_str().trim().is_empty() {
                     return Ok(());
                 }
@@ -150,8 +150,11 @@ pub async fn parse_url(
                 let handle = Handle::current();
                 task::block_in_place(|| {
                     handle.block_on(async move {
-                        let mut sections = paragraph_sections.lock().await;
-                        sections.push(Section::Paragraph(
+                        let mut section_details = paragraph_sections.lock().await;
+                        if section_details.0.contains(text.as_str()) {
+                            return Ok::<(), SakinyjeError>(());
+                        }
+                        section_details.1.push(Section::Paragraph(
                             words_from_string(text.as_str(), paragraph_state).await?,
                         ));
                         Ok::<(), SakinyjeError>(())
@@ -171,7 +174,7 @@ pub async fn parse_url(
                 task::block_in_place(|| {
                     handle.block_on(async move {
                         if let Some(src) = el.get_attribute("src") {
-                            let mut sections = image_sections.lock().await;
+                            let sections = &mut image_sections.lock().await.1;
                             sections.push(Section::Image(format!("https://www.{root_url}/{src}")));
                         }
                     })
@@ -189,7 +192,7 @@ pub async fn parse_url(
     )
     .unwrap();
     let owned_sections = Arc::into_inner(sections).unwrap();
-    Ok(owned_sections.into_inner())
+    Ok(owned_sections.into_inner().1)
 }
 
 #[tauri::command]
