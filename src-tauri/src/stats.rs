@@ -15,12 +15,16 @@ pub async fn time_spent(state: State<'_, SakinyjeState>) -> Result<TimeSpentStat
     let mut total_time_spent = TimeDelta::default();
     let mut streak = 0;
 
-    for (time, duration) in state.to_save.sessions.iter() {
+    for (time, _) in state.to_save.sessions.iter().rev() {
         let days_since = Utc::now().signed_duration_since(*time).num_days();
-        let duration = TimeDelta::from_std(*duration).expect("duration to be valid");
         if days_since == streak {
             streak += 1;
         }
+    }
+
+    for (time, duration) in state.to_save.sessions.iter() {
+        let days_since = Utc::now().signed_duration_since(*time).num_days();
+        let duration = TimeDelta::from_std(*duration).expect("duration to be valid");
 
         for day in 0..7 {
             if days_since == day {
