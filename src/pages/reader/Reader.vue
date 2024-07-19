@@ -68,6 +68,7 @@ async function set_words() {
 }
 
 function handle_word_selected(word: Word, s_index: number, w_index: number) {
+  console.log(word);
   selectedWord.value = word;
   selectedSectionIndex.value = s_index;
   selectedWordIndex.value = w_index;
@@ -109,13 +110,13 @@ const sectionStyling = new Map<string, string>([
     <SelectedWordView
       class="float-right m-3 w-96"
       v-if="selectedWord"
-      v-model="sections![selectedWordIndex]"
+      v-model="sections![selectedSectionIndex].c[selectedWordIndex]"
       :sentence
       :currentLanguage
       @set-rating="changeRating"
     />
   </Suspense>
-  <div class="py-3 px-6">
+  <div class="py-3 px-10 w-1/2">
     <div v-for="(section, s_index) in sections">
       <div v-if="section.t == 'Image' && typeof section.c == 'string'">
         <img :src="section.c" class="mt-1" />
