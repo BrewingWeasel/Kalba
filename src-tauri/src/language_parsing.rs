@@ -71,7 +71,6 @@ pub async fn parse_url(
                 if text.as_str().trim().is_empty() {
                     return Ok(());
                 }
-                let title_state = Arc::clone(&state);
                 let title_sections = Arc::clone(&sections);
                 let handle = Handle::current();
                 task::block_in_place(|| {
@@ -96,7 +95,6 @@ pub async fn parse_url(
                     return Ok(());
                 }
                 log::info!("Subtitle text: {}", text.as_str());
-                let subtitle_state = Arc::clone(&state);
                 let subtitle_sections = Arc::clone(&sections);
                 let handle = Handle::current();
                 task::block_in_place(|| {
@@ -155,7 +153,6 @@ pub async fn parse_url(
                 if text.as_str().trim().is_empty() {
                     return Ok(());
                 }
-                let paragraph_state = Arc::clone(&state);
                 let paragraph_sections = Arc::clone(&sections);
                 let handle = Handle::current();
                 task::block_in_place(|| {
@@ -215,19 +212,19 @@ pub async fn parse_url(
     let owned_details = owned_sections.into_inner();
     let mut all_words = words_from_string(&owned_details.2, state)
         .await?
-        .into_iter();
-    println!("{:?}", all_words.clone().count());
+        .into_iter()
+        .peekable();
 
     let mut get_words = |length| {
         let mut current_length = 0;
         let mut words = Vec::new();
-        while let Some(word) = all_words.next() {
+        while let Some(word) = all_words.peek() {
             println!("{:?}", word);
-            current_length += word.length;
+            current_length += word.length + 1;
             if current_length >= length {
                 break;
             }
-            words.push(word);
+            words.push(all_words.next().expect("already peeked"));
         }
         words
     };
