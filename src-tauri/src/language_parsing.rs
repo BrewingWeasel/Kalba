@@ -10,16 +10,25 @@ use crate::{
     LanguageParser, SakinyjeError, SakinyjeState, SharedInfo,
 };
 use log::{info, trace};
-use lol_html::{element, html_content::UserData, text, RewriteStrSettings};
+use lol_html::{element, text, RewriteStrSettings};
 use shared::*;
 use spyglys::interpreter::Interpreter;
 use tauri::{State, Window};
 use tokio::{
-    runtime::{Handle, Runtime},
+    runtime::Handle,
     sync::{Mutex, MutexGuard},
     task,
 };
 use url::Url;
+
+#[derive(Debug, Clone)]
+enum SectionContents {
+    Title(usize),
+    Subtitle(usize),
+    Caption(usize),
+    Paragraph(usize),
+    SpecificSection(Section),
+}
 
 #[tauri::command]
 pub async fn parse_url(
@@ -49,7 +58,7 @@ pub async fn parse_url(
         .await
         .expect("to get valid bytes");
 
-    let sections = Arc::new(Mutex::new((HashSet::new(), Vec::new())));
+    let sections = Arc::new(Mutex::new((HashSet::new(), Vec::new(), String::new())));
     let state = Arc::new(state);
 
     let section_handlers = vec![
@@ -67,10 +76,10 @@ pub async fn parse_url(
                 let handle = Handle::current();
                 task::block_in_place(|| {
                     handle.block_on(async move {
-                        let sections = &mut title_sections.lock().await.1;
-                        sections.push(Section::Title(
-                            words_from_string(text.as_str(), title_state).await?,
-                        ));
+                        let mut sections = title_sections.lock().await;
+                        sections.2.push_str(text.as_str());
+                        sections.2.push('\n');
+                        sections.1.push(SectionContents::Title(text.as_str().len()));
                         Ok::<(), SakinyjeError>(())
                     })
                 })?;
@@ -94,9 +103,11 @@ pub async fn parse_url(
                     handle.block_on(async move {
                         let mut section_details = subtitle_sections.lock().await;
                         section_details.0.insert(text.as_str().to_owned());
-                        section_details.1.push(Section::Subtitle(
-                            words_from_string(text.as_str(), subtitle_state).await?,
-                        ));
+                        section_details.2.push_str(text.as_str());
+                        section_details.2.push('\n');
+                        section_details
+                            .1
+                            .push(SectionContents::Subtitle(text.as_str().len()));
                         Ok::<(), SakinyjeError>(())
                     })
                 })?;
@@ -121,15 +132,14 @@ pub async fn parse_url(
                 } else {
                     text.as_str()
                 };
-                let caption_state = Arc::clone(&state);
-                let caption_sections = Arc::clone(&sections);
+                let sections = Arc::clone(&sections);
                 let handle = Handle::current();
                 task::block_in_place(|| {
                     handle.block_on(async move {
-                        let sections = &mut caption_sections.lock().await.1;
-                        sections.push(Section::Caption(
-                            words_from_string(text, caption_state).await?,
-                        ));
+                        let mut section_details = sections.lock().await;
+                        section_details.2.push_str(&text);
+                        section_details.2.push('\n');
+                        section_details.1.push(SectionContents::Caption(text.len()));
                         Ok::<(), SakinyjeError>(())
                     })
                 })?;
@@ -154,9 +164,11 @@ pub async fn parse_url(
                         if section_details.0.contains(text.as_str()) {
                             return Ok::<(), SakinyjeError>(());
                         }
-                        section_details.1.push(Section::Paragraph(
-                            words_from_string(text.as_str(), paragraph_state).await?,
-                        ));
+                        section_details.2.push_str(text.as_str());
+                        section_details.2.push('\n');
+                        section_details
+                            .1
+                            .push(SectionContents::Paragraph(text.as_str().len()));
                         Ok::<(), SakinyjeError>(())
                     })
                 })?;
@@ -175,7 +187,13 @@ pub async fn parse_url(
                     handle.block_on(async move {
                         if let Some(src) = el.get_attribute("src") {
                             let sections = &mut image_sections.lock().await.1;
-                            sections.push(Section::Image(format!("https://www.{root_url}/{src}")));
+                            sections.push(SectionContents::SpecificSection(Section::Image(
+                                if src.starts_with("http") {
+                                    src.to_owned()
+                                } else {
+                                    format!("https://www.{root_url}/{src}")
+                                },
+                            )));
                         }
                     })
                 });
@@ -183,6 +201,7 @@ pub async fn parse_url(
             }
         ),
     ];
+
     lol_html::rewrite_str(
         &response,
         RewriteStrSettings {
@@ -191,8 +210,42 @@ pub async fn parse_url(
         },
     )
     .unwrap();
+
     let owned_sections = Arc::into_inner(sections).unwrap();
-    Ok(owned_sections.into_inner().1)
+    let owned_details = owned_sections.into_inner();
+    let mut all_words = words_from_string(&owned_details.2, state)
+        .await?
+        .into_iter();
+    println!("{:?}", all_words.clone().count());
+
+    let mut get_words = |length| {
+        let mut current_length = 0;
+        let mut words = Vec::new();
+        while let Some(word) = all_words.next() {
+            println!("{:?}", word);
+            current_length += word.length;
+            if current_length >= length {
+                break;
+            }
+            words.push(word);
+        }
+        words
+    };
+
+    let mut sections = Vec::new();
+    for section_content in owned_details.1 {
+        println!("{:?}", section_content);
+        let section = match section_content {
+            SectionContents::Paragraph(length) => Section::Paragraph(get_words(length)),
+            SectionContents::Title(length) => Section::Title(get_words(length)),
+            SectionContents::Subtitle(length) => Section::Subtitle(get_words(length)),
+            SectionContents::Caption(length) => Section::Caption(get_words(length)),
+            SectionContents::SpecificSection(s) => s,
+        };
+        sections.push(section);
+    }
+
+    Ok(sections)
 }
 
 #[tauri::command]
@@ -247,6 +300,8 @@ struct StanzaToken {
     lemma: String,
     upos: String,
     feats: Option<String>,
+    start_char: usize,
+    end_char: usize,
 }
 
 #[tauri::command]
@@ -380,6 +435,7 @@ fn stanza_parser(
                 morph,
                 clickable: token.upos != "PUNCT",
                 other_forms: get_alternate_forms(&lemma, interpreter, state)?,
+                length: token.end_char - token.start_char,
             })
         })
         .collect::<Result<Vec<Word>, SakinyjeError>>()
@@ -421,6 +477,7 @@ fn default_tokenizer(
                     rating,
                     morph: HashMap::new(),
                     other_forms: get_alternate_forms(&word, interpreter, state)?,
+                    length: word.len() + 1,
                 })
             }
             while let Some(possible_whitespace) = chars.peek() {
@@ -440,6 +497,7 @@ fn default_tokenizer(
                 rating: 4,
                 morph: HashMap::new(),
                 other_forms: Vec::new(),
+                length: 1,
             })
         }
     }

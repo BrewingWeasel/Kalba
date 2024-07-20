@@ -35,6 +35,7 @@ export interface Word {
   clickable: boolean;
   rating: number;
   other_forms: string[];
+  length: number;
 }
 
 export interface FileType {

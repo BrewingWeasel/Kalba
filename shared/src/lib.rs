@@ -31,6 +31,7 @@ pub struct Word {
     pub morph: HashMap<String, String>,
     pub clickable: bool,
     pub other_forms: Vec<String>,
+    pub length: usize,
 }
 
 #[derive(Clone, Serialize, Deserialize, Debug)]
