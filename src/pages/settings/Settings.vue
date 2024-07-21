@@ -32,6 +32,14 @@ import Grammar from "./components/Grammar.vue";
 import { useRouter } from "vue-router";
 import SiteConfigurationTable from "./components/SiteConfigurationTable.vue";
 
+import {
+  NumberField,
+  NumberFieldContent,
+  NumberFieldDecrement,
+  NumberFieldIncrement,
+  NumberFieldInput,
+} from "@/components/ui/number-field";
+
 const isDark = useDark();
 const router = useRouter();
 
@@ -223,6 +231,33 @@ async function newLanguage(language: string) {
           title="Word Knowledge"
           description="Automatically synchronize the words you know with Anki"
         />
+        <HoverCard>
+          <div class="flex items-center">
+            <Label for="freq">Words known by frequency </Label>
+            <HoverCardTrigger
+              ><Info class="ml-1 mt-2" :size="16"
+            /></HoverCardTrigger>
+          </div>
+          <HoverCardContent>
+            <p>
+              The most frequent words within this range will be marked as known
+              automatically, referencing the frequency list provided.
+            </p>
+          </HoverCardContent>
+        </HoverCard>
+        <NumberField
+          id="freq"
+          v-model="settings.languages[selectedLang].words_known_by_freq"
+          class="w-48"
+        >
+          <NumberFieldContent>
+            <NumberFieldDecrement />
+            <NumberFieldInput />
+            <NumberFieldIncrement />
+          </NumberFieldContent>
+        </NumberField>
+        <br />
+
         <Suspense>
           <WordKnowledge
             :decks="settings.languages[selectedLang].anki_parser"
@@ -269,25 +304,6 @@ async function newLanguage(language: string) {
         <Label for="frequencylist">Frequency list</Label>
         <FilePicker v-model="settings.languages[selectedLang].frequency_list" />
 
-        <HoverCard>
-          <div class="flex items-center">
-            <Label for="freq">Number of words known</Label>
-            <HoverCardTrigger
-              ><Info class="mt-2" :size="16"
-            /></HoverCardTrigger>
-          </div>
-          <HoverCardContent>
-            <p>
-              The most frequent words within this range will be marked as known
-              automatically, referencing the frequency list provided.
-            </p>
-          </HoverCardContent>
-        </HoverCard>
-        <Input
-          id="freq"
-          type="number"
-          v-model="settings.languages[selectedLang].words_known_by_freq"
-        />
         <br />
         <Grammar
           v-model:parser="settings.languages[selectedLang].grammar_parser"
