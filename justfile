@@ -31,6 +31,7 @@ check:
 
 pre-commit:
   #!/usr/bin/env sh
+  set -e
   newfiles=$(git status --porcelain | awk '{ print $2 }')
   if (echo $newfiles | grep ".rs" ); then
     just rust-check
