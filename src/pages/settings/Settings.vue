@@ -30,6 +30,7 @@ import NewLanguage from "@/components/generated/NewLanguage.vue";
 import { toast } from "vue-sonner";
 import Grammar from "./components/Grammar.vue";
 import { useRouter } from "vue-router";
+import SiteConfigurationTable from "./components/SiteConfigurationTable.vue";
 
 const isDark = useDark();
 const router = useRouter();
@@ -107,6 +108,7 @@ async function newLanguage(language: string) {
         section="Appearance"
         :rightLanguage="true"
       />
+      <SettingsMenu v-model="section" section="Input" :rightLanguage="true" />
       <Collapsible class="px-4" v-model:open="allLanguageMenuOpen">
         <div class="flex justify-between items-center">
           <h4 class="font-semibold">Languages</h4>
@@ -189,6 +191,15 @@ async function newLanguage(language: string) {
         />
         <Switch id="theme" v-model:checked="isDark" />
         <Label for="theme">Use dark mode</Label>
+      </template>
+
+      <template v-if="section == 'Input'">
+        <Heading
+          title_id="input"
+          title="Input"
+          description="Configure how text and pages are processed"
+        />
+        <SiteConfigurationTable v-model="settings.site_configurations" />
       </template>
 
       <template v-else-if="section == 'Exporting' && selectedLang != null">

@@ -12,6 +12,18 @@ export interface ExportDetails {
 export interface Settings {
   dark_mode: boolean;
   languages: { [key: string]: LanguageSettings };
+  site_configurations: { [key: string]: SiteConfiguration };
+}
+
+export interface SiteConfiguration {
+  sites: string[];
+  main_section: string;
+  title_selector: string;
+  subtitle_selector: string;
+  image_selector: string;
+  caption_selector: string;
+  caption_separator?: string;
+  paragraph_selector: string;
 }
 
 export interface LanguageSettings {

@@ -7,6 +7,7 @@ export type SettingsSection =
   | "Exporting"
   | "Word Knowledge"
   | "Dictionaries"
+  | "Input"
   | "Grammar";
 
 const section = defineModel<SettingsSection>({ required: true });
