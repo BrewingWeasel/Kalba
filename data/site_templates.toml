@@ -11,7 +11,7 @@ paragraph_selector = ".article-content > p"
 
 ["delfi.lt"]
 name = "delfi"
-main_section = "col-article"
+main_section = ".col-article"
 title_selector = ".article-info__title"
 subtitle_selector = "h3"
 image_selector = ".lazy-image img"
