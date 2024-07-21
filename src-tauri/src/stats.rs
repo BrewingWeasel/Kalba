@@ -8,7 +8,7 @@ use crate::SakinyjeState;
 pub async fn time_spent(state: State<'_, SakinyjeState>) -> Result<TimeSpentStats, String> {
     let state = state.0.lock().await;
 
-    let mut time_spent_days_this_week = vec![TimeDelta::default(); 7];
+    let mut time_spent_days_this_week = [TimeDelta::default(); 7];
     let mut time_spent_this_week = TimeDelta::default();
     let mut time_spent_this_month = TimeDelta::default();
     let mut time_spent_this_year = TimeDelta::default();
@@ -76,7 +76,7 @@ pub async fn get_words_known_at_levels(
         .get(current_language)
         .expect("language to include")
         .words;
-    let mut words_at_rating = vec![0; 5];
+    let mut words_at_rating = [0; 5];
     for info in words.values() {
         match info.rating {
             -1 | 0 => (),

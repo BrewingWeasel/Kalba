@@ -24,7 +24,7 @@ pub async fn new_language_from_template(
 ) -> Result<(), SakinyjeError> {
     let language = language.to_lowercase();
     if language == "custom" {
-        return Ok(Default::default());
+        return Ok(());
     }
     let client = Client::new();
     let template = client.get(format!(

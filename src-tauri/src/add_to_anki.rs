@@ -80,11 +80,9 @@ pub async fn add_to_anki(export_details: ExportDetails<'_>) -> Result<(), Sakiny
 mod test {
     use super::*;
     use serde_json::Value;
-    use shared::Settings;
 
     #[test]
     fn default_settings_no_defs() {
-        let settings = Settings::default();
         let details = ExportDetails {
             word: "word",
             sentence: "mmm",
@@ -112,8 +110,6 @@ mod test {
 
     #[test]
     fn default_settings_defs() {
-        let settings = Settings::default();
-
         let details = ExportDetails {
             word: "word",
             sentence: "sent:2",

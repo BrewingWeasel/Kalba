@@ -30,7 +30,7 @@ pub enum EkalbaDictionary {
 impl DictionaryInfo {
     async fn send_request(&mut self, url: &str) -> reqwest::Response {
         self.client
-            .get_or_insert_with(|| Client::new())
+            .get_or_insert_with(Client::new)
             .get(url)
             .send()
             .await

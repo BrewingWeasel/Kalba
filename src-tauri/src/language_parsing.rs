@@ -139,7 +139,7 @@ pub async fn parse_url(
                 task::block_in_place(|| {
                     handle.block_on(async move {
                         let mut section_details = sections.lock().await;
-                        section_details.2.push_str(&text);
+                        section_details.2.push_str(text);
                         section_details.2.push('\n');
                         section_details.1.push(SectionContents::Caption(text.len()));
                         Ok::<(), SakinyjeError>(())
