@@ -342,7 +342,14 @@ pub async fn start_stanza(
         BufReader::new(std::mem::take(&mut process.stdout).expect("stdout to be piped"));
     let mut stdin = std::mem::take(&mut process.stdin).expect("stdin to be piped");
 
-    stdin.write(format!("{model}\n").as_bytes())?;
+    let model_formatted = format!("{model}\n");
+    let bytes_written = stdin.write(model_formatted.as_bytes())?;
+    if bytes_written != model_formatted.as_bytes().len() {
+        return Err(SakinyjeError::IncorrectWrite(
+            model_formatted,
+            bytes_written,
+        ));
+    }
     log::info!("Loading stanza model {model} for language {language}");
     window.emit(
         "stanza_loading",
@@ -373,10 +380,16 @@ fn stanza_parser(
         .language_parser
         .as_mut()
         .expect("language parser to be started");
-    language_parser
+
+    let sent_formatted = format!("{sent}\n");
+    let bytes_written = language_parser
         .stdin
-        .write(format!("{sent}\n").as_bytes())
+        .write(sent_formatted.as_bytes())
         .expect("to write to stdin");
+    if bytes_written != sent_formatted.as_bytes().len() {
+        return Err(SakinyjeError::IncorrectWrite(sent_formatted, bytes_written));
+    }
+
     log::trace!("sentence written");
 
     let mut contents = String::new();

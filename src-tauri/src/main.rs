@@ -54,6 +54,8 @@ enum SakinyjeError {
     AnkiConnectError(String),
     #[error("No site configuration found for {0}")]
     MissingSiteConfig(String),
+    #[error("Only wrote {1} bytes of `{0}`")]
+    IncorrectWrite(String, usize),
 }
 
 // we must manually implement serde::Serialize
