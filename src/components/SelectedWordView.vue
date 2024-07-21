@@ -120,7 +120,9 @@ async function updateLemma() {
           {{ form }}
         </Button>
       </div>
-      <i>{{ word.text }}</i>
+      <p class="flex justify-center items-center py-1">
+        <i>{{ word.text }}</i>
+      </p>
       <RatingButtons
         class="pb-3"
         @change-rating="
