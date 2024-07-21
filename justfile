@@ -2,14 +2,12 @@
 lint:
   cargo check
   cargo clippy -- --deny warnings
-  leptosfmt -- check ./src-ui/src
   cargo fmt --check
 
 # format code
 format:
-  leptosfmt ./src-ui/src
   cargo fmt
-# TODO: some sort of css formatting (prettier?)
+# TODO: format other languages
 
 # Fix code not passing pre-commit hook (uses --allow-dirty + --allow-staged on clippy)
 force-fix: && format
