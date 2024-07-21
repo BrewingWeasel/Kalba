@@ -5,6 +5,11 @@ import IndividualWord from "@/components/Word.vue";
 import SelectedWordView from "@/components/SelectedWordView.vue";
 import type { Word, Section } from "@/types";
 import { toast } from "vue-sonner";
+import {
+  ResizableHandle,
+  ResizablePanel,
+  ResizablePanelGroup,
+} from "@/components/ui/resizable";
 
 const props = defineProps<{
   sentence: string;
@@ -106,31 +111,41 @@ const sectionStyling = new Map<string, string>([
 </script>
 
 <template>
-  <Suspense>
-    <SelectedWordView
-      class="float-right m-3 w-96"
-      v-if="selectedWord"
-      v-model="sections![selectedSectionIndex].c[selectedWordIndex]"
-      :sentence
-      :currentLanguage
-      @set-rating="changeRating"
-    />
-  </Suspense>
-  <div class="py-3 px-10 w-1/2">
-    <div v-for="(section, s_index) in sections">
-      <div v-if="section.t == 'Image' && typeof section.c == 'string'">
-        <img :src="section.c" class="mt-1" />
+  <ResizablePanelGroup direction="horizontal">
+    <ResizablePanel>
+      <div class="py-3 px-10 w-1/2">
+        <div v-for="(section, s_index) in sections">
+          <div v-if="section.t == 'Image' && typeof section.c == 'string'">
+            <img :src="section.c" class="mt-1" />
+          </div>
+          <div
+            v-else
+            :class="sectionStyling.get(section.t)"
+            class="flex flex-wrap"
+          >
+            <IndividualWord
+              v-if="typeof section.c != 'string'"
+              v-for="(word, w_index) in section.c"
+              :word="word"
+              :rating="word.rating"
+              @selected="(w) => handle_word_selected(w, s_index, w_index)"
+              @set-rating="changeRating"
+            />
+          </div>
+        </div>
       </div>
-      <div v-else :class="sectionStyling.get(section.t)" class="flex flex-wrap">
-        <IndividualWord
-          v-if="typeof section.c != 'string'"
-          v-for="(word, w_index) in section.c"
-          :word="word"
-          :rating="word.rating"
-          @selected="(w) => handle_word_selected(w, s_index, w_index)"
+    </ResizablePanel>
+    <ResizableHandle />
+    <ResizablePanel>
+      <Suspense>
+        <SelectedWordView
+          v-if="selectedWord"
+          v-model="sections![selectedSectionIndex].c[selectedWordIndex]"
+          :sentence
+          :currentLanguage
           @set-rating="changeRating"
         />
-      </div>
-    </div>
-  </div>
+      </Suspense>
+    </ResizablePanel>
+  </ResizablePanelGroup>
 </template>

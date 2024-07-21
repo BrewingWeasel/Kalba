@@ -67,65 +67,60 @@ async function updateLemma() {
 </script>
 
 <template>
-  <Card>
-    <CardHeader>
-      <CardTitle>
-        <div class="flex justify-center gap-1 items-center">
-          <Button
-            variant="outline"
-            size="icon"
-            :disabled="word_history.length === 1 || word_history_index === 0"
-            @click="
-              word_history_index--;
-              word.lemma = word_history[word_history_index];
-              updateLemma();
-            "
-          >
-            <Undo2 />
-          </Button>
-          <Input
-            @change="updateLemma"
-            class="text-lg text-center border-0 hover:border-2 focus:border-2"
-            v-model="word.lemma"
-          />
-          <Button
-            variant="outline"
-            size="icon"
-            :disabled="
-              word_history.length === 1 ||
-              word_history_index === word_history.length - 1
-            "
-            @click="
-              word_history_index++;
-              word.lemma = word_history[word_history_index];
-              updateLemma();
-            "
-          >
-            <Redo2 />
-          </Button>
-        </div>
-        <div class="flex justify-center gap-3 items-center">
-          <Button
-            variant="outline"
-            class="text-sm"
-            size="sm"
-            v-for="form in word.other_forms"
-            @click="
-              word_history.push(form);
-              word_history_index++;
-              word.lemma = form;
-              updateLemma();
-            "
-          >
-            {{ form }}
-          </Button>
-        </div>
-      </CardTitle>
-      <CardDescription class="text-center">
-        <i>{{ word.text }}</i>
-      </CardDescription>
-    </CardHeader>
-    <CardContent>
+  <div class="px-7 bg-accent w-full h-full">
+    <br />
+    <div class="p-2 bg-border rounded-lg">
+      <div class="flex justify-center gap-1 items-center">
+        <Button
+          variant="outline"
+          size="icon"
+          :disabled="word_history.length === 1 || word_history_index === 0"
+          @click="
+            word_history_index--;
+            word.lemma = word_history[word_history_index];
+            updateLemma();
+          "
+        >
+          <Undo2 />
+        </Button>
+        <Input
+          @change="updateLemma"
+          class="text-lg text-center border-0 hover:border-2 focus:border-2"
+          v-model="word.lemma"
+        />
+        <Button
+          variant="outline"
+          size="icon"
+          :disabled="
+            word_history.length === 1 ||
+            word_history_index === word_history.length - 1
+          "
+          @click="
+            word_history_index++;
+            word.lemma = word_history[word_history_index];
+            updateLemma();
+          "
+        >
+          <Redo2 />
+        </Button>
+      </div>
+      <div class="flex justify-center gap-3 items-center">
+        <Button
+          variant="outline"
+          class="text-sm"
+          size="sm"
+          v-for="form in word.other_forms"
+          @click="
+            word_history.push(form);
+            word_history_index++;
+            word.lemma = form;
+            updateLemma();
+          "
+        >
+          {{ form }}
+        </Button>
+      </div>
+      <i>{{ word.text }}</i>
       <RatingButtons
         class="pb-3"
         @change-rating="
@@ -134,16 +129,14 @@ async function updateLemma() {
           }
         "
       />
-      <Suspense>
-        <DefinitionView v-if="!isComputingDefinition" :definition />
-        <div v-else><Loader2 class="animate-spin" /></div>
+    </div>
+    <Suspense>
+      <DefinitionView v-if="!isComputingDefinition" :definition />
+      <div v-else><Loader2 class="animate-spin" /></div>
 
-        <template #fallback><Loader2 class="animate-spin" /></template>
-      </Suspense>
-    </CardContent>
-    <CardFooter>
-      <GrammarDetails :morph="word.morph" separator="true" />
-    </CardFooter>
+      <template #fallback><Loader2 class="animate-spin" /></template>
+    </Suspense>
+    <GrammarDetails :morph="word.morph" separator="true" />
     <Suspense>
       <ExportButton
         :defs="definition.map((v) => v.conts)"
@@ -157,5 +150,5 @@ async function updateLemma() {
         "
       />
     </Suspense>
-  </Card>
+  </div>
 </template>
