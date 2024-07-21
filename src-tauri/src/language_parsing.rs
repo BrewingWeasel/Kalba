@@ -255,9 +255,9 @@ pub async fn parse_text(
     sent: &str,
     state: State<'_, SakinyjeState>,
 ) -> Result<Vec<Section>, SakinyjeError> {
-    Ok(vec![Section::Paragraph(
-        words_from_string(sent, Arc::new(state)).await?,
-    )])
+    Ok(vec![Section::Paragraph(dbg!(
+        words_from_string(sent, Arc::new(state)).await?
+    ))])
 }
 
 pub async fn words_from_string(
@@ -279,7 +279,12 @@ pub async fn words_from_string(
 
     let words = if state.language_parser.is_some() {
         log::trace!("Sending to stanza parser");
-        stanza_parser(sent, &mut state, language.clone(), &interpreter)
+        stanza_parser(
+            &format!("{sent}\n"),
+            &mut state,
+            language.clone(),
+            &interpreter,
+        )
     } else {
         default_tokenizer(sent, language.clone(), &mut state, &interpreter)
     }?;
