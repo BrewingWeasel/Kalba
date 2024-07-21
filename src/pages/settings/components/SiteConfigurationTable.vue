@@ -33,6 +33,7 @@ import { Button } from "@/components/ui/button";
 import { type SiteConfiguration } from "@/types";
 import { Pencil, X } from "lucide-vue-next";
 import { ref } from "vue";
+import Badge from "@/components/ui/badge/Badge.vue";
 
 const sites = defineModel<{ [key: string]: SiteConfiguration }>({
   required: true,
@@ -73,7 +74,11 @@ function newSite() {
     <TableBody>
       <TableRow v-for="(_, site) in sites">
         <TableCell>{{ site }}</TableCell>
-        <TableCell>{{ sites[site].sites }}</TableCell>
+        <TableCell
+          ><Badge v-for="currentSite in sites[site].sites" class="mr-1">{{
+            currentSite
+          }}</Badge></TableCell
+        >
         <TableCell class="text-right">
           <AlertDialog v-model:open="siteConfigOpen[site]">
             <AlertDialogTrigger><Pencil :size="16" /></AlertDialogTrigger>
