@@ -67,9 +67,9 @@ async function updateLemma() {
 </script>
 
 <template>
-  <div class="px-7 bg-accent w-full h-full">
+  <div class="px-7 bg-accent w-full h-max">
     <br />
-    <div class="p-2 bg-border rounded-lg">
+    <div class="p-2 bg-border rounded-lg mb-2">
       <div class="flex justify-center gap-1 items-center">
         <Button
           variant="outline"
@@ -132,25 +132,27 @@ async function updateLemma() {
         "
       />
     </div>
-    <Suspense>
+    <Suspense class="flex-grow">
       <DefinitionView v-if="!isComputingDefinition" :definition />
       <div v-else><Loader2 class="animate-spin" /></div>
 
       <template #fallback><Loader2 class="animate-spin" /></template>
     </Suspense>
-    <GrammarDetails :morph="word.morph" separator="true" />
-    <Suspense>
-      <ExportButton
-        :defs="definition.map((v) => v.conts)"
-        :word="word.lemma"
-        :sentence="props.sentence"
-        :currentLanguage
-        @change-rating="
-          (r) => {
-            $emit('set-rating', r, word.lemma, true);
-          }
-        "
-      />
-    </Suspense>
+    <div class="mt-auto">
+      <GrammarDetails :morph="word.morph" separator="true" />
+      <Suspense>
+        <ExportButton
+          :defs="definition.map((v) => v.conts)"
+          :word="word.lemma"
+          :sentence="props.sentence"
+          :currentLanguage
+          @change-rating="
+            (r) => {
+              $emit('set-rating', r, word.lemma, true);
+            }
+          "
+        />
+      </Suspense>
+    </div>
   </div>
 </template>

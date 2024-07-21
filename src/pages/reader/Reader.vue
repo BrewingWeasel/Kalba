@@ -136,7 +136,7 @@ const sectionStyling = new Map<string, string>([
       </div>
     </ResizablePanel>
     <ResizableHandle />
-    <ResizablePanel :min-size="20" :max-size="70" :default-size="35">
+    <ResizablePanel :min-size="20" :max-size="70" :default-size="32">
       <Suspense>
         <SelectedWordView
           v-if="selectedWord"

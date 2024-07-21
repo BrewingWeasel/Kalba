@@ -188,7 +188,7 @@ onMounted(async () => {
         </TooltipProvider>
       </nav>
     </aside>
-    <div class="flex flex-col sm:gap-4 sm:py-4 sm:pl-14">
+    <div class="flex flex-col sm:py-4 sm:pl-14 h-screen">
       <header
         class="sticky top-0 z-30 flex h-4 items-center gap-4 border-b bg-background px-4 sm:static sm:h-auto sm:border-0 sm:bg-transparent sm:px-6"
       >
@@ -244,9 +244,9 @@ onMounted(async () => {
           </Popover>
         </div>
       </header>
-      <Separator />
+      <Separator class="mt-3" />
 
-      <main class="pt-1 px-4">
+      <main class="flex-grow">
         <Suspense>
           <router-view
             :currentLanguage="currentLanguage"
