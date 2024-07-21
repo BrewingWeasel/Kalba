@@ -119,7 +119,7 @@ pub struct Note(
 
 #[derive(Deserialize, Serialize, Clone, Debug)]
 pub struct SiteConfiguration {
-    pub name: String,
+    pub sites: Vec<String>,
     pub main_section: String,
     pub title_selector: String,
     pub subtitle_selector: String,

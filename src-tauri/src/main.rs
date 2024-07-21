@@ -52,6 +52,8 @@ enum SakinyjeError {
     NoModelHandler,
     #[error("Ankiconnect return an error: {0}")]
     AnkiConnectError(String),
+    #[error("No site configuration found for {0}")]
+    MissingSiteConfig(String),
 }
 
 // we must manually implement serde::Serialize

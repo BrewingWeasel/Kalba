@@ -45,13 +45,16 @@ pub async fn parse_url(
             "Site configurations: {:?}",
             locked_state.settings.site_configurations
         );
-        locked_state
-            .settings
-            .site_configurations
-            .get(root_url)
-            .unwrap()
-            .clone()
-    };
+        let mut site_config = Err(SakinyjeError::MissingSiteConfig(root_url.to_owned()));
+        for possible_site in locked_state.settings.site_configurations.values() {
+            if possible_site.sites.contains(&root_url.to_owned()) {
+                site_config = Ok(possible_site.to_owned());
+                break;
+            }
+        }
+        site_config
+    }?;
+
     let response = reqwest::get(url)
         .await?
         .text()
