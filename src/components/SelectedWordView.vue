@@ -67,7 +67,7 @@ async function updateLemma() {
 </script>
 
 <template>
-  <div class="px-7 bg-accent w-full h-max">
+  <div class="px-7 bg-accent w-full h-full flex flex-col">
     <br />
     <div class="p-2 bg-border rounded-lg mb-2">
       <div class="flex justify-center gap-1 items-center">
@@ -132,7 +132,7 @@ async function updateLemma() {
         "
       />
     </div>
-    <Suspense class="flex-grow">
+    <Suspense>
       <DefinitionView v-if="!isComputingDefinition" :definition />
       <div v-else><Loader2 class="animate-spin" /></div>
 

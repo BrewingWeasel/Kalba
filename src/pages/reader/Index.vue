@@ -22,7 +22,7 @@ function set_sentence() {
 </script>
 
 <template>
-  <div v-if="props.currentLanguage">
+  <div v-if="props.currentLanguage" class="h-full">
     <div
       v-if="sentence.length == 0"
       class="flex flex-wrap py-4 px-10 space-x-5 basis-auto"
@@ -68,8 +68,8 @@ function set_sentence() {
         <Textarea placeholder="Enter url to use" v-model="currentSentence" />
       </ButtonDialog>
     </div>
-    <div v-else>
-      <ReaderView :sentence :currentLanguage :isUrl />
+    <div v-else class="h-full">
+      <ReaderView :sentence :currentLanguage :isUrl class="h-full" />
     </div>
   </div>
   <div v-else>

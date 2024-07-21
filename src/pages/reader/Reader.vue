@@ -111,7 +111,7 @@ const sectionStyling = new Map<string, string>([
 </script>
 
 <template>
-  <ResizablePanelGroup direction="horizontal">
+  <ResizablePanelGroup direction="horizontal" class="h-full">
     <ResizablePanel>
       <div class="py-3 px-10 w-1/2">
         <div v-for="(section, s_index) in sections">
@@ -136,14 +136,20 @@ const sectionStyling = new Map<string, string>([
       </div>
     </ResizablePanel>
     <ResizableHandle />
-    <ResizablePanel :min-size="20" :max-size="70" :default-size="32">
-      <Suspense>
+    <ResizablePanel
+      v-if="selectedWord"
+      :min-size="20"
+      :max-size="70"
+      :default-size="32"
+      class="h-full"
+    >
+      <Suspense class="h-full">
         <SelectedWordView
-          v-if="selectedWord"
           v-model="sections![selectedSectionIndex].c[selectedWordIndex]"
           :sentence
           :currentLanguage
           @set-rating="changeRating"
+          class="h-full"
         />
       </Suspense>
     </ResizablePanel>
