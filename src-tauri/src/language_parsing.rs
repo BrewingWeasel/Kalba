@@ -57,6 +57,7 @@ pub async fn parse_url(
         .text()
         .await
         .expect("to get valid bytes");
+    info!("Got response");
 
     let sections = Arc::new(Mutex::new((HashSet::new(), Vec::new(), String::new())));
     let state = Arc::new(state);
@@ -207,6 +208,7 @@ pub async fn parse_url(
         },
     )
     .unwrap();
+    log::info!("Created sections");
 
     let owned_sections = Arc::into_inner(sections).unwrap();
     let owned_details = owned_sections.into_inner();
@@ -219,7 +221,7 @@ pub async fn parse_url(
         let mut current_length = 0;
         let mut words = Vec::new();
         while let Some(word) = all_words.peek() {
-            println!("{:?}", word);
+            log::trace!("word: {:?}", word);
             current_length += word.length + 1;
             if current_length >= length {
                 break;
