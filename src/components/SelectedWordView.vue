@@ -85,7 +85,7 @@ async function updateLemma() {
         </Button>
         <Input
           @change="updateLemma"
-          class="text-lg text-center border-0 hover:border-2 focus:border-2"
+          class="text-lg text-center border-0 hover:border-2 focus:border-2 max-w-64"
           v-model="word.lemma"
         />
         <Button
