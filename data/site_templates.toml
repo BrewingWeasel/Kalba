@@ -1,0 +1,19 @@
+["lrt.lt"]
+name = "lrt"
+main_section = ".article-block"
+title_selector = ".title-block__heading"
+subtitle_selector = "p strong"
+image_selector = ".media-block__image"
+caption_selector = ".media-block__description"
+caption_separator = "/"
+paragraph_selector = ".article-content > p"
+
+
+["delfi.lt"]
+name = "delfi"
+main_section = "col-article"
+title_selector = ".article-info__title"
+subtitle_selector = "h3"
+image_selector = ".lazy-image img"
+caption_selector = ".media-block__description"
+paragraph_selector = ".fragment p"

@@ -165,23 +165,13 @@ pub struct LanguageSettings {
 
 impl Default for Settings {
     fn default() -> Self {
+        let site_configurations = toml::from_str(include_str!("../../data/site_templates.toml"))
+            .expect("Failed to parse site_templates.toml");
         Self {
             to_run: None,
             dark_mode: true,
             languages: HashMap::new(),
-            site_configurations: HashMap::from([(
-                String::from("lrt.lt"),
-                SiteConfiguration {
-                    name: String::from("lrt"),
-                    main_section: String::from(".article-block"),
-                    title_selector: String::from(".title-block__heading"),
-                    subtitle_selector: String::from("p strong"),
-                    image_selector: String::from("img"),
-                    caption_selector: String::from(".media-block__description"),
-                    caption_separator: Some(String::from("/")),
-                    paragraph_selector: String::from(".article-content p"),
-                },
-            )]),
+            site_configurations,
         }
     }
 }
