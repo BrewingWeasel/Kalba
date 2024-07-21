@@ -252,14 +252,14 @@ async function newLanguage(language: string) {
         />
         <HoverCard>
           <div class="flex items-center">
-            <Label for="model" class="pr-1">SpaCy model</Label>
+            <Label for="model" class="pr-1">Stanza model</Label>
             <HoverCardTrigger
               ><Info class="mt-2" :size="16"
             /></HoverCardTrigger>
           </div>
           <HoverCardContent>
             <p>
-              SpaCy models are used to automatically determine the grammar of
+              Stanza models are used to automatically determine the grammar of
               the language so that words with the same root are automatically
               considered the same
             </p>
