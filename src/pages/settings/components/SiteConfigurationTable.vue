@@ -73,7 +73,17 @@ function newSite() {
     </TableHeader>
     <TableBody>
       <TableRow v-for="(_, site) in sites">
-        <TableCell>{{ site }}</TableCell>
+        <TableCell
+          ><Input
+            :modelValue="site"
+            @update:model-value="
+              ($event) => {
+                sites[$event] = sites[site];
+                delete sites[site];
+              }
+            "
+          ></Input
+        ></TableCell>
         <TableCell
           ><Badge v-for="currentSite in sites[site].sites" class="mr-1">{{
             currentSite
