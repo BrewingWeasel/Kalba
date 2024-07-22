@@ -101,7 +101,7 @@ async function updateLemma() {
           variant="secondary"
           class="text-sm"
           size="sm"
-          v-for="form in word.other_forms"
+          v-for="form in word.other_forms.filter((f) => f !== word.lemma)"
           @click="
             word_history.push(form);
             word_history_index++;
