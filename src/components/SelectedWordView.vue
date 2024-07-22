@@ -1,12 +1,4 @@
 <script setup lang="ts">
-import {
-  Card,
-  CardContent,
-  CardDescription,
-  CardFooter,
-  CardHeader,
-  CardTitle,
-} from "@/components/ui/card";
 import RatingButtons from "@/components/RatingButtons.vue";
 import GrammarDetails from "@/components/GrammarDetails.vue";
 import DefinitionView from "@/components/DefinitionView.vue";
@@ -104,9 +96,9 @@ async function updateLemma() {
           <Redo2 />
         </Button>
       </div>
-      <div class="flex justify-center gap-3 items-center">
+      <div class="flex justify-center gap-3 items-center mt-1">
         <Button
-          variant="outline"
+          variant="secondary"
           class="text-sm"
           size="sm"
           v-for="form in word.other_forms"
