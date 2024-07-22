@@ -63,14 +63,12 @@ pub async fn get_anki_card_statuses(
 
         let rating = if interval <= 1 {
             1
-        } else if interval <= 4 {
-            2
         } else if interval <= 9 {
+            2
+        } else if interval <= 23 {
             3
-        } else if interval <= 25 {
-            4
         } else {
-            5
+            4
         };
 
         if let Some(orig) = original_words.get_mut(&word) {

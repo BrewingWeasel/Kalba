@@ -340,9 +340,9 @@ fn update_words_known(
             original_words.insert(
                 word.to_owned(),
                 WordInfo {
-                    rating: 5,
+                    rating: 4,
                     method: Method::FromFrequency,
-                    history: vec![(Utc::now(), Method::FromFrequency, 5)],
+                    history: vec![(Utc::now(), Method::FromFrequency, 4)],
                 },
             );
         }
