@@ -46,11 +46,11 @@ for (const site in sites) {
 
 function newSite() {
   sites.value["New site"] = {
-    sites: [""],
+    sites: [],
     main_section: "main",
     title_selector: "",
     subtitle_selector: "",
-    image_selector: "",
+    image_selector: "img",
     caption_selector: "",
     paragraph_selector: "",
   };
@@ -113,17 +113,30 @@ function newSite() {
                 <TagsInputInput placeholder="Sites" />
               </TagsInput>
 
-              <Label for="main-section">Main section</Label>
-              <Input v-model="sites[site].main_section" id="main-section" />
-              <Label for="title-selector">Title Selector</Label>
-              <Input v-model="sites[site].title_selector" id="title-selector" />
-              <Label for="subtitle-selector">Subtitle Selector</Label>
-              <Input
-                v-model="sites[site].subtitle_selector"
-                id="subtitle-selector"
-              />
-              <Label for="image-selector">Image Selector</Label>
-              <Input v-model="sites[site].image_selector" id="image-selector" />
+              <div>
+                <Label for="main-section">Main section</Label>
+                <Input v-model="sites[site].main_section" id="main-section" />
+                <Label for="title-selector">Title Selector</Label>
+                <Input
+                  v-model="sites[site].title_selector"
+                  id="title-selector"
+                />
+                <Label for="subtitle-selector">Subtitle Selector</Label>
+                <Input
+                  v-model="sites[site].subtitle_selector"
+                  id="subtitle-selector"
+                />
+                <Label for="caption-selector">Caption Selector</Label>
+                <Input
+                  v-model="sites[site].caption_selector"
+                  id="caption-selector"
+                />
+                <Label for="image-selector">Image Selector</Label>
+                <Input
+                  v-model="sites[site].image_selector"
+                  id="image-selector"
+                />
+              </div>
 
               <AlertDialogFooter>
                 <AlertDialogCancel>Cancel</AlertDialogCancel>
