@@ -361,13 +361,19 @@ async fn get_ekalba_bendrines(
             Ok(())
         }),
     ];
-    Ok(Definition::Text(rewrite_str(
+    let response = rewrite_str(
         &response.details.view_html,
         RewriteStrSettings {
             element_content_handlers,
             ..RewriteStrSettings::default()
         },
-    )?))
+    )?;
+
+    if response.contains("Žodis įtrauktas į žodyno antraštyną. Informacija renkama.") {
+        Ok(Definition::Empty)
+    } else {
+        Ok(Definition::Text(response))
+    }
 }
 
 async fn get_ekalba_dabartines(
