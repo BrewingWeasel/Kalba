@@ -1,23 +1,29 @@
 # Indo-European | Baltic | Full Support
 model = "lt"
-dicts = [
-  [
-    "Main",
-    { t = "EkalbaBendrines" },
-  ],
-  [
-    "Secondary",
-    { t = "EkalbaDabartines" },
-  ],
-  [
-    "Lithuanian Wiktionary",
-    { t = "Wiktionary", c = [
-      "en",
-      "Lithuanian",
-    ] },
-  ],
-]
 frequency_list = true
 spyglys_details = true
 run_on_lemmas = ["remove_universal_prefix"]
 suggest_on_lemmas = ["root_verb", "unreflexify", "remove_verb_prefix"]
+
+[[dicts]]
+name = "Main"
+fetch_by_default = true
+
+[dicts.specific_settings]
+t = "EkalbaBendrines"
+
+[[dicts]]
+name = "Secondary"
+run_when_not = "Main"
+fetch_by_default = true
+
+[dicts.specific_settings]
+t = "EkalbaDabartines"
+
+[[dicts]]
+name = "Lithuanian Wiktionary"
+fetch_by_default = false
+
+[dicts.specific_settings]
+t = "Wiktionary"
+c = ["en", "Lithuanian"]
