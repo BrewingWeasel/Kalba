@@ -66,6 +66,7 @@ pub enum DictFileType {
 #[derive(Serialize, Deserialize, PartialEq, Eq, Clone, Debug)]
 pub struct Dictionary {
     pub name: String,
+    pub run_when_not: Option<String>,
     pub specific_settings: DictionarySpecificSettings,
     pub fetch_by_default: bool,
 }

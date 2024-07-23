@@ -25,6 +25,8 @@ import IndividualDict from "./IndividualDict.vue";
 import { type Dictionary, DictionaryType } from "@/types";
 import { Pencil, X } from "lucide-vue-next";
 import { ref } from "vue";
+import { Switch } from "@/components/ui/switch";
+import StyledCombobox from "@/components/StyledCombobox.vue";
 
 const dicts = defineModel({
   type: Array<Dictionary>,
@@ -36,8 +38,10 @@ const props = defineProps<{
 }>();
 
 const dictSettings = ref<{ [key: string]: boolean }>({});
+const dictIsReplacement = ref<{ [key: string]: boolean }>({});
 for (const dict of dicts.value) {
   dictSettings.value[dict.name] = false;
+  dictIsReplacement.value[dict.name] = dict.run_when_not ? true : false;
 }
 
 function addDictionary() {
@@ -56,6 +60,7 @@ function addDictionary() {
     },
   });
   dictSettings.value["New dictionary"] = true;
+  dictIsReplacement.value["New dictionary"] = false;
 }
 </script>
 
@@ -87,6 +92,27 @@ function addDictionary() {
                 :currentLanguage="props.currentLanguage"
                 v-model="dicts[index].specific_settings"
               />
+              <Label for="toggle-replacement">Backup dictionary</Label>
+              <Switch
+                id="toggle-replacement"
+                v-model:checked="dictIsReplacement[dict.name]"
+                @update:checked="
+                  if (!$event) {
+                    dicts[index].run_when_not = undefined;
+                  }
+                "
+              />
+              <div v-if="dictIsReplacement[dict.name]">
+                <Label for="dict-replacement">Dictionary to replace</Label>
+                <StyledCombobox
+                  id="dict-replacement"
+                  v-model="dicts[index].run_when_not"
+                  :options="
+                    dicts.map((d) => d.name).filter((n) => n !== dict.name)
+                  "
+                  item-being-selected="dictionary to replace"
+                />
+              </div>
               <Label for="fetch">Fetch by default</Label>
               <Switch
                 id="fetch"

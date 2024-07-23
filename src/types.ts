@@ -78,6 +78,7 @@ export interface Dictionary {
   name: string;
   fetch_by_default: boolean;
   specific_settings: DictionarySpecificSettings;
+  run_when_not?: string;
 }
 
 export interface DictionarySpecificSettings {

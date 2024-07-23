@@ -153,6 +153,7 @@ pub async fn get_defs(
         Ok(v.clone())
     } else {
         let mut defs = Vec::new();
+        let mut successful_defs = Vec::new();
         for dict in &state
             .settings
             .languages
@@ -160,6 +161,11 @@ pub async fn get_defs(
             .expect("language should exist")
             .dicts
         {
+            if let Some(required_dictionary) = dict.run_when_not.as_ref() {
+                if successful_defs.contains(&required_dictionary) {
+                    continue;
+                }
+            }
             let def = if dict.fetch_by_default {
                 get_def(
                     Arc::clone(&state.dict_info),
@@ -170,6 +176,10 @@ pub async fn get_defs(
             } else {
                 Definition::OnDemand(dict.name.to_owned())
             };
+            if def != Definition::Empty {
+                successful_defs.push(&dict.name);
+            }
+
             defs.push(def);
         }
         state
