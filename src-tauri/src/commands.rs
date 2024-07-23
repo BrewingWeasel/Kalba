@@ -1,9 +1,8 @@
-use std::{
-    error::Error,
-    process::{Command, Output},
-};
+use std::process::{Command, Output};
 
-pub fn run_command(real_command: &str) -> Result<Output, Box<dyn Error>> {
+use crate::SakinyjeError;
+
+pub fn run_command(real_command: &str) -> Result<Output, SakinyjeError> {
     if cfg!(target_os = "windows") {
         Ok(Command::new("cmd").args(["/C", real_command]).output()?)
     } else {

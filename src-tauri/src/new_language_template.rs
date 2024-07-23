@@ -10,7 +10,7 @@ use crate::{SakinyjeError, SakinyjeState};
 #[derive(Debug, Deserialize, Clone)]
 struct TemplateDetails {
     model: String,
-    dicts: Vec<(String, Dictionary)>,
+    dicts: Vec<Dictionary>,
     frequency_list: bool,
     spyglys_details: bool,
     run_on_lemmas: Vec<String>,

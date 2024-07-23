@@ -64,14 +64,29 @@ pub enum DictFileType {
 }
 
 #[derive(Serialize, Deserialize, PartialEq, Eq, Clone, Debug)]
+pub struct Dictionary {
+    pub name: String,
+    pub specific_settings: DictionarySpecificSettings,
+    pub fetch_by_default: bool,
+}
+
+#[derive(Serialize, Deserialize, PartialEq, Eq, Clone, Debug)]
 #[serde(tag = "t", content = "c")]
-pub enum Dictionary {
+pub enum DictionarySpecificSettings {
     File(String, DictFileType),
     Url(String),
     Command(String),
     EkalbaBendrines,
     EkalbaDabartines,
     Wiktionary(String, String),
+}
+
+#[derive(Serialize, Deserialize, PartialEq, Eq, Clone, Debug)]
+#[serde(tag = "t", content = "c")]
+pub enum Definition {
+    Text(String),
+    OnDemand(String),
+    Empty,
 }
 
 #[derive(Serialize, Deserialize, PartialEq, Eq, Clone, Debug)]
@@ -153,7 +168,7 @@ pub struct LanguageSettings {
     pub note_type: String,
     pub note_fields: HashMap<String, String>,
     pub model: String,
-    pub dicts: Vec<(String, Dictionary)>,
+    pub dicts: Vec<Dictionary>,
     #[serde(with = "HashMapToArray::<String, Note, DeckKeyValueLabels>")]
     pub anki_parser: HashMap<String, Note>,
     pub frequency_list: String,

@@ -27,7 +27,7 @@ import { Pencil, X } from "lucide-vue-next";
 import { ref } from "vue";
 
 const dicts = defineModel({
-  type: Array<[string, Dictionary]>,
+  type: Array<Dictionary>,
   required: true,
 });
 
@@ -37,13 +37,14 @@ const props = defineProps<{
 
 const dictSettings = ref<{ [key: string]: boolean }>({});
 for (const dict of dicts.value) {
-  dictSettings.value[dict[0]] = false;
+  dictSettings.value[dict.name] = false;
 }
 
 function addDictionary() {
-  dicts.value.push([
-    "New dictionary",
-    {
+  dicts.value.push({
+    name: "New dictionary",
+    fetch_by_default: true,
+    specific_settings: {
       t: DictionaryType.File,
       c: [
         "",
@@ -53,7 +54,7 @@ function addDictionary() {
         },
       ],
     },
-  ]);
+  });
   dictSettings.value["New dictionary"] = true;
 }
 </script>
@@ -73,10 +74,10 @@ function addDictionary() {
     </TableHeader>
     <TableBody>
       <TableRow v-for="(dict, index) in dicts" :key="index">
-        <TableCell><Input v-model="dict[0]" /></TableCell>
-        <TableCell>{{ dict[1].t }}</TableCell>
+        <TableCell><Input v-model="dict.name" /></TableCell>
+        <TableCell>{{ dict.specific_settings.t }}</TableCell>
         <TableCell class="text-right">
-          <AlertDialog v-model:open="dictSettings[dict[0]]">
+          <AlertDialog v-model:open="dictSettings[dict.name]">
             <AlertDialogTrigger><Pencil :size="16" /></AlertDialogTrigger>
             <AlertDialogContent>
               <AlertDialogHeader>
@@ -84,7 +85,12 @@ function addDictionary() {
               </AlertDialogHeader>
               <IndividualDict
                 :currentLanguage="props.currentLanguage"
-                v-model="dicts[index][1]"
+                v-model="dicts[index].specific_settings"
+              />
+              <Label for="fetch">Fetch by default</Label>
+              <Switch
+                id="fetch"
+                v-model:checked="dicts[index].fetch_by_default"
               />
               <AlertDialogFooter>
                 <AlertDialogCancel>Cancel</AlertDialogCancel>

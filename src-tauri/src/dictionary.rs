@@ -2,11 +2,11 @@ use lol_html::{element, html_content::ContentType, rewrite_str, text, RewriteStr
 use reqwest::Client;
 use select::{document::Document, predicate::Attr};
 use serde::{Deserialize, Serialize};
-use shared::*;
-use std::{collections::HashMap, error::Error, fs, sync::Arc};
+use shared::{Definition, DictFileType, DictionarySpecificSettings};
+use std::{collections::HashMap, fs, sync::Arc};
 use tauri::State;
 
-use crate::{commands::run_command, SakinyjeState};
+use crate::{commands::run_command, SakinyjeError, SakinyjeState};
 
 // TODO: should be customizable
 const DEFINITION: &str = "color: #eb6f92; font-weight: 900;";
@@ -83,7 +83,7 @@ fn get_def_from_file(
     lemma: &str,
     file: &str,
     dict_type: &DictFileType,
-) -> Result<String, Box<dyn Error>> {
+) -> Result<Definition, SakinyjeError> {
     match dict_type {
         DictFileType::StarDict => {
             let mut dict = stardict::no_cache(file)?;
@@ -100,37 +100,43 @@ fn get_def_from_file(
                     }
                 }
             }
-            Ok(def)
+            if def.is_empty() {
+                Ok(Definition::Empty)
+            } else {
+                Ok(Definition::Text(def))
+            }
         }
         DictFileType::TextSplitAt(delim) => Ok(fs::read_to_string(file).map(|lines| {
             for line in lines.lines() {
                 let (word, def) = line.split_once(delim).unwrap();
                 if word == lemma {
-                    return def.to_owned();
+                    return Definition::Text(def.to_owned());
                 }
             }
-            String::new()
+            Definition::Empty
         })?),
     }
 }
 
-async fn get_def_url(lemma: &str, url: &str) -> Result<String, Box<dyn Error>> {
+async fn get_def_url(lemma: &str, url: &str) -> Result<Definition, SakinyjeError> {
     let new_url = url.replacen("{word}", lemma, 1);
     let client = reqwest::Client::new();
-    Ok(client.get(new_url).send().await?.text().await?)
+    Ok(Definition::Text(
+        client.get(new_url).send().await?.text().await?,
+    ))
 }
 
-async fn get_def_command(lemma: &str, cmd: &str) -> Result<String, Box<dyn Error>> {
+async fn get_def_command(lemma: &str, cmd: &str) -> Result<Definition, SakinyjeError> {
     let real_command = cmd.replacen("{word}", lemma, 1);
     let output = run_command(&real_command)?;
-    Ok(String::from_utf8(output.stdout)?)
+    Ok(Definition::Text(String::from_utf8(output.stdout)?))
 }
 
 #[tauri::command]
 pub async fn get_defs(
     state: State<'_, SakinyjeState>,
     lemma: String,
-) -> Result<Vec<SakinyjeResult<String>>, String> {
+) -> Result<Vec<Definition>, SakinyjeError> {
     let mut state = state.0.lock().await;
     let language = state
         .current_language
@@ -147,16 +153,23 @@ pub async fn get_defs(
         Ok(v.clone())
     } else {
         let mut defs = Vec::new();
-        for (_, dict) in &state
+        for dict in &state
             .settings
             .languages
             .get(&language)
             .expect("language should exist")
             .dicts
         {
-            let def = get_def(Arc::clone(&state.dict_info), dict, &lemma)
-                .await
-                .into();
+            let def = if dict.fetch_by_default {
+                get_def(
+                    Arc::clone(&state.dict_info),
+                    &dict.specific_settings,
+                    &lemma,
+                )
+                .await?
+            } else {
+                Definition::OnDemand(dict.name.to_owned())
+            };
             defs.push(def);
         }
         state
@@ -170,19 +183,51 @@ pub async fn get_defs(
     }
 }
 
+#[tauri::command]
+pub async fn get_definition_on_demand(
+    state: State<'_, SakinyjeState>,
+    lemma: String,
+    dictionary: String,
+) -> Result<Definition, SakinyjeError> {
+    let state = state.0.lock().await;
+    let language = state
+        .current_language
+        .clone()
+        .expect("current language should already be selected");
+    for dict in &state
+        .settings
+        .languages
+        .get(&language)
+        .expect("language should exist")
+        .dicts
+    {
+        if dict.name == dictionary {
+            return get_def(
+                Arc::clone(&state.dict_info),
+                &dict.specific_settings,
+                &lemma,
+            )
+            .await;
+        }
+    }
+    panic!("No dictionary found");
+}
+
 async fn get_def(
     dict_info: Arc<tauri::async_runtime::Mutex<DictionaryInfo>>,
-    dict: &Dictionary,
+    dict: &DictionarySpecificSettings,
     lemma: &str,
-) -> Result<String, Box<dyn Error>> {
+) -> Result<Definition, SakinyjeError> {
     match dict {
-        Dictionary::File(f, dict_type) => get_def_from_file(lemma, f, dict_type),
-        Dictionary::Url(url) => get_def_url(lemma, url).await,
-        Dictionary::Command(cmd) => get_def_command(lemma, cmd).await,
-        Dictionary::EkalbaBendrines => Ok(get_ekalba_bendrines(dict_info, lemma).await),
-        Dictionary::EkalbaDabartines => Ok(get_ekalba_dabartines(dict_info, lemma).await),
-        Dictionary::Wiktionary(definition_lang, target_lang) => {
-            Ok(get_wiktionary(dict_info, lemma, definition_lang, target_lang).await)
+        DictionarySpecificSettings::File(f, dict_type) => get_def_from_file(lemma, f, dict_type),
+        DictionarySpecificSettings::Url(url) => get_def_url(lemma, url).await,
+        DictionarySpecificSettings::Command(cmd) => get_def_command(lemma, cmd).await,
+        DictionarySpecificSettings::EkalbaBendrines => get_ekalba_bendrines(dict_info, lemma).await,
+        DictionarySpecificSettings::EkalbaDabartines => {
+            get_ekalba_dabartines(dict_info, lemma).await
+        }
+        DictionarySpecificSettings::Wiktionary(definition_lang, target_lang) => {
+            get_wiktionary(dict_info, lemma, definition_lang, target_lang).await
         }
     }
 }
@@ -192,14 +237,14 @@ async fn get_wiktionary(
     lemma: &str,
     definition_lang: &str,
     target_lang: &str,
-) -> String {
+) -> Result<Definition, SakinyjeError> {
     let mut lock = dict_info.lock().await;
     let response = lock
         .send_request(&format!(
             "https://{definition_lang}.wiktionary.org/wiki/{lemma}"
         ))
         .await;
-    let doc = Document::from_read(response.text().await.unwrap().as_bytes()).unwrap();
+    let doc = Document::from_read(response.text().await?.as_bytes())?;
     let mut def_html = String::new();
     for node in doc.find(Attr("id", target_lang)) {
         let mut node = node.parent().unwrap();
@@ -248,14 +293,13 @@ async fn get_wiktionary(
         }),
     ];
 
-    rewrite_str(
+    Ok(Definition::Text(rewrite_str(
         &def_html,
         RewriteStrSettings {
             element_content_handlers,
             ..RewriteStrSettings::default()
         },
-    )
-    .unwrap()
+    )?))
 }
 
 #[derive(Default, Debug, Clone, PartialEq, Serialize, Deserialize)]
@@ -273,11 +317,11 @@ pub struct EkalbaDetails {
 async fn get_ekalba_bendrines(
     dict_info: Arc<tauri::async_runtime::Mutex<DictionaryInfo>>,
     word: &str,
-) -> String {
+) -> Result<Definition, SakinyjeError> {
     let response = {
         let mut lock = dict_info.lock().await;
         let Some(uuid) = lock.get_bendrines(EkalbaDictionary::Bendrines, word).await else {
-            return String::new();
+            return Ok(Definition::Empty);
         };
         let uuid = uuid.to_owned();
 
@@ -286,8 +330,7 @@ async fn get_ekalba_bendrines(
         ))
         .await
         .json::<EkalbaRoot>()
-        .await
-        .unwrap()
+        .await?
     };
     let element_content_handlers = vec![
         // Titles
@@ -308,24 +351,23 @@ async fn get_ekalba_bendrines(
             Ok(())
         }),
     ];
-    rewrite_str(
+    Ok(Definition::Text(rewrite_str(
         &response.details.view_html,
         RewriteStrSettings {
             element_content_handlers,
             ..RewriteStrSettings::default()
         },
-    )
-    .unwrap()
+    )?))
 }
 
 async fn get_ekalba_dabartines(
     dict_info: Arc<tauri::async_runtime::Mutex<DictionaryInfo>>,
     word: &str,
-) -> String {
+) -> Result<Definition, SakinyjeError> {
     let response = {
         let mut lock = dict_info.lock().await;
         let Some(uuid) = lock.get_bendrines(EkalbaDictionary::Dabartines, word).await else {
-            return String::new();
+            return Ok(Definition::Empty);
         };
         let uuid = uuid.to_owned();
 
@@ -334,8 +376,7 @@ async fn get_ekalba_dabartines(
         ))
         .await
         .json::<EkalbaRoot>()
-        .await
-        .unwrap()
+        .await?
     };
     let element_content_handlers = vec![
         element!(".dz_homonym div", |el| {
@@ -369,14 +410,13 @@ async fn get_ekalba_dabartines(
             Ok(())
         }),
     ];
-    rewrite_str(
+    Ok(Definition::Text(rewrite_str(
         &response.details.view_html,
         RewriteStrSettings {
             element_content_handlers,
             ..RewriteStrSettings::default()
         },
-    )
-    .unwrap()
+    )?))
 }
 
 #[cfg(test)]
@@ -414,7 +454,7 @@ mod tests {
         let dict_type = DictFileType::TextSplitAt(String::from(":"));
         assert_eq!(
             get_def_from_file("geras", f.to_str().unwrap(), &dict_type).unwrap(),
-            String::from("good")
+            Definition::Text(String::from("good"))
         );
     }
 
@@ -424,7 +464,7 @@ mod tests {
         let dict_type = DictFileType::TextSplitAt(String::from(":"));
         assert_eq!(
             get_def_from_file("", f.to_str().unwrap(), &dict_type).unwrap(),
-            String::new()
+            Definition::Empty
         );
     }
 
@@ -434,7 +474,7 @@ mod tests {
         let dict_type = DictFileType::TextSplitAt(String::from(":"));
         assert_eq!(
             get_def_from_file("blogas", f.to_str().unwrap(), &dict_type).unwrap(),
-            String::from("bad:extra")
+            Definition::Text(String::from("bad:extra"))
         );
     }
 
@@ -455,7 +495,7 @@ mod tests {
         let dict_type = DictFileType::StarDict;
         assert_eq!(
             get_def_from_file("blogas", f.to_str().unwrap(), &dict_type).unwrap(),
-            String::from("<i>adj</i><br><ol><li>bad, wrong</li></ol><br><i>noun</i><br><ol><li>(Internet) blog</li></ol>\n")
+            Definition::Text(String::from("<i>adj</i><br><ol><li>bad, wrong</li></ol><br><i>noun</i><br><ol><li>(Internet) blog</li></ol>\n"))
         );
     }
 
@@ -465,7 +505,7 @@ mod tests {
         let dict_type = DictFileType::StarDict;
         assert_eq!(
             get_def_from_file("this key doesnt exist", f.to_str().unwrap(), &dict_type).unwrap(),
-            String::new(),
+            Definition::Empty,
         );
     }
 

@@ -2,10 +2,14 @@
 import { Input } from "@/components/ui/input";
 import StyledCombobox from "@/components/StyledCombobox.vue";
 import FilePicker from "@/components/FilePicker.vue";
-import { type Dictionary, DictionaryType, type FileType } from "@/types";
+import {
+  type DictionarySpecificSettings,
+  DictionaryType,
+  type FileType,
+} from "@/types";
 import { watch } from "vue";
 
-const dict = defineModel<Dictionary>({ required: true });
+const dict = defineModel<DictionarySpecificSettings>({ required: true });
 
 const props = defineProps<{
   currentLanguage: string;

@@ -4,7 +4,7 @@
 use crate::{
     add_to_anki::add_to_anki,
     ankiconnect::{get_all_deck_names, get_all_note_names, get_note_field_names, remove_deck},
-    dictionary::{get_defs, DictionaryInfo},
+    dictionary::{get_definition_on_demand, get_defs, DictionaryInfo},
     language_parsing::{parse_text, parse_url, start_stanza},
     new_language_template::new_language_from_template,
 };
@@ -12,7 +12,7 @@ use ankiconnect::get_anki_card_statuses;
 use chrono::{DateTime, TimeDelta, Utc};
 use commands::run_command;
 use serde::{Deserialize, Serialize};
-use shared::{LanguageSettings, SakinyjeResult, Settings, ToasterPayload};
+use shared::{Definition, LanguageSettings, Settings, ToasterPayload};
 use simple_logger::SimpleLogger;
 use spyglys_integration::{format_spyglys, get_spyglys_functions};
 use stats::{get_words_known_at_levels, time_spent};
@@ -42,6 +42,12 @@ enum SakinyjeError {
     Spyglys(#[from] spyglys::SpyglysError),
     #[error(transparent)]
     SpyglysRuntime(#[from] spyglys::interpreter::RuntimeError),
+    #[error(transparent)]
+    HtmlRewrite(#[from] lol_html::errors::RewritingError),
+    #[error(transparent)]
+    Utf8Error(#[from] std::string::FromUtf8Error),
+    #[error(transparent)]
+    Stardict(#[from] stardict::error::Error),
     #[error("No operating system {0} directory was found")]
     MissingDir(String),
     #[error("Anki is not available. This may be because it is not open or ankiconnect is not installed.")]
@@ -97,7 +103,7 @@ struct ToSave {
 #[derive(Serialize, Deserialize, Default)]
 struct LanguageSpecficToSave {
     words: HashMap<String, WordInfo>,
-    cached_defs: HashMap<String, Vec<SakinyjeResult<String>>>,
+    cached_defs: HashMap<String, Vec<Definition>>,
     previous_file: Option<String>,
     previous_amount: usize,
     words_seen: Vec<(DateTime<Utc>, usize)>,
@@ -216,6 +222,7 @@ fn main() {
             get_words_known_at_levels,
             check_startup_errors,
             parse_url,
+            get_definition_on_demand,
         ])
         .on_window_event(handle_window_event)
         .run(tauri::generate_context!())

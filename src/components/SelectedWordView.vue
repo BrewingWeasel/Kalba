@@ -6,15 +6,10 @@ import { Input } from "@/components/ui/input";
 import ExportButton from "@/components/ExportButton.vue";
 import { invoke } from "@tauri-apps/api/tauri";
 import { computedAsync } from "@vueuse/core";
-import type { Word } from "@/types";
+import type { Definition, Word } from "@/types";
 import { Button } from "@/components/ui/button";
 import { ref, watch } from "vue";
 import { Loader2, Redo2, Undo2 } from "lucide-vue-next";
-
-interface Definition {
-  t: string;
-  conts: string;
-}
 
 const props = defineProps<{ sentence: string; currentLanguage: string }>();
 const word = defineModel<Word>({ required: true });
@@ -42,7 +37,7 @@ watch(
 
 const isComputingDefinition = ref(false);
 
-const definition = computedAsync(
+const definitions = computedAsync(
   async (): Promise<Definition[]> => {
     return await invoke("get_defs", { lemma: word.value.lemma });
   },
@@ -125,7 +120,11 @@ async function updateLemma() {
       />
     </div>
     <Suspense>
-      <DefinitionView v-if="!isComputingDefinition" :definition />
+      <DefinitionView
+        v-if="!isComputingDefinition"
+        :definitions
+        :lemma="word.lemma"
+      />
       <div v-else><Loader2 class="animate-spin" /></div>
 
       <template #fallback><Loader2 class="animate-spin" /></template>
@@ -134,7 +133,7 @@ async function updateLemma() {
       <GrammarDetails :morph="word.morph" separator="true" />
       <Suspense>
         <ExportButton
-          :defs="definition.map((v) => v.conts)"
+          :defs="definitions.filter((v) => v.t == 'Text').map((v) => v.c!)"
           :word="word.lemma"
           :sentence="props.sentence"
           :currentLanguage

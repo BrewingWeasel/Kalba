@@ -1,5 +1,10 @@
 import type { Deck } from "@/components/settings/Deck.vue";
 
+export interface Definition {
+  t: "Empty" | "Text" | "OnDemand";
+  c: undefined | string;
+}
+
 export interface ExportDetails {
   word: string;
   deck: string;
@@ -32,7 +37,7 @@ export interface LanguageSettings {
   note_fields: { [key: string]: string };
   model: string;
   anki_parser: Deck[];
-  dicts: [string, Dictionary][];
+  dicts: Dictionary[];
   frequency_list: string;
   words_known_by_freq: number;
   grammar_parser: string;
@@ -70,6 +75,12 @@ export enum DictionaryType {
 }
 
 export interface Dictionary {
+  name: string;
+  fetch_by_default: boolean;
+  specific_settings: DictionarySpecificSettings;
+}
+
+export interface DictionarySpecificSettings {
   t: DictionaryType;
   c: [string, FileType] | [string, string] | string | undefined;
 }
