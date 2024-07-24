@@ -5,25 +5,29 @@ import DefinitionView from "@/components/DefinitionView.vue";
 import { Input } from "@/components/ui/input";
 import ExportButton from "@/components/ExportButton.vue";
 import { invoke } from "@tauri-apps/api/tauri";
-import { computedAsync } from "@vueuse/core";
 import type { Definition, Word } from "@/types";
 import { Button } from "@/components/ui/button";
 import { ref, watch } from "vue";
 import { Loader2, Redo2, Undo2 } from "lucide-vue-next";
 
-const props = defineProps<{ sentence: string; currentLanguage: string }>();
+const separatedDefinitions = defineModel<string[]>("separatedDefinitions", {
+  required: true,
+});
+
+const props = defineProps<{
+  sentence: string;
+  currentLanguage: string;
+  definitions: Definition[];
+  isComputingDefinition: boolean;
+  onDemandDefinitions: Map<string, undefined | string>;
+}>();
 const word = defineModel<Word>({ required: true });
 console.log(word.value);
 
-const emit =
-  defineEmits<
-    (
-      e: "set-rating",
-      rating: number,
-      lemma: string,
-      modifiable?: boolean,
-    ) => void
-  >();
+const emit = defineEmits<{
+  (e: "set-rating", rating: number, lemma: string, modifiable?: boolean): void;
+  (e: "getOnDemandDef", definition: string): void;
+}>();
 
 const word_history = ref([word.value.lemma]);
 const word_history_index = ref(0);
@@ -33,16 +37,6 @@ watch(
     word_history.value = [];
     word_history_index.value = 0;
   },
-);
-
-const isComputingDefinition = ref(false);
-
-const definitions = computedAsync(
-  async (): Promise<Definition[]> => {
-    return await invoke("get_defs", { lemma: word.value.lemma });
-  },
-  [],
-  isComputingDefinition,
 );
 
 async function updateLemma() {
@@ -121,9 +115,16 @@ async function updateLemma() {
     </div>
     <Suspense>
       <DefinitionView
-        v-if="!isComputingDefinition"
-        :definitions
+        v-if="!props.isComputingDefinition"
+        :definitions="props.definitions"
         :lemma="word.lemma"
+        :onDemandDefinitions="props.onDemandDefinitions"
+        :separatedDefinitions
+        @getOnDemandDef="
+          (definition) => {
+            $emit('getOnDemandDef', definition);
+          }
+        "
       />
       <div v-else><Loader2 class="animate-spin" /></div>
 
