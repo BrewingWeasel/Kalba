@@ -10,7 +10,7 @@ const forwarded = useForwardProps(props);
 </script>
 
 <template>
-  <HoverCardRoot v-bind="forwarded">
+  <HoverCardRoot v-bind="forwarded" @update:open="$emit('update:open', $event)">
     <slot />
   </HoverCardRoot>
 </template>

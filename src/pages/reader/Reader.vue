@@ -12,6 +12,7 @@ import {
 } from "@/components/ui/resizable";
 import { computedAsync } from "@vueuse/core";
 import { Loader2, PanelBottomClose } from "lucide-vue-next";
+import { useMagicKeys, whenever } from "@vueuse/core";
 
 const props = defineProps<{
   sentence: string;
@@ -30,6 +31,33 @@ console.log("Stanza loaded");
 
 await set_words();
 console.log(sections);
+
+const wordHovered = ref<string | undefined>(undefined);
+
+const { one, two, three, four, five, zero } = useMagicKeys({
+  aliasMap: {
+    one: "1",
+    two: "2",
+    three: "3",
+    four: "4",
+    five: "5",
+    zero: "0",
+  },
+});
+
+[one, two, three, four, five].forEach((key, i) => {
+  whenever(key, () => {
+    if (wordHovered.value) {
+      changeRating(i, wordHovered.value, true);
+    }
+  });
+});
+
+whenever(zero, () => {
+  if (wordHovered.value) {
+    changeRating(-1, wordHovered.value, true);
+  }
+});
 
 const DEFAULT_WORDS_AROUND = 25;
 
@@ -164,7 +192,7 @@ watch(definitions, () => {
       <ResizablePanelGroup direction="vertical">
         <ResizablePanel :min-size="20">
           <div class="py-3 px-10 w-1/2">
-            <div v-for="(section, s_index) in sections">
+            <div v-for="(section, sectionIndex) in sections">
               <div v-if="section.t == 'Image' && typeof section.c == 'string'">
                 <img :src="section.c" class="mt-1" />
               </div>
@@ -175,10 +203,13 @@ watch(definitions, () => {
               >
                 <IndividualWord
                   v-if="typeof section.c != 'string'"
-                  v-for="(word, w_index) in section.c"
+                  v-for="(word, wordIndex) in section.c"
                   :word="word"
                   :rating="word.rating"
-                  @selected="(w) => handle_word_selected(w, s_index, w_index)"
+                  v-model="wordHovered"
+                  @selected="
+                    (w) => handle_word_selected(w, sectionIndex, wordIndex)
+                  "
                   @set-rating="changeRating"
                 />
               </div>

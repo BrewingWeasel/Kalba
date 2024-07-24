@@ -8,7 +8,14 @@ import GrammarDetails from "@/components/GrammarDetails.vue";
 import RatingButtons from "@/components/RatingButtons.vue";
 
 import { computed } from "vue";
-const props = defineProps(["word", "rating"]);
+import { Word } from "@/types";
+const props = defineProps<{
+  word: Word;
+  rating: number;
+}>();
+
+const hoveredWord = defineModel<string | undefined>();
+
 const emit = defineEmits(["selected", "set-rating"]);
 
 const rating = computed(() => {
@@ -40,7 +47,18 @@ function set_selected() {
 
 <template>
   <div :class="rating" @click="set_selected">
-    <HoverCard>
+    <HoverCard
+      @update:open="
+        ($event) => {
+          if ($event) {
+            console.log('yes');
+            hoveredWord = props.word.lemma;
+          } else {
+            hoveredWord = undefined;
+          }
+        }
+      "
+    >
       <HoverCardTrigger>{{ props.word.text }}</HoverCardTrigger>
       <HoverCardContent>
         <h1 class="text-center font-semibold text-lg" :class="rating">
