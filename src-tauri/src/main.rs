@@ -422,6 +422,20 @@ async fn write_settings(
     let conts = toml::to_string_pretty(&settings)?;
 
     let mut state = state.0.lock().await;
+
+    // TODO: avoid this clone (arc)
+    let cloned_languages = state.settings.languages.clone();
+
+    for (language, specific_settings) in &cloned_languages {
+        if let Some(new_specific_settings) = settings.languages.get(language) {
+            if new_specific_settings.dicts != specific_settings.dicts {
+                if let Some(saved_details) = state.to_save.language_specific.get_mut(language) {
+                    saved_details.cached_defs.clear();
+                }
+            }
+        }
+    }
+
     state.settings = settings;
 
     fs::write(config_file, conts)?;
