@@ -48,7 +48,9 @@ async function updateLemma() {
 </script>
 
 <template>
-  <div class="px-7 bg-accent w-full h-full flex flex-col">
+  <div
+    class="px-7 bg-accent w-full h-[calc(100vh-3.25rem)] flex flex-col overflow-auto"
+  >
     <br />
     <div class="p-2 bg-border rounded-lg mb-2">
       <div class="flex justify-center gap-1 items-center">

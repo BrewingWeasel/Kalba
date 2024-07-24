@@ -188,9 +188,9 @@ onMounted(async () => {
         </TooltipProvider>
       </nav>
     </aside>
-    <div class="flex flex-col sm:py-4 sm:pl-14 h-screen">
+    <div class="flex flex-col sm:pl-14 h-screen max-h-screen">
       <header
-        class="sticky top-0 z-30 flex h-4 items-center gap-4 border-b bg-background px-4 sm:static sm:h-auto sm:border-0 sm:bg-transparent sm:px-6"
+        class="sticky top-0 z-30 flex mt-3 h-4 items-center gap-4 border-b bg-background px-4 sm:static sm:h-auto sm:border-0 sm:bg-transparent sm:px-6"
       >
         <Breadcrumb>
           <BreadcrumbList>

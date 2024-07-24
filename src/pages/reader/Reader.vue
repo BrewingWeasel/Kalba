@@ -188,14 +188,14 @@ watch(definitions, () => {
         <template v-for="(definition, index) in separatedDefinitions">
           <ResizableHandle />
           <ResizablePanel :default-size="25">
-            <div class="flex items-center justify-between bg-accent px-2">
+            <div class="flex items-center justify-between bg-accent px-2 mb-2">
               <h1>{{ definition }}</h1>
               <PanelBottomClose
                 class="w-4 h-4"
                 @click="separatedDefinitions.splice(index, 1)"
               />
             </div>
-            <div class="p-3 h-full">
+            <div class="px-3 h-full overflow-auto">
               <span
                 v-if="onDemandDefinitions.get(definition)"
                 v-html="onDemandDefinitions.get(definition)"
@@ -212,7 +212,7 @@ watch(definitions, () => {
       :min-size="20"
       :max-size="70"
       :default-size="32"
-      class="h-full"
+      class="max-h-full"
     >
       <Suspense class="h-full">
         <SelectedWordView
@@ -225,7 +225,7 @@ watch(definitions, () => {
           :separatedDefinitions
           @set-rating="changeRating"
           @getOnDemandDef="getOnDemandDef"
-          class="h-full"
+          class="max-h-full"
         />
       </Suspense>
     </ResizablePanel>
