@@ -2,6 +2,11 @@
 
 Sakinyje is a tool for language learning based on the idea of [sentence mining](https://refold.la/roadmap/stage-2/a/basic-sentence-mining).
 
+
+Note: Sakinyje is in a transitional period and much of the following README is out of date
+
+
+
 ## Features:
 
 - automatically detecting grammatical details such as the root word and morphology using SpaCy (works automatically for any languages with [pre-trained models](), and you can train [custom models](https://spacy.io/usage/training) with [data](https://universaldependencies.org/))
