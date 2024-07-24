@@ -195,7 +195,7 @@ watch(definitions, () => {
                 @click="separatedDefinitions.splice(index, 1)"
               />
             </div>
-            <div class="px-3 h-full overflow-auto">
+            <div class="px-3 h-full overflow-auto pb-10">
               <span
                 v-if="onDemandDefinitions.get(definition)"
                 v-html="onDemandDefinitions.get(definition)"
