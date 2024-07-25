@@ -191,8 +191,13 @@ watch(definitions, () => {
     <ResizablePanel>
       <ResizablePanelGroup direction="vertical">
         <ResizablePanel :min-size="20">
-          <div class="py-3 px-10 w-1/2">
-            <div v-for="(section, sectionIndex) in sections">
+          <div
+            class="py-6 px-10 flex flex-col items-center w-full h-[calc(100vh-3.25rem)] overflow-auto"
+          >
+            <div
+              v-for="(section, sectionIndex) in sections"
+              class="max-w-[500px] w-[500px] min-w-[350px]"
+            >
               <div v-if="section.t == 'Image' && typeof section.c == 'string'">
                 <img :src="section.c" class="mt-1" />
               </div>
