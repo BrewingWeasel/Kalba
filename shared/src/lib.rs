@@ -32,6 +32,7 @@ pub struct Word {
     pub clickable: bool,
     pub other_forms: Vec<String>,
     pub length: usize,
+    pub whitespace_after: bool,
 }
 
 #[derive(Clone, Serialize, Deserialize, Debug)]

@@ -53,6 +53,7 @@ export interface Word {
   rating: number;
   other_forms: string[];
   length: number;
+  whitespace_after: boolean;
 }
 
 export interface FileType {

@@ -225,8 +225,12 @@ pub async fn parse_url(
         let mut words = Vec::new();
         while let Some(word) = all_words.peek() {
             log::trace!("word: {:?}", word);
-            current_length += word.length + 1;
-            if current_length >= length {
+            current_length += word.length;
+            if word.whitespace_after {
+                current_length += 1;
+            }
+
+            if current_length > length {
                 break;
             }
             words.push(all_words.next().expect("already peeked"));
@@ -412,53 +416,63 @@ fn stanza_parser(
             break;
         }
     }
-    let details = serde_json::from_str::<Vec<StanzaToken>>(&contents).unwrap();
+    let mut details = serde_json::from_str::<Vec<StanzaToken>>(&contents)
+        .unwrap()
+        .into_iter()
+        .peekable();
     log::trace!("response parsed");
 
-    details
-        .into_iter()
-        .map(|token| {
-            let lemma = handle_lemma(&token.lemma, interpreter, state)?;
-            let rating = state
-                .to_save
-                .language_specific
-                .get_mut(&language)
-                .expect("language to be chosen")
-                .words
-                .entry(lemma.clone())
-                .or_insert(crate::WordInfo {
-                    rating: 0,
-                    method: crate::Method::FromSeen,
-                    history: vec![(chrono::Utc::now(), crate::Method::FromSeen, 0)],
-                })
-                .rating;
+    let mut words = Vec::new();
 
-            let morph = token
-                .feats
-                .map(|feats| {
-                    feats
-                        .split('|')
-                        .map(|morph| {
-                            let mut morph_parts = morph.split('=');
-                            let key = morph_parts.next().unwrap().to_string();
-                            let value = morph_parts.next().unwrap().to_string();
-                            (key, value)
-                        })
-                        .collect()
-                })
-                .unwrap_or_default();
-
-            Ok(Word {
-                text: token.text,
-                lemma: lemma.clone(),
-                rating,
-                morph,
-                clickable: token.upos != "PUNCT",
-                other_forms: get_alternate_forms(&lemma, interpreter, state)?,
-                length: token.end_char - token.start_char,
+    while let Some(token) = details.next() {
+        let lemma = handle_lemma(&token.lemma, interpreter, state)?;
+        let rating = state
+            .to_save
+            .language_specific
+            .get_mut(&language)
+            .expect("language to be chosen")
+            .words
+            .entry(lemma.clone())
+            .or_insert(crate::WordInfo {
+                rating: 0,
+                method: crate::Method::FromSeen,
+                history: vec![(chrono::Utc::now(), crate::Method::FromSeen, 0)],
             })
-        })
-        .collect::<Result<Vec<Word>, SakinyjeError>>()
+            .rating;
+
+        let morph = token
+            .feats
+            .map(|feats| {
+                feats
+                    .split('|')
+                    .map(|morph| {
+                        let mut morph_parts = morph.split('=');
+                        let key = morph_parts.next().unwrap().to_string();
+                        let value = morph_parts.next().unwrap().to_string();
+                        (key, value)
+                    })
+                    .collect()
+            })
+            .unwrap_or_default();
+
+        let whitespace_after = if let Some(next_token) = details.peek() {
+            next_token.start_char != token.end_char
+        } else {
+            false
+        };
+
+        words.push(dbg!(Word {
+            text: token.text,
+            lemma: lemma.clone(),
+            rating,
+            morph,
+            clickable: token.upos != "PUNCT",
+            other_forms: get_alternate_forms(&lemma, interpreter, state)?,
+            length: token.end_char - token.start_char,
+            whitespace_after,
+        }))
+    }
+    Ok(words)
 }
 
 fn default_tokenizer(
@@ -490,6 +504,13 @@ fn default_tokenizer(
                         history: vec![(chrono::Utc::now(), crate::Method::FromSeen, 0)],
                     })
                     .rating;
+
+                let whitespace_after = if let Some(next_token) = chars.peek() {
+                    next_token.is_whitespace()
+                } else {
+                    false
+                };
+
                 words.push(Word {
                     text: word.clone(),
                     clickable: true,
@@ -498,10 +519,13 @@ fn default_tokenizer(
                     morph: HashMap::new(),
                     other_forms: get_alternate_forms(&word, interpreter, state)?,
                     length: word.len() + 1,
+                    whitespace_after,
                 })
             }
+            let mut whitespace_after = false;
             while let Some(possible_whitespace) = chars.peek() {
                 if possible_whitespace.is_whitespace() {
+                    whitespace_after = true;
                     chars.next();
                 } else {
                     break;
@@ -510,6 +534,7 @@ fn default_tokenizer(
             if c.is_whitespace() {
                 continue;
             }
+
             words.push(Word {
                 text: c.to_string(),
                 clickable: false,
@@ -518,6 +543,7 @@ fn default_tokenizer(
                 morph: HashMap::new(),
                 other_forms: Vec::new(),
                 length: 1,
+                whitespace_after,
             })
         }
     }

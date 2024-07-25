@@ -19,7 +19,7 @@ const hoveredWord = defineModel<string | undefined>();
 const emit = defineEmits(["selected", "set-rating"]);
 
 const rating = computed(() => {
-  const startingClass = props.word.clickable ? "pl-1 " : "px-0 ";
+  const startingClass = props.word.whitespace_after ? "pr-1 " : "pr-0 ";
   if (props.word.text.includes("\n")) {
     return "basis-full h-0 pb-2";
   }
