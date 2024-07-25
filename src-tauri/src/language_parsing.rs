@@ -426,19 +426,23 @@ fn stanza_parser(
 
     while let Some(token) = details.next() {
         let lemma = handle_lemma(&token.lemma, interpreter, state)?;
-        let rating = state
-            .to_save
-            .language_specific
-            .get_mut(&language)
-            .expect("language to be chosen")
-            .words
-            .entry(lemma.clone())
-            .or_insert(crate::WordInfo {
-                rating: 0,
-                method: crate::Method::FromSeen,
-                history: vec![(chrono::Utc::now(), crate::Method::FromSeen, 0)],
-            })
-            .rating;
+        let rating = if token.upos == "PUNCT" {
+            -1
+        } else {
+            state
+                .to_save
+                .language_specific
+                .get_mut(&language)
+                .expect("language to be chosen")
+                .words
+                .entry(lemma.clone())
+                .or_insert(crate::WordInfo {
+                    rating: 0,
+                    method: crate::Method::FromSeen,
+                    history: vec![(chrono::Utc::now(), crate::Method::FromSeen, 0)],
+                })
+                .rating
+        };
 
         let morph = token
             .feats
@@ -461,7 +465,7 @@ fn stanza_parser(
             false
         };
 
-        words.push(dbg!(Word {
+        words.push(Word {
             text: token.text,
             lemma: lemma.clone(),
             rating,
@@ -470,7 +474,7 @@ fn stanza_parser(
             other_forms: get_alternate_forms(&lemma, interpreter, state)?,
             length: token.end_char - token.start_char,
             whitespace_after,
-        }))
+        })
     }
     Ok(words)
 }
@@ -539,7 +543,7 @@ fn default_tokenizer(
                 text: c.to_string(),
                 clickable: false,
                 lemma: c.to_string(),
-                rating: 4,
+                rating: -1,
                 morph: HashMap::new(),
                 other_forms: Vec::new(),
                 length: 1,
