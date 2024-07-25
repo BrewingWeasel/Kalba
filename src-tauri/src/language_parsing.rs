@@ -82,7 +82,9 @@ pub async fn parse_url(
                         let mut sections = title_sections.lock().await;
                         sections.2.push_str(text.as_str());
                         sections.2.push('\n');
-                        sections.1.push(SectionContents::Title(text.as_str().len()));
+                        sections.1.push(SectionContents::Title(
+                            text.as_str().trim_start().chars().count(),
+                        ));
                         Ok::<(), SakinyjeError>(())
                     })
                 })?;
@@ -107,9 +109,9 @@ pub async fn parse_url(
                         section_details.0.insert(text.as_str().to_owned());
                         section_details.2.push_str(text.as_str());
                         section_details.2.push('\n');
-                        section_details
-                            .1
-                            .push(SectionContents::Subtitle(text.as_str().len()));
+                        section_details.1.push(SectionContents::Subtitle(
+                            text.as_str().trim_start().chars().count(),
+                        ));
                         Ok::<(), SakinyjeError>(())
                     })
                 })?;
@@ -127,7 +129,7 @@ pub async fn parse_url(
                 }
                 let text = if let Some(separator) = site_config.caption_separator.as_ref() {
                     if let Some((main_caption, _)) = text.as_str().split_once(separator) {
-                        main_caption
+                        main_caption.trim()
                     } else {
                         text.as_str()
                     }
@@ -141,7 +143,9 @@ pub async fn parse_url(
                         let mut section_details = sections.lock().await;
                         section_details.2.push_str(text);
                         section_details.2.push('\n');
-                        section_details.1.push(SectionContents::Caption(text.len()));
+                        section_details
+                            .1
+                            .push(SectionContents::Caption(text.chars().count()));
                         Ok::<(), SakinyjeError>(())
                     })
                 })?;
@@ -167,9 +171,9 @@ pub async fn parse_url(
                         }
                         section_details.2.push_str(text.as_str());
                         section_details.2.push('\n');
-                        section_details
-                            .1
-                            .push(SectionContents::Paragraph(text.as_str().len()));
+                        section_details.1.push(SectionContents::Paragraph(
+                            text.as_str().trim_start().chars().count(),
+                        ));
                         Ok::<(), SakinyjeError>(())
                     })
                 })?;
@@ -230,7 +234,7 @@ pub async fn parse_url(
                 current_length += 1;
             }
 
-            if current_length > length {
+            if current_length - 1 > length {
                 break;
             }
             words.push(all_words.next().expect("already peeked"));
@@ -240,7 +244,6 @@ pub async fn parse_url(
 
     let mut sections = Vec::new();
     for section_content in owned_details.1 {
-        println!("{:?}", section_content);
         let section = match section_content {
             SectionContents::Paragraph(length) => Section::Paragraph(get_words(length)),
             SectionContents::Title(length) => Section::Title(get_words(length)),
