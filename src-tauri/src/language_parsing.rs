@@ -429,7 +429,7 @@ fn stanza_parser(
 
     while let Some(token) = details.next() {
         let lemma = handle_lemma(&token.lemma, interpreter, state)?;
-        let rating = if token.upos == "PUNCT" {
+        let rating = if ["PUNCT", "SYM", "PROPN"].contains(&token.upos.as_str()) {
             -1
         } else {
             state
