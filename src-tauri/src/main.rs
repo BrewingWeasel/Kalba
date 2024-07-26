@@ -409,6 +409,7 @@ async fn get_language(state: State<'_, SakinyjeState>) -> Result<Option<String>,
 #[tauri::command]
 async fn set_language(state: State<'_, SakinyjeState>, language: String) -> Result<(), String> {
     let mut state = state.0.lock().await;
+    state.language_parser = None;
     state.current_language = Some(language);
     Ok(())
 }
