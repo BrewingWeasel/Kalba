@@ -36,31 +36,6 @@ console.log(sections);
 
 const wordHovered = ref<string | undefined>(undefined);
 
-const { one, two, three, four, five, zero } = useMagicKeys({
-  aliasMap: {
-    one: "1",
-    two: "2",
-    three: "3",
-    four: "4",
-    five: "5",
-    zero: "0",
-  },
-});
-
-[one, two, three, four, five].forEach((key, i) => {
-  whenever(key, () => {
-    if (wordHovered.value) {
-      changeRating(i, wordHovered.value, true);
-    }
-  });
-});
-
-whenever(zero, () => {
-  if (wordHovered.value) {
-    changeRating(-1, wordHovered.value, true);
-  }
-});
-
 const DEFAULT_WORDS_AROUND = 25;
 
 const sentence = computed(() => {
@@ -200,7 +175,6 @@ watch(
 );
 
 function undo() {
-  console.log(historyIndex.value, history.value);
   if (historyIndex.value > 0) {
     historyIndex.value--;
     const newLemma = history.value[historyIndex.value];
@@ -220,6 +194,43 @@ function redo() {
     }
   }
 }
+
+const { one, two, three, four, five, zero } = useMagicKeys({
+  aliasMap: {
+    one: "1",
+    two: "2",
+    three: "3",
+    four: "4",
+    five: "5",
+    zero: "0",
+  },
+  passive: false,
+  onEventFired(e) {
+    console.log(e);
+    if (e.ctrlKey && (e.key === "z" || e.key === "Z") && e.type === "keydown") {
+      e.preventDefault();
+      if (e.shiftKey) {
+        redo();
+      } else {
+        undo();
+      }
+    }
+  },
+});
+
+[one, two, three, four, five].forEach((key, i) => {
+  whenever(key, () => {
+    if (wordHovered.value) {
+      changeRating(i, wordHovered.value, true);
+    }
+  });
+});
+
+whenever(zero, () => {
+  if (wordHovered.value) {
+    changeRating(-1, wordHovered.value, true);
+  }
+});
 </script>
 
 <template>
