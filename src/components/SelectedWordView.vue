@@ -7,7 +7,7 @@ import ExportButton from "@/components/ExportButton.vue";
 import { invoke } from "@tauri-apps/api/tauri";
 import type { Definition, HistoryItem, Word } from "@/types";
 import { Button } from "@/components/ui/button";
-import { Loader2 } from "lucide-vue-next";
+import { Tags, CheckCircle2, Loader2 } from "lucide-vue-next";
 
 const separatedDefinitions = defineModel<string[]>("separatedDefinitions", {
   required: true,
@@ -38,6 +38,13 @@ async function updateLemma() {
   });
   emit("set-rating", rating, word.value.lemma);
 }
+
+async function alwaysChangeLemma() {
+  await invoke("always_change_lemma", {
+    lemma: history.value[0],
+    updatedLemma: word.value.lemma,
+  });
+}
 </script>
 
 <template>
@@ -47,11 +54,22 @@ async function updateLemma() {
     <br />
     <div class="p-2 bg-border rounded-lg mb-2">
       <div class="flex justify-center gap-1 items-center">
+        <Button variant="outline" size="icon" :disabled="true">
+          <Tags />
+        </Button>
         <Input
           @change="updateLemma"
-          class="text-lg text-center border-0 hover:border-2 focus:border-2 max-w-64"
+          class="text-lg text-center max-w-64"
           v-model="word.lemma"
         />
+        <Button
+          variant="outline"
+          size="icon"
+          :disabled="history.length === 1 || historyIndex === 0"
+          @click="alwaysChangeLemma"
+        >
+          <CheckCircle2 />
+        </Button>
       </div>
       <div class="flex justify-center gap-3 items-center mt-1">
         <Button

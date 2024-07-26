@@ -13,6 +13,18 @@ pub fn handle_lemma(
         .current_language
         .as_ref()
         .expect("language to already be selected");
+
+    if let Some(new_lemma) = state
+        .to_save
+        .language_specific
+        .get(language)
+        .expect("language to exist")
+        .lemmas_to_replace
+        .get(lemma)
+    {
+        return Ok(new_lemma.clone());
+    }
+
     for modifier in &state
         .settings
         .languages

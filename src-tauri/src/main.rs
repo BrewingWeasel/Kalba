@@ -105,6 +105,7 @@ struct LanguageSpecficToSave {
     words: HashMap<String, WordInfo>,
     cached_defs: HashMap<String, Vec<Definition>>,
     previous_file: Option<String>,
+    lemmas_to_replace: HashMap<String, String>,
     previous_amount: usize,
     words_seen: Vec<(DateTime<Utc>, usize)>,
 }
@@ -223,6 +224,7 @@ fn main() {
             check_startup_errors,
             parse_url,
             get_definition_on_demand,
+            always_change_lemma
         ])
         .on_window_event(handle_window_event)
         .run(tauri::generate_context!())
@@ -473,5 +475,26 @@ async fn update_word_knowledge(
     word_knowledge.history.push((Utc::now(), method, rating));
     word_knowledge.rating = rating;
     word_knowledge.method = method;
+    Ok(())
+}
+
+#[tauri::command]
+async fn always_change_lemma(
+    state: State<'_, SakinyjeState>,
+    lemma: String,
+    updated_lemma: String,
+) -> Result<(), String> {
+    let mut state = state.0.lock().await;
+    let language = state
+        .current_language
+        .clone()
+        .expect("current language should already be chosen");
+    state
+        .to_save
+        .language_specific
+        .get_mut(&language)
+        .expect("language should exist")
+        .lemmas_to_replace
+        .insert(lemma, updated_lemma);
     Ok(())
 }

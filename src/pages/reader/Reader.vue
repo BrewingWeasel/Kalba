@@ -14,6 +14,7 @@ import { computedAsync } from "@vueuse/core";
 import { Loader2, PanelBottomClose, Redo2, Undo2 } from "lucide-vue-next";
 import { useMagicKeys, whenever } from "@vueuse/core";
 import { Button } from "@/components/ui/button";
+import { Separator } from "@/components/ui/separator";
 
 const props = defineProps<{
   sentence: string;
@@ -273,6 +274,7 @@ function redo() {
             </div>
           </ResizablePanel>
         </template>
+        <Separator />
         <div class="flex bg-background px-3 h-8 items-center gap-1">
           <Button
             variant="outline"
