@@ -200,6 +200,7 @@ watch(
 );
 
 function undo() {
+  console.log(historyIndex.value, history.value);
   if (historyIndex.value > 0) {
     historyIndex.value--;
     const newLemma = history.value[historyIndex.value];
@@ -210,12 +211,13 @@ function undo() {
 }
 
 function redo() {
+  console.log(historyIndex.value, history.value);
   if (historyIndex.value < history.value.length) {
+    historyIndex.value++;
     const newLemma = history.value[historyIndex.value];
     if (typeof newLemma === "string" && selectedWord.value) {
       selectedWord.value.lemma = newLemma;
     }
-    historyIndex.value++;
   }
 }
 </script>
