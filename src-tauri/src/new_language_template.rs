@@ -1,4 +1,4 @@
-use std::fs;
+use std::{collections::HashMap, fs};
 
 use reqwest::Client;
 use serde::Deserialize;
@@ -15,6 +15,7 @@ struct TemplateDetails {
     spyglys_details: bool,
     run_on_lemmas: Vec<String>,
     suggest_on_lemmas: Vec<String>,
+    replace_lemmas: HashMap<String, String>,
 }
 
 #[tauri::command]
@@ -76,7 +77,8 @@ pub async fn new_language_from_template(
         suggest_on_lemmas: details.suggest_on_lemmas,
         ..Default::default()
     };
-    if state.settings.languages.contains_key(&language) {
+    let mut language_name = language.clone();
+    if state.settings.languages.contains_key(&language_name) {
         let mut language_number = 2;
         while state
             .settings
@@ -85,12 +87,18 @@ pub async fn new_language_from_template(
         {
             language_number += 1;
         }
-        state
-            .settings
-            .languages
-            .insert(format!("{language} {language_number}"), lang_settings);
-    } else {
-        state.settings.languages.insert(language, lang_settings);
+        language_name = format!("{language} {language_number}");
     }
+    state
+        .settings
+        .languages
+        .insert(language_name.clone(), lang_settings);
+    state.to_save.language_specific.insert(
+        language_name,
+        crate::LanguageSpecficToSave {
+            lemmas_to_replace: details.replace_lemmas,
+            ..Default::default()
+        },
+    );
     Ok(())
 }

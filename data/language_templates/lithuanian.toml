@@ -27,3 +27,8 @@ fetch_by_default = false
 [dicts.specific_settings]
 t = "Wiktionary"
 c = ["en", "Lithuanian"]
+
+# Stanza gets these wrong for some reason
+[replace_lemmas]
+"s" = "nes"
+"t" = "bet"
