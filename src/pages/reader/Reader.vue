@@ -372,7 +372,7 @@ whenever(zero, () => {
                 variant="outline"
                 size="smallIcon"
                 :disabled="
-                  history.length === 1 || historyIndex === history.length - 1
+                  history.length === 1 || historyIndex >= history.length - 1
                 "
                 @click="redo"
               >
