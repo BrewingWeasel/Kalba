@@ -8,6 +8,7 @@ import { invoke } from "@tauri-apps/api/tauri";
 import type { Definition, HistoryItem, Word } from "@/types";
 import { Button } from "@/components/ui/button";
 import { Tags, CheckCircle2, Loader2 } from "lucide-vue-next";
+import { ref, watch } from "vue";
 
 const separatedDefinitions = defineModel<string[]>("separatedDefinitions", {
   required: true,
@@ -32,7 +33,18 @@ const emit = defineEmits<{
   (e: "getOnDemandDef", definition: string): void;
 }>();
 
+const updatingLemma = ref(word.value.lemma);
+watch(
+  () => word.value.lemma,
+  (newLemma) => {
+    updatingLemma.value = newLemma;
+  },
+);
+
 async function updateLemma() {
+  history.value.push(updatingLemma.value);
+  historyIndex.value++;
+  word.value.lemma = updatingLemma.value;
   const rating: number = await invoke("get_rating", {
     lemma: word.value.lemma,
   });
@@ -60,7 +72,7 @@ async function alwaysChangeLemma() {
         <Input
           @change="updateLemma"
           class="text-lg text-center max-w-64"
-          v-model="word.lemma"
+          v-model="updatingLemma"
         />
         <Button
           variant="outline"

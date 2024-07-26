@@ -51,7 +51,6 @@ function set_selected() {
       @update:open="
         ($event) => {
           if ($event) {
-            console.log('yes');
             hoveredWord = props.word.lemma;
           } else {
             hoveredWord = undefined;
