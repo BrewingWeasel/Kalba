@@ -80,6 +80,28 @@ async function set_words() {
   }
 }
 
+const sentenceStats = computed(() => {
+  let atEachLevel = [0, 0, 0, 0, 0, 0];
+  let words = 0;
+  let percentage = 0;
+  if (sections.value) {
+    sections.value.forEach((section) => {
+      if (typeof section.c !== "string") {
+        section.c.forEach((word) => {
+          if (word.rating === -1) {
+            atEachLevel[5]++;
+          } else if (word.rating !== undefined) {
+            words++;
+            percentage += word.rating;
+            atEachLevel[word.rating]++;
+          }
+        });
+      }
+    });
+  }
+  return { words, atEachLevel, percentage: percentage / (words * 4) };
+});
+
 function handle_word_selected(word: Word, s_index: number, w_index: number) {
   console.log(word);
   selectedWord.value = word;
@@ -207,7 +229,6 @@ const { one, two, three, four, five, zero } = useMagicKeys({
   },
   passive: false,
   onEventFired(e) {
-    console.log(e);
     if (e.ctrlKey && (e.key === "z" || e.key === "Z") && e.type === "keydown") {
       e.preventDefault();
       if (e.shiftKey) {
@@ -290,28 +311,75 @@ whenever(zero, () => {
           </ResizablePanel>
         </template>
         <Separator />
-        <div class="flex bg-background px-3 h-8 items-center gap-1">
-          <BetterTooltip tooltip="Undo">
-            <Button
-              variant="outline"
-              size="smallIcon"
-              :disabled="history.length === 1 || historyIndex === 0"
-              @click="undo"
+        <div class="flex bg-background px-3 h-8 items-center justify-between">
+          <div class="text-xs flex items-center">
+            <span class="hover:bg-accent px-1 py-1 h-full"
+              >{{ sentenceStats.words }} words</span
             >
-              <Undo2 class="h-4 w-4" /> </Button
-          ></BetterTooltip>
-          <BetterTooltip tooltip="Redo">
-            <Button
-              variant="outline"
-              size="smallIcon"
-              :disabled="
-                history.length === 1 || historyIndex === history.length - 1
-              "
-              @click="redo"
+            <span class="hover:bg-accent px-1 py-1 h-full mr-2"
+              >{{ (sentenceStats.percentage * 100).toFixed(1) }}% known</span
             >
-              <Redo2 class="h-4 w-4" />
-            </Button>
-          </BetterTooltip>
+            <template v-if="sentenceStats.atEachLevel[0] != 0">
+              <BetterTooltip tooltip="Unknown words">
+                <span class="mx-1 rounded-full bg-rose-600 w-3 h-3"></span>
+                <span>{{ sentenceStats.atEachLevel[0] }} </span>
+              </BetterTooltip>
+            </template>
+            <template v-if="sentenceStats.atEachLevel[1] != 0">
+              <BetterTooltip tooltip="Learning words">
+                <span class="mx-1 rounded-full bg-red-400 w-3 h-3"></span>
+                <span>{{ sentenceStats.atEachLevel[1] }} </span>
+              </BetterTooltip>
+            </template>
+            <template v-if="sentenceStats.atEachLevel[2] != 0">
+              <BetterTooltip tooltip="Recognized words">
+                <span class="mx-1 rounded-full bg-orange-400 w-3 h-3"></span>
+                <span>{{ sentenceStats.atEachLevel[2] }} </span>
+              </BetterTooltip>
+            </template>
+            <template v-if="sentenceStats.atEachLevel[3] != 0">
+              <BetterTooltip tooltip="Familiar words">
+                <span class="mx-1 rounded-full bg-amber-300 w-3 h-3"></span>
+                <span>{{ sentenceStats.atEachLevel[3] }} </span>
+              </BetterTooltip>
+            </template>
+            <template v-if="sentenceStats.atEachLevel[4] != 0">
+              <BetterTooltip tooltip="Known words">
+                <span class="mx-1 rounded-full bg-current w-3 h-3"></span>
+                <span>{{ sentenceStats.atEachLevel[4] }} </span>
+              </BetterTooltip>
+            </template>
+            <template v-if="sentenceStats.atEachLevel[5] != 0">
+              <BetterTooltip tooltip="Ignored words">
+                <span class="mx-1 rounded-full bg-gray-500 w-3 h-3"></span>
+                <span>{{ sentenceStats.atEachLevel[5] }} </span>
+              </BetterTooltip>
+            </template>
+          </div>
+          <div>
+            <BetterTooltip tooltip="Undo">
+              <Button
+                class="mr-1"
+                variant="outline"
+                size="smallIcon"
+                :disabled="history.length === 1 || historyIndex === 0"
+                @click="undo"
+              >
+                <Undo2 class="h-4 w-4" /> </Button
+            ></BetterTooltip>
+            <BetterTooltip tooltip="Redo">
+              <Button
+                variant="outline"
+                size="smallIcon"
+                :disabled="
+                  history.length === 1 || historyIndex === history.length - 1
+                "
+                @click="redo"
+              >
+                <Redo2 class="h-4 w-4" />
+              </Button>
+            </BetterTooltip>
+          </div>
         </div>
       </ResizablePanelGroup>
     </ResizablePanel>
