@@ -429,7 +429,7 @@ fn stanza_parser(
 
     while let Some(token) = details.next() {
         let lemma = handle_lemma(&token.lemma, interpreter, state)?;
-        let rating = if ["PUNCT", "SYM", "PROPN"].contains(&token.upos.as_str()) {
+        let rating = if ["PUNCT", "SYM", "PROPN", "NUM"].contains(&token.upos.as_str()) {
             -1
         } else {
             state
@@ -473,7 +473,7 @@ fn stanza_parser(
             lemma: lemma.clone(),
             rating,
             morph,
-            clickable: token.upos != "PUNCT",
+            clickable: !["PUNCT", "SYM", "NUM"].contains(&token.upos.as_str()),
             other_forms: get_alternate_forms(&lemma, interpreter, state)?,
             length: token.end_char - token.start_char,
             whitespace_after,
