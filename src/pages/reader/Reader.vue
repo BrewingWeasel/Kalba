@@ -15,6 +15,7 @@ import { Loader2, PanelBottomClose, Redo2, Undo2 } from "lucide-vue-next";
 import { useMagicKeys, whenever } from "@vueuse/core";
 import { Button } from "@/components/ui/button";
 import { Separator } from "@/components/ui/separator";
+import BetterTooltip from "@/components/BetterTooltip.vue";
 
 const props = defineProps<{
   sentence: string;
@@ -273,10 +274,11 @@ whenever(zero, () => {
           <ResizablePanel :default-size="25">
             <div class="flex items-center justify-between bg-accent px-2 mb-2">
               <h1>{{ definition }}</h1>
-              <PanelBottomClose
-                class="w-4 h-4"
-                @click="separatedDefinitions.splice(index, 1)"
-              />
+              <BetterTooltip tooltip="move panel into definition view">
+                <PanelBottomClose
+                  class="w-4 h-4"
+                  @click="separatedDefinitions.splice(index, 1)"
+              /></BetterTooltip>
             </div>
             <div class="px-3 h-full overflow-auto pb-10">
               <span
@@ -289,24 +291,27 @@ whenever(zero, () => {
         </template>
         <Separator />
         <div class="flex bg-background px-3 h-8 items-center gap-1">
-          <Button
-            variant="outline"
-            size="smallIcon"
-            :disabled="history.length === 1 || historyIndex === 0"
-            @click="undo"
-          >
-            <Undo2 class="h-4 w-4" />
-          </Button>
-          <Button
-            variant="outline"
-            size="smallIcon"
-            :disabled="
-              history.length === 1 || historyIndex === history.length - 1
-            "
-            @click="redo"
-          >
-            <Redo2 class="h-4 w-4" />
-          </Button>
+          <BetterTooltip tooltip="Undo">
+            <Button
+              variant="outline"
+              size="smallIcon"
+              :disabled="history.length === 1 || historyIndex === 0"
+              @click="undo"
+            >
+              <Undo2 class="h-4 w-4" /> </Button
+          ></BetterTooltip>
+          <BetterTooltip tooltip="Redo">
+            <Button
+              variant="outline"
+              size="smallIcon"
+              :disabled="
+                history.length === 1 || historyIndex === history.length - 1
+              "
+              @click="redo"
+            >
+              <Redo2 class="h-4 w-4" />
+            </Button>
+          </BetterTooltip>
         </div>
       </ResizablePanelGroup>
     </ResizablePanel>

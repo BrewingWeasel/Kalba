@@ -7,6 +7,7 @@ import {
 } from "@/components/ui/collapsible";
 import { ref } from "vue";
 import { ChevronDown, Loader2, PanelRightOpen } from "lucide-vue-next";
+import BetterTooltip from "./BetterTooltip.vue";
 
 const emit = defineEmits<{
   (e: "getOnDemandDef", definition: string): void;
@@ -47,10 +48,12 @@ for (const def of props.definitions) {
           >
             <h1>{{ def.c }}</h1>
             <div class="flex items-center gap-1">
-              <PanelRightOpen
-                @click="separatedDefinitions.push(def.c)"
-                class="w-4 h-4"
-              />
+              <BetterTooltip tooltip="Open in new panel" side="left">
+                <PanelRightOpen
+                  @click="separatedDefinitions.push(def.c)"
+                  class="w-4 h-4"
+                />
+              </BetterTooltip>
               <ChevronDown class="w-4 h-4" />
             </div>
           </div>

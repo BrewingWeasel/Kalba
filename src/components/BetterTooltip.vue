@@ -8,6 +8,7 @@ import {
 
 defineProps<{
   tooltip: string;
+  side?: "top" | "bottom" | "left" | "right";
 }>();
 </script>
 
@@ -17,7 +18,7 @@ defineProps<{
       <TooltipTrigger as-child>
         <slot />
       </TooltipTrigger>
-      <TooltipContent side="top"> {{ tooltip }} </TooltipContent>
+      <TooltipContent :side="side ?? 'top'"> {{ tooltip }} </TooltipContent>
     </Tooltip>
   </TooltipProvider>
 </template>

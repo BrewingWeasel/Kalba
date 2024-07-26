@@ -9,6 +9,7 @@ import type { Definition, HistoryItem, Word } from "@/types";
 import { Button } from "@/components/ui/button";
 import { Tags, CheckCircle2, Loader2 } from "lucide-vue-next";
 import { ref, watch } from "vue";
+import BetterTooltip from "./BetterTooltip.vue";
 
 const separatedDefinitions = defineModel<string[]>("separatedDefinitions", {
   required: true,
@@ -67,7 +68,9 @@ async function alwaysChangeLemma() {
     <div class="p-2 bg-border rounded-lg mb-2">
       <div class="flex justify-center gap-1 items-center">
         <Button variant="outline" size="icon" :disabled="true">
-          <Tags />
+          <BetterTooltip tooltip="Edit tags">
+            <Tags />
+          </BetterTooltip>
         </Button>
         <Input
           @change="updateLemma"
@@ -80,7 +83,11 @@ async function alwaysChangeLemma() {
           :disabled="history.length === 1 || historyIndex === 0"
           @click="alwaysChangeLemma"
         >
-          <CheckCircle2 />
+          <BetterTooltip
+            :tooltip="`Always change '${history[0]}' to '${word.lemma}'`"
+          >
+            <CheckCircle2
+          /></BetterTooltip>
         </Button>
       </div>
       <div class="flex justify-center gap-3 items-center mt-1">
@@ -131,17 +138,18 @@ async function alwaysChangeLemma() {
     <div class="mt-auto">
       <GrammarDetails :morph="word.morph" separator="true" />
       <Suspense>
-        <ExportButton
-          :defs="definitions.filter((v) => v.t == 'Text').map((v) => v.c!)"
-          :word="word.lemma"
-          :sentence="props.sentence"
-          :currentLanguage
-          @change-rating="
-            (r) => {
-              $emit('set-rating', r, word.lemma, true);
-            }
-          "
-        />
+        <BetterTooltip :tooltip="`Save ${word.lemma} to Anki`">
+          <ExportButton
+            :defs="definitions.filter((v) => v.t == 'Text').map((v) => v.c!)"
+            :word="word.lemma"
+            :sentence="props.sentence"
+            :currentLanguage
+            @change-rating="
+              (r) => {
+                $emit('set-rating', r, word.lemma, true);
+              }
+            "
+        /></BetterTooltip>
       </Suspense>
     </div>
   </div>
