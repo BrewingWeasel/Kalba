@@ -97,9 +97,7 @@ async function alwaysChangeLemma() {
           size="sm"
           v-for="form in word.other_forms.filter((f) => f !== word.lemma)"
           @click="
-            history.push(form);
-            historyIndex++;
-            word.lemma = form;
+            updatingLemma = form;
             updateLemma();
           "
         >
