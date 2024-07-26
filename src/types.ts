@@ -1,5 +1,7 @@
 import type { Deck } from "@/components/settings/Deck.vue";
 
+export type HistoryItem = string | number;
+
 export interface Definition {
   t: "Empty" | "Text" | "OnDemand";
   c: undefined | string;

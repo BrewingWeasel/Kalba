@@ -5,10 +5,9 @@ import DefinitionView from "@/components/DefinitionView.vue";
 import { Input } from "@/components/ui/input";
 import ExportButton from "@/components/ExportButton.vue";
 import { invoke } from "@tauri-apps/api/tauri";
-import type { Definition, Word } from "@/types";
+import type { Definition, HistoryItem, Word } from "@/types";
 import { Button } from "@/components/ui/button";
-import { ref, watch } from "vue";
-import { Loader2, Redo2, Undo2 } from "lucide-vue-next";
+import { Loader2 } from "lucide-vue-next";
 
 const separatedDefinitions = defineModel<string[]>("separatedDefinitions", {
   required: true,
@@ -21,23 +20,17 @@ const props = defineProps<{
   isComputingDefinition: boolean;
   onDemandDefinitions: Map<string, undefined | string>;
 }>();
-const word = defineModel<Word>({ required: true });
+
+const word = defineModel<Word>("word", { required: true });
 console.log(word.value);
+
+const history = defineModel<HistoryItem[]>("history", { required: true });
+const historyIndex = defineModel<number>("historyIndex", { required: true });
 
 const emit = defineEmits<{
   (e: "set-rating", rating: number, lemma: string, modifiable?: boolean): void;
   (e: "getOnDemandDef", definition: string): void;
 }>();
-
-const word_history = ref([word.value.lemma]);
-const word_history_index = ref(0);
-watch(
-  () => word.value.text,
-  () => {
-    word_history.value = [];
-    word_history_index.value = 0;
-  },
-);
 
 async function updateLemma() {
   const rating: number = await invoke("get_rating", {
@@ -54,38 +47,11 @@ async function updateLemma() {
     <br />
     <div class="p-2 bg-border rounded-lg mb-2">
       <div class="flex justify-center gap-1 items-center">
-        <Button
-          variant="outline"
-          size="icon"
-          :disabled="word_history.length === 1 || word_history_index === 0"
-          @click="
-            word_history_index--;
-            word.lemma = word_history[word_history_index];
-            updateLemma();
-          "
-        >
-          <Undo2 />
-        </Button>
         <Input
           @change="updateLemma"
           class="text-lg text-center border-0 hover:border-2 focus:border-2 max-w-64"
           v-model="word.lemma"
         />
-        <Button
-          variant="outline"
-          size="icon"
-          :disabled="
-            word_history.length === 1 ||
-            word_history_index === word_history.length - 1
-          "
-          @click="
-            word_history_index++;
-            word.lemma = word_history[word_history_index];
-            updateLemma();
-          "
-        >
-          <Redo2 />
-        </Button>
       </div>
       <div class="flex justify-center gap-3 items-center mt-1">
         <Button
@@ -94,8 +60,8 @@ async function updateLemma() {
           size="sm"
           v-for="form in word.other_forms.filter((f) => f !== word.lemma)"
           @click="
-            word_history.push(form);
-            word_history_index++;
+            history.push(form);
+            historyIndex++;
             word.lemma = form;
             updateLemma();
           "

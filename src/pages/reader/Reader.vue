@@ -3,7 +3,7 @@ import { type Ref, computed, ref, watch } from "vue";
 import { invoke } from "@tauri-apps/api/tauri";
 import IndividualWord from "@/components/Word.vue";
 import SelectedWordView from "@/components/SelectedWordView.vue";
-import type { Word, Section, Definition } from "@/types";
+import type { Word, Section, Definition, HistoryItem } from "@/types";
 import { toast } from "vue-sonner";
 import {
   ResizableHandle,
@@ -11,8 +11,9 @@ import {
   ResizablePanelGroup,
 } from "@/components/ui/resizable";
 import { computedAsync } from "@vueuse/core";
-import { Loader2, PanelBottomClose } from "lucide-vue-next";
+import { Loader2, PanelBottomClose, Redo2, Undo2 } from "lucide-vue-next";
 import { useMagicKeys, whenever } from "@vueuse/core";
+import { Button } from "@/components/ui/button";
 
 const props = defineProps<{
   sentence: string;
@@ -184,6 +185,38 @@ watch(definitions, () => {
     getOnDemandDef(def);
   }
 });
+
+const history = ref<HistoryItem[]>([]);
+const historyIndex = ref(0);
+watch(
+  () => selectedWord.value?.text,
+  () => {
+    if (selectedWord.value) {
+      history.value = [selectedWord.value.lemma];
+      historyIndex.value = 0;
+    }
+  },
+);
+
+function undo() {
+  if (historyIndex.value > 0) {
+    historyIndex.value--;
+    const newLemma = history.value[historyIndex.value];
+    if (typeof newLemma === "string" && selectedWord.value) {
+      selectedWord.value.lemma = newLemma;
+    }
+  }
+}
+
+function redo() {
+  if (historyIndex.value < history.value.length) {
+    const newLemma = history.value[historyIndex.value];
+    if (typeof newLemma === "string" && selectedWord.value) {
+      selectedWord.value.lemma = newLemma;
+    }
+    historyIndex.value++;
+  }
+}
 </script>
 
 <template>
@@ -240,11 +273,31 @@ watch(definitions, () => {
             </div>
           </ResizablePanel>
         </template>
+        <div class="flex bg-background px-3 h-8 items-center gap-1">
+          <Button
+            variant="outline"
+            size="smallIcon"
+            :disabled="history.length === 1 || historyIndex === 0"
+            @click="undo"
+          >
+            <Undo2 class="h-4 w-4" />
+          </Button>
+          <Button
+            variant="outline"
+            size="smallIcon"
+            :disabled="
+              history.length === 1 || historyIndex === history.length - 1
+            "
+            @click="redo"
+          >
+            <Redo2 class="h-4 w-4" />
+          </Button>
+        </div>
       </ResizablePanelGroup>
     </ResizablePanel>
     <ResizableHandle />
     <ResizablePanel
-      v-if="selectedWord"
+      v-if="selectedWord && sections"
       :min-size="20"
       :max-size="70"
       :default-size="32"
@@ -252,13 +305,17 @@ watch(definitions, () => {
     >
       <Suspense class="h-full">
         <SelectedWordView
-          v-model="sections![selectedSectionIndex].c[selectedWordIndex]"
+          v-model:word="
+            sections[selectedSectionIndex].c[selectedWordIndex] as Word
+          "
+          v-model:history="history"
+          v-model:historyIndex="historyIndex"
           :sentence
           :currentLanguage
           :definitions
           :isComputingDefinition
           :onDemandDefinitions
-          :separatedDefinitions
+          v-model:separatedDefinitions="separatedDefinitions"
           @set-rating="changeRating"
           @getOnDemandDef="getOnDemandDef"
           class="max-h-full"
