@@ -318,24 +318,26 @@ async function newLanguage(language: string) {
           title="Grammar"
           description="Configure the automatic parsing of grammar and other language details"
         />
-        <template v-if="settings.stanza_enabled">
-          <HoverCard>
-            <div class="flex items-center">
-              <Label for="model" class="pr-1">Stanza model</Label>
-              <HoverCardTrigger
-                ><Info class="mt-2" :size="16"
-              /></HoverCardTrigger>
-            </div>
-            <HoverCardContent>
-              <p>
-                Stanza models are used to automatically determine the grammar of
-                the language so that words with the same root are automatically
-                considered the same
-              </p>
-            </HoverCardContent>
-          </HoverCard>
-          <Input id="model" v-model="settings.languages[selectedLang].model" />
-        </template>
+        <HoverCard>
+          <div class="flex items-center">
+            <Label for="model" class="pr-1">Stanza model</Label>
+            <HoverCardTrigger
+              ><Info class="mt-2" :size="16"
+            /></HoverCardTrigger>
+          </div>
+          <HoverCardContent>
+            <p>
+              Stanza models are used to automatically determine the grammar of
+              the language so that words with the same root are automatically
+              considered the same
+            </p>
+          </HoverCardContent>
+        </HoverCard>
+        <Input
+          id="model"
+          :disabled="!settings.stanza_enabled"
+          v-model="settings.languages[selectedLang].model"
+        />
         <Label for="frequencylist">Frequency list</Label>
         <FilePicker v-model="settings.languages[selectedLang].frequency_list" />
 
