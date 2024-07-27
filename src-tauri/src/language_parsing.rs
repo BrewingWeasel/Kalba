@@ -60,7 +60,6 @@ pub async fn parse_url(
         .text()
         .await
         .expect("to get valid bytes");
-    info!("Got response");
 
     let sections = Arc::new(Mutex::new((HashSet::new(), Vec::new(), String::new())));
     let state = Arc::new(state);
@@ -512,11 +511,7 @@ fn default_tokenizer(
                     })
                     .rating;
 
-                let whitespace_after = if let Some(next_token) = chars.peek() {
-                    next_token.is_whitespace()
-                } else {
-                    false
-                };
+                let whitespace_after = c.is_whitespace();
 
                 words.push(Word {
                     text: word.clone(),
