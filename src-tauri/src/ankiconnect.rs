@@ -61,6 +61,7 @@ pub async fn get_anki_card_statuses(
 
         log::trace!("found word {word} with interval {interval}");
 
+        // TODO: these intervals should be configurable
         let rating = if interval <= 1 {
             1
         } else if interval <= 9 {
@@ -73,7 +74,8 @@ pub async fn get_anki_card_statuses(
 
         if let Some(orig) = original_words.get_mut(&word) {
             if orig.method != Method::Specified {
-                orig.rating = rating;
+                // TODO: this should probably be configurable
+                orig.rating = rating.max(orig.rating);
             }
         } else {
             original_words.insert(
