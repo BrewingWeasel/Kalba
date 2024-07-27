@@ -20,6 +20,7 @@ export interface Settings {
   dark_mode: boolean;
   languages: { [key: string]: LanguageSettings };
   site_configurations: { [key: string]: SiteConfiguration };
+  stanza_enabled: boolean;
 }
 
 export interface SiteConfiguration {

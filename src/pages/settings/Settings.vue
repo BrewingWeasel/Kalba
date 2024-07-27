@@ -31,6 +31,7 @@ import { toast } from "vue-sonner";
 import Grammar from "./components/Grammar.vue";
 import { useRouter } from "vue-router";
 import SiteConfigurationTable from "./components/SiteConfigurationTable.vue";
+import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 
 import {
   NumberField,
@@ -39,10 +40,12 @@ import {
   NumberFieldIncrement,
   NumberFieldInput,
 } from "@/components/ui/number-field";
+import EnableStanza from "@/components/EnableStanza.vue";
 
 const isDark = useDark();
 const router = useRouter();
 
+const installed = await invoke<boolean>("check_stanza_installed");
 const settings = reactive<Settings>(await invoke("get_settings"));
 
 const models = await invoke<string[]>("get_all_note_names").catch((error) => {
@@ -117,6 +120,7 @@ async function newLanguage(language: string) {
         :rightLanguage="true"
       />
       <SettingsMenu v-model="section" section="Input" :rightLanguage="true" />
+      <SettingsMenu v-model="section" section="Stanza" :rightLanguage="true" />
       <Collapsible class="px-4" v-model:open="allLanguageMenuOpen">
         <div class="flex justify-between items-center">
           <h4 class="font-semibold">Languages</h4>
@@ -210,6 +214,35 @@ async function newLanguage(language: string) {
         <SiteConfigurationTable v-model="settings.site_configurations" />
       </template>
 
+      <template v-if="section == 'Stanza'">
+        <Heading
+          title_id="stanza"
+          title="Stanza"
+          description="Configure and enable grammar parsing with Stanza"
+        />
+        <div v-if="installed">
+          <Label for="stanza-enabled">Enable Stanza</Label>
+          <Switch
+            id="stanza-enabled"
+            v-model:checked="settings.stanza_enabled"
+          />
+        </div>
+        <div v-else>
+          <EnableStanza
+            v-model:installed="installed"
+            v-model:enabled="settings.stanza_enabled"
+          />
+        </div>
+        <Alert class="mt-4 w-fit">
+          <Info class="h-4 w-4" />
+          <AlertTitle>Stanza Usage</AlertTitle>
+          <AlertDescription>
+            Stanza can be used to automatically parse grammar and determine the
+            root word for over 70 languages.</AlertDescription
+          >
+        </Alert>
+      </template>
+
       <template v-else-if="section == 'Exporting' && selectedLang != null">
         <Heading
           title_id="exporting"
@@ -285,22 +318,24 @@ async function newLanguage(language: string) {
           title="Grammar"
           description="Configure the automatic parsing of grammar and other language details"
         />
-        <HoverCard>
-          <div class="flex items-center">
-            <Label for="model" class="pr-1">Stanza model</Label>
-            <HoverCardTrigger
-              ><Info class="mt-2" :size="16"
-            /></HoverCardTrigger>
-          </div>
-          <HoverCardContent>
-            <p>
-              Stanza models are used to automatically determine the grammar of
-              the language so that words with the same root are automatically
-              considered the same
-            </p>
-          </HoverCardContent>
-        </HoverCard>
-        <Input id="model" v-model="settings.languages[selectedLang].model" />
+        <template v-if="settings.stanza_enabled">
+          <HoverCard>
+            <div class="flex items-center">
+              <Label for="model" class="pr-1">Stanza model</Label>
+              <HoverCardTrigger
+                ><Info class="mt-2" :size="16"
+              /></HoverCardTrigger>
+            </div>
+            <HoverCardContent>
+              <p>
+                Stanza models are used to automatically determine the grammar of
+                the language so that words with the same root are automatically
+                considered the same
+              </p>
+            </HoverCardContent>
+          </HoverCard>
+          <Input id="model" v-model="settings.languages[selectedLang].model" />
+        </template>
         <Label for="frequencylist">Frequency list</Label>
         <FilePicker v-model="settings.languages[selectedLang].frequency_list" />
 

@@ -7,6 +7,7 @@ use crate::{
     dictionary::{get_definition_on_demand, get_defs, DictionaryInfo},
     language_parsing::{parse_text, parse_url, start_stanza},
     new_language_template::new_language_from_template,
+    setup_stanza::{check_stanza_installed, setup_stanza},
 };
 use ankiconnect::get_anki_card_statuses;
 use chrono::{DateTime, TimeDelta, Utc};
@@ -25,6 +26,7 @@ mod commands;
 mod dictionary;
 mod language_parsing;
 mod new_language_template;
+mod setup_stanza;
 mod spyglys_integration;
 mod stats;
 
@@ -62,6 +64,10 @@ enum SakinyjeError {
     MissingSiteConfig(String),
     #[error("Only wrote {1} bytes of `{0}`")]
     IncorrectWrite(String, usize),
+    #[error("Unable to find a version of python installed on the system. It may not be installed or in the PATH.")]
+    PythonNotFound,
+    #[error("Python version ({0}) does not match. Version 3.8 or later is required for stanza")]
+    WrongPythonVersion(String),
 }
 
 // we must manually implement serde::Serialize
@@ -93,6 +99,7 @@ struct LanguageParser {
 
 #[derive(Serialize, Deserialize, Default)]
 struct ToSave {
+    installing_stanza: bool,
     last_launched: DateTime<Utc>,
     last_language: Option<String>,
     decks_checked: Vec<String>,
@@ -224,7 +231,9 @@ fn main() {
             check_startup_errors,
             parse_url,
             get_definition_on_demand,
-            always_change_lemma
+            always_change_lemma,
+            setup_stanza,
+            check_stanza_installed,
         ])
         .on_window_event(handle_window_event)
         .run(tauri::generate_context!())

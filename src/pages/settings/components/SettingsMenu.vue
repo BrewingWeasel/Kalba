@@ -8,7 +8,8 @@ export type SettingsSection =
   | "Word Knowledge"
   | "Dictionaries"
   | "Input"
-  | "Grammar";
+  | "Grammar"
+  | "Stanza";
 
 const section = defineModel<SettingsSection>({ required: true });
 

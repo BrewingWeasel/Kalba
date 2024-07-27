@@ -162,6 +162,7 @@ pub struct Settings {
     pub dark_mode: bool,
     pub site_configurations: HashMap<String, SiteConfiguration>,
     pub languages: HashMap<String, LanguageSettings>,
+    pub stanza_enabled: bool,
 }
 
 #[derive(Deserialize, Serialize, Clone)]
@@ -189,6 +190,7 @@ impl Default for Settings {
             dark_mode: true,
             languages: HashMap::new(),
             site_configurations,
+            stanza_enabled: false,
         }
     }
 }
