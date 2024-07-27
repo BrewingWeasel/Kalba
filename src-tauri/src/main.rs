@@ -50,6 +50,8 @@ enum SakinyjeError {
     Utf8Error(#[from] std::string::FromUtf8Error),
     #[error(transparent)]
     Stardict(#[from] stardict::error::Error),
+    #[error(transparent)]
+    CacheDecode(#[from] rmp_serde::decode::Error),
     #[error("No operating system {0} directory was found")]
     MissingDir(String),
     #[error("Anki is not available. This may be because it is not open or ankiconnect is not installed.")]
@@ -90,6 +92,12 @@ struct SharedInfo {
     dict_info: Arc<tauri::async_runtime::Mutex<DictionaryInfo>>,
     errors: Vec<SakinyjeError>,
     can_save: bool,
+    language_cached_data: HashMap<String, CachedData>,
+}
+
+#[derive(Debug, Deserialize, Serialize, Default)]
+struct CachedData {
+    definitions: HashMap<String, Vec<Definition>>,
 }
 
 struct LanguageParser {
@@ -110,7 +118,6 @@ struct ToSave {
 #[derive(Serialize, Deserialize, Default)]
 struct LanguageSpecficToSave {
     words: HashMap<String, WordInfo>,
-    cached_defs: HashMap<String, Vec<Definition>>,
     previous_file: Option<String>,
     lemmas_to_replace: HashMap<String, String>,
     previous_amount: usize,
@@ -153,6 +160,22 @@ impl Default for SharedInfo {
             }
         };
 
+        let language_cached_data = match dirs::cache_dir()
+            .ok_or_else(|| SakinyjeError::MissingDir(String::from("cache")))
+            .and_then(|cache_dir| {
+                fs::read(cache_dir.join("sakinyje.cache"))
+                    .map_err(SakinyjeError::Io)
+                    .and_then(|v| rmp_serde::from_slice(&v).map_err(SakinyjeError::CacheDecode))
+            }) {
+            Ok(v) => v,
+            Err(e) => {
+                if !matches!(e, SakinyjeError::Io(_)) {
+                    errors.push(e);
+                }
+                HashMap::new()
+            }
+        };
+
         set_word_knowledge_from_anki(&mut to_save, &settings.languages);
 
         if let Some(cmds) = &settings.to_run {
@@ -177,6 +200,7 @@ impl Default for SharedInfo {
             current_language,
             dict_info: Default::default(),
             can_save,
+            language_cached_data,
         }
     }
 }
@@ -339,6 +363,15 @@ fn handle_window_event(event: GlobalWindowEvent) {
                         toml::to_string(&locked_state.to_save).expect("Error serializing to toml");
                     fs::write(saved_state_file, conts).expect("error writing to file");
                 }
+                let cache_file = dirs::cache_dir()
+                    .expect("cache dir does not exist")
+                    .join("sakinyje.cache");
+                fs::write(
+                    cache_file,
+                    rmp_serde::to_vec(&locked_state.language_cached_data)
+                        .expect("error serializing cache"),
+                )
+                .expect("error writing cache");
             }
             _ => (),
         }
@@ -441,8 +474,8 @@ async fn write_settings(
     for (language, specific_settings) in &cloned_languages {
         if let Some(new_specific_settings) = settings.languages.get(language) {
             if new_specific_settings.dicts != specific_settings.dicts {
-                if let Some(saved_details) = state.to_save.language_specific.get_mut(language) {
-                    saved_details.cached_defs.clear();
+                if let Some(language_cache) = state.language_cached_data.get_mut(language) {
+                    language_cache.definitions.clear();
                 }
             }
         }

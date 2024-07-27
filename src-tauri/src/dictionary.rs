@@ -143,12 +143,9 @@ pub async fn get_defs(
         .clone()
         .expect("current language should already be selected");
     if let Some(v) = state
-        .to_save
-        .language_specific
+        .language_cached_data
         .get(&language)
-        .expect("language to already have data to save")
-        .cached_defs
-        .get(&lemma)
+        .and_then(|v| v.definitions.get(&lemma))
     {
         Ok(v.clone())
     } else {
@@ -183,11 +180,10 @@ pub async fn get_defs(
             defs.push(def);
         }
         state
-            .to_save
-            .language_specific
-            .get_mut(&language)
-            .expect("language to already have data to save")
-            .cached_defs
+            .language_cached_data
+            .entry(language)
+            .or_default()
+            .definitions
             .insert(lemma, defs.clone());
         Ok(defs)
     }
