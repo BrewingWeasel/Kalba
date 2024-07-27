@@ -284,7 +284,7 @@ pub async fn words_from_string(
         .expect("Language to have already been chosen");
     let interpreter = load_spyglys(&mut state)?;
 
-    let words = if state.language_parser.is_some() {
+    let words = if state.language_parser.is_some() && state.settings.stanza_enabled {
         log::trace!("Sending to stanza parser");
         stanza_parser(
             &format!("{sent}\n"),
