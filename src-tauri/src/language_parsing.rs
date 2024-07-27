@@ -224,6 +224,7 @@ pub async fn parse_url(
         .peekable();
 
     let mut get_words = |length| {
+        log::trace!("section length: {length}");
         let mut current_length = 0;
         let mut words = Vec::new();
         while let Some(word) = all_words.peek() {
@@ -520,7 +521,7 @@ fn default_tokenizer(
                     rating,
                     morph: HashMap::new(),
                     other_forms: get_alternate_forms(&word, interpreter, state)?,
-                    length: word.len() + 1,
+                    length: word.chars().count(),
                     whitespace_after,
                 })
             }
