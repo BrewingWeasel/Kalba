@@ -324,7 +324,7 @@ pub async fn start_stanza(
     window: Window,
 ) -> Result<(), SakinyjeError> {
     let mut state = state.0.lock().await;
-    if state.language_parser.is_some() {
+    if state.language_parser.is_some() || !state.settings.stanza_enabled {
         return Ok(());
     }
 
