@@ -14,7 +14,7 @@ interface NoteToWordHandling {
   field_to_use: string;
   only_first_word_or_line: boolean;
   remove_everything_in_parens: boolean;
-  tags_wanted: string[];
+  search_params: string;
 }
 
 const props = defineProps<{

@@ -29,7 +29,7 @@ function addNote() {
       field_to_use: "",
       only_first_word_or_line: false,
       remove_everything_in_parens: false,
-      tags_wanted: [],
+      search_params: "",
     },
   });
 }

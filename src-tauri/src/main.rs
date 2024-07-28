@@ -58,8 +58,6 @@ enum SakinyjeError {
     AnkiNotAvailable,
     #[error("Unable to download language details from github: {0}")]
     LanugageDetailsDownloading(#[from] reqwest::Error),
-    #[error("The selected card has handler that fits its model")]
-    NoModelHandler,
     #[error("Ankiconnect return an error: {0}")]
     AnkiConnectError(String),
     #[error("No site configuration found for {0}")]

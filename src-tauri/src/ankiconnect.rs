@@ -40,52 +40,57 @@ pub async fn get_anki_card_statuses(
     } else {
         format!("rated:{days_passed}")
     };
-    let find_cards_query = format!("\"deck:{deck}\"{days_passed_query}");
-    log::info!("Using query: {find_cards_query}");
+    for (note_type, handler) in note_handling {
+        let find_notes_query = format!(
+            "\"deck:{deck}\" \"note:{note_type}\" {days_passed_query} {}",
+            handler.search_params
+        );
+        log::info!("Using query: {find_notes_query}");
+        let notes =
+            get_card_or_note_vals("findNotes", json!({ "query": find_notes_query })).await?;
 
-    let cards = get_card_or_note_vals("findCards", json!({ "query": find_cards_query })).await?;
-    let intervals = get_card_or_note_vals("getIntervals", json!({ "cards": &cards })).await?;
-    let notes = get_card_or_note_vals("cardsToNotes", json!({ "cards": &cards })).await?;
+        let notes_info_res =
+            generic_anki_connect_action("notesInfo", json!({ "notes": notes })).await?;
+        let notes_info = Into::<Result<Vec<NoteInfo>, SakinyjeError>>::into(
+            notes_info_res
+                .json::<AnkiResult<Vec<NoteInfo>>>()
+                .await
+                .expect("valid json from anki"),
+        )?;
+        for note in &notes_info {
+            let Ok(Some(word)) = get_word_from_note(note, handler).await else {
+                continue;
+            };
+            let intervals =
+                get_card_or_note_vals("getIntervals", json!({ "cards": note.cards })).await?;
+            let selected_interval = intervals.iter().max().copied().unwrap_or_default();
+            log::trace!("found word {word} with interval {selected_interval}");
 
-    let res = generic_anki_connect_action("notesInfo", json!({ "notes": notes })).await?;
-    let notes_info = Into::<Result<Vec<NoteInfo>, SakinyjeError>>::into(
-        res.json::<AnkiResult<Vec<NoteInfo>>>()
-            .await
-            .expect("valid json from anki"),
-    )?;
+            // TODO: these intervals should be configurable
+            let rating = if selected_interval <= 1 {
+                1
+            } else if selected_interval <= 9 {
+                2
+            } else if selected_interval <= 23 {
+                3
+            } else {
+                4
+            };
 
-    for ((note, interval), note_info) in notes.into_iter().zip(intervals).zip(notes_info) {
-        let Ok(Some(word)) = get_word_from_note(note, note_info, note_handling).await else {
-            continue;
-        };
-
-        log::trace!("found word {word} with interval {interval}");
-
-        // TODO: these intervals should be configurable
-        let rating = if interval <= 1 {
-            1
-        } else if interval <= 9 {
-            2
-        } else if interval <= 23 {
-            3
-        } else {
-            4
-        };
-
-        if let Some(orig) = original_words.get_mut(&word) {
-            if orig.method != Method::Specified {
-                // TODO: this should probably be configurable
-                orig.rating = rating.max(orig.rating);
+            if let Some(orig) = original_words.get_mut(&word) {
+                if orig.method != Method::Specified {
+                    orig.rating = rating;
+                }
+            } else {
+                original_words.insert(
+                    word,
+                    WordInfo {
+                        rating,
+                        method: Method::FromAnki,
+                        history: vec![(Utc::now(), Method::FromAnki, rating)],
+                    },
+                );
             }
-        } else {
-            original_words.insert(
-                word,
-                WordInfo {
-                    rating,
-                    method: Method::FromAnki,
-                    history: vec![(Utc::now(), Method::FromAnki, rating)],
-                },
-            );
         }
     }
 
@@ -95,8 +100,7 @@ pub async fn get_anki_card_statuses(
 #[derive(Deserialize, Debug)]
 struct NoteInfo {
     fields: HashMap<String, FieldInfo>,
-    #[serde(rename = "modelName")]
-    model_name: String,
+    cards: Vec<isize>,
 }
 
 #[derive(Deserialize, Debug)]
@@ -133,37 +137,20 @@ async fn get_card_or_note_vals(action: &str, data: Value) -> Result<Vec<isize>, 
 }
 
 async fn get_word_from_note(
-    note_id: isize,
-    note: NoteInfo,
-    templates: &HashMap<String, NoteToWordHandling>,
+    note: &NoteInfo,
+    handler: &NoteToWordHandling,
 ) -> Result<Option<String>, SakinyjeError> {
-    if let Some(handler) = templates.get(&note.model_name) {
-        let res = generic_anki_connect_action("getNoteTags", json!({ "note": &note_id })).await?;
-        let tags: Result<Vec<String>, SakinyjeError> = res
-            .json::<AnkiResult<Vec<String>>>()
-            .await
-            .expect("Valid json from anki")
-            .into();
-
-        if !handler.tags_wanted.is_empty() && !tags?.iter().any(|t| handler.tags_wanted.contains(t))
-        {
-            return Ok(None);
-        }
-
-        let selected_field = note
-            .fields
-            .into_iter()
-            .find(|x| x.0 == handler.field_to_use)
-            .unwrap()
-            .1
-            .value;
-        Ok(Some(get_word_from_field(selected_field, handler)))
-    } else {
-        Err(SakinyjeError::NoModelHandler)
-    }
+    let selected_field = &note
+        .fields
+        .iter()
+        .find(|x| x.0 == &handler.field_to_use)
+        .unwrap()
+        .1
+        .value;
+    Ok(Some(get_word_from_field(selected_field, handler)))
 }
 
-fn get_word_from_field(selected_field: String, handler: &NoteToWordHandling) -> String {
+fn get_word_from_field(selected_field: &str, handler: &NoteToWordHandling) -> String {
     let mut parsed = String::new();
 
     let mut in_bracket = false;
