@@ -10,6 +10,7 @@ import { Button } from "@/components/ui/button";
 import IndividualDeck from "./Deck.vue";
 import type { Deck } from "./Deck.vue";
 import { invoke } from "@tauri-apps/api/tauri";
+import { toast } from "vue-sonner";
 
 const props = defineProps<{
   decks: Deck[];
@@ -25,7 +26,9 @@ function addDeck() {
 }
 
 function refreshAnki(forceAll: boolean) {
-  invoke("refresh_anki", { forceAll });
+  invoke("refresh_anki", { forceAll }).catch((e) => {
+    toast.error(e);
+  });
 }
 </script>
 

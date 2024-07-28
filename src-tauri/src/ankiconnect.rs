@@ -1,4 +1,4 @@
-use std::collections::HashMap;
+use std::{collections::HashMap, time::Duration};
 
 use chrono::Utc;
 use reqwest::Response;
@@ -60,9 +60,8 @@ pub async fn get_anki_card_statuses(
                 .expect("valid json from anki"),
         )?;
         for note in &notes_info {
-            let Ok(Some(word)) = get_word_from_note(note, handler).await else {
-                continue;
-            };
+            let word = get_word_from_note(note, handler).await;
+
             let intervals =
                 get_card_or_note_vals("getIntervals", json!({ "cards": note.cards }), &client)
                     .await?;
@@ -129,12 +128,24 @@ async fn generic_anki_connect_action(
         })
     };
 
-    client
+    match client
         .post("http://127.0.0.1:8765")
         .json(&request)
         .send()
         .await
-        .map_err(|_| SakinyjeError::AnkiNotAvailable)
+    {
+        Ok(r) => Ok(r),
+        Err(_) => {
+            // try again after a short delay
+            tokio::time::sleep(Duration::from_millis(300)).await;
+            client
+                .post("http://127.0.0.1:8765")
+                .json(&request)
+                .send()
+                .await
+                .map_err(|_| SakinyjeError::AnkiNotAvailable)
+        }
+    }
 }
 
 async fn get_card_or_note_vals(
@@ -146,10 +157,7 @@ async fn get_card_or_note_vals(
     res.json::<AnkiResult<Vec<isize>>>().await.unwrap().into()
 }
 
-async fn get_word_from_note(
-    note: &NoteInfo,
-    handler: &NoteToWordHandling,
-) -> Result<Option<String>, SakinyjeError> {
+async fn get_word_from_note(note: &NoteInfo, handler: &NoteToWordHandling) -> String {
     let selected_field = &note
         .fields
         .iter()
@@ -157,7 +165,7 @@ async fn get_word_from_note(
         .unwrap()
         .1
         .value;
-    Ok(Some(get_word_from_field(selected_field, handler)))
+    get_word_from_field(selected_field, handler)
 }
 
 fn get_word_from_field(selected_field: &str, handler: &NoteToWordHandling) -> String {
