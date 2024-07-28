@@ -35,6 +35,7 @@ pub async fn get_anki_card_statuses(
     first_time_run: bool,
 ) -> Result<(), SakinyjeError> {
     log::info!("getting anki card statuses");
+    let client = reqwest::Client::new();
     let days_passed_query = if first_time_run {
         String::new()
     } else {
@@ -47,10 +48,11 @@ pub async fn get_anki_card_statuses(
         );
         log::info!("Using query: {find_notes_query}");
         let notes =
-            get_card_or_note_vals("findNotes", json!({ "query": find_notes_query })).await?;
+            get_card_or_note_vals("findNotes", json!({ "query": find_notes_query }), &client)
+                .await?;
 
         let notes_info_res =
-            generic_anki_connect_action("notesInfo", json!({ "notes": notes })).await?;
+            generic_anki_connect_action("notesInfo", json!({ "notes": notes }), &client).await?;
         let notes_info = Into::<Result<Vec<NoteInfo>, SakinyjeError>>::into(
             notes_info_res
                 .json::<AnkiResult<Vec<NoteInfo>>>()
@@ -62,7 +64,8 @@ pub async fn get_anki_card_statuses(
                 continue;
             };
             let intervals =
-                get_card_or_note_vals("getIntervals", json!({ "cards": note.cards })).await?;
+                get_card_or_note_vals("getIntervals", json!({ "cards": note.cards }), &client)
+                    .await?;
             let selected_interval = intervals.iter().max().copied().unwrap_or_default();
             log::trace!("found word {word} with interval {selected_interval}");
 
@@ -108,8 +111,11 @@ struct FieldInfo {
     value: String,
 }
 
-async fn generic_anki_connect_action(action: &str, data: Value) -> Result<Response, SakinyjeError> {
-    let client = reqwest::Client::new();
+async fn generic_anki_connect_action(
+    action: &str,
+    data: Value,
+    client: &reqwest::Client,
+) -> Result<Response, SakinyjeError> {
     let request = if data == Value::Null {
         json!({
             "action": action,
@@ -131,8 +137,12 @@ async fn generic_anki_connect_action(action: &str, data: Value) -> Result<Respon
         .map_err(|_| SakinyjeError::AnkiNotAvailable)
 }
 
-async fn get_card_or_note_vals(action: &str, data: Value) -> Result<Vec<isize>, SakinyjeError> {
-    let res = generic_anki_connect_action(action, data).await?;
+async fn get_card_or_note_vals(
+    action: &str,
+    data: Value,
+    client: &reqwest::Client,
+) -> Result<Vec<isize>, SakinyjeError> {
+    let res = generic_anki_connect_action(action, data, client).await?;
     res.json::<AnkiResult<Vec<isize>>>().await.unwrap().into()
 }
 
@@ -177,7 +187,8 @@ fn get_word_from_field(selected_field: &str, handler: &NoteToWordHandling) -> St
 
 #[tauri::command]
 pub async fn get_all_deck_names() -> Result<Vec<String>, SakinyjeError> {
-    let res = generic_anki_connect_action("deckNames", Value::Null).await?;
+    let res =
+        generic_anki_connect_action("deckNames", Value::Null, &reqwest::Client::new()).await?;
     res.json::<AnkiResult<Vec<String>>>()
         .await
         .expect("Valid json from anki")
@@ -186,7 +197,8 @@ pub async fn get_all_deck_names() -> Result<Vec<String>, SakinyjeError> {
 
 #[tauri::command]
 pub async fn get_all_note_names() -> Result<Vec<String>, SakinyjeError> {
-    let res = generic_anki_connect_action("modelNames", Value::Null).await?;
+    let res =
+        generic_anki_connect_action("modelNames", Value::Null, &reqwest::Client::new()).await?;
     res.json::<AnkiResult<Vec<String>>>()
         .await
         .expect("Valid json from anki")
@@ -195,7 +207,12 @@ pub async fn get_all_note_names() -> Result<Vec<String>, SakinyjeError> {
 
 #[tauri::command]
 pub async fn get_note_field_names(model: &str) -> Result<Vec<String>, SakinyjeError> {
-    let res = generic_anki_connect_action("modelFieldNames", json!({ "modelName": model })).await?;
+    let res = generic_anki_connect_action(
+        "modelFieldNames",
+        json!({ "modelName": model }),
+        &reqwest::Client::new(),
+    )
+    .await?;
     res.json::<AnkiResult<Vec<String>>>()
         .await
         .expect("Valid json from anki")
