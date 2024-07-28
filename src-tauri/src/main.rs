@@ -125,6 +125,7 @@ struct LanguageSpecficToSave {
 impl Default for SharedInfo {
     fn default() -> Self {
         let mut errors = Vec::new();
+        let mut can_save = true;
 
         let mut to_save: ToSave = match dirs::data_dir()
             .ok_or_else(|| SakinyjeError::MissingDir(String::from("data")))
@@ -136,6 +137,7 @@ impl Default for SharedInfo {
             Ok(v) => v,
             Err(e) => {
                 if !matches!(e, SakinyjeError::Io(_)) {
+                    can_save = false;
                     errors.push(e);
                 }
                 ToSave::default()
@@ -152,6 +154,7 @@ impl Default for SharedInfo {
             Ok(v) => v,
             Err(e) => {
                 if !matches!(e, SakinyjeError::Io(_)) {
+                    can_save = false;
                     errors.push(e);
                 }
                 Settings::default()
@@ -174,7 +177,13 @@ impl Default for SharedInfo {
             }
         };
 
-        set_word_knowledge_from_anki(&mut to_save, &settings.languages);
+        if let Err(e) = block_on(set_word_knowledge_from_anki(
+            &mut to_save,
+            &settings.languages,
+            false,
+        )) {
+            errors.push(e);
+        }
 
         if let Some(cmds) = &settings.to_run {
             for cmd in cmds {
@@ -187,8 +196,6 @@ impl Default for SharedInfo {
             .clone()
             .or_else(|| settings.languages.keys().next().cloned());
         to_save.sessions.push((Utc::now(), Duration::new(0, 0)));
-
-        let can_save = errors.is_empty();
 
         Self {
             errors,
@@ -263,7 +270,11 @@ fn main() {
 }
 
 #[tauri::command]
-async fn refresh_anki(state: State<'_, SakinyjeState>, window: Window) -> Result<(), String> {
+async fn refresh_anki(
+    state: State<'_, SakinyjeState>,
+    window: Window,
+    force_all: bool,
+) -> Result<(), SakinyjeError> {
     window
         .emit(
             "refresh_anki",
@@ -275,10 +286,9 @@ async fn refresh_anki(state: State<'_, SakinyjeState>, window: Window) -> Result
     let mut state = state.0.lock().await;
     let languages = state.settings.languages.clone();
 
-    set_word_knowledge_from_anki(&mut state.to_save, &languages);
-    window
-        .emit("refresh_anki", ToasterPayload { message: None })
-        .unwrap();
+    set_word_knowledge_from_anki(&mut state.to_save, &languages, force_all).await?;
+    log::trace!("Anki data loaded [forced: {force_all}]");
+    window.emit("refresh_anki", ToasterPayload { message: None })?;
     Ok(())
 }
 
@@ -293,10 +303,11 @@ async fn check_startup_errors(state: State<'_, SakinyjeState>) -> Result<(), Vec
     }
 }
 
-fn set_word_knowledge_from_anki(
+async fn set_word_knowledge_from_anki(
     to_save: &mut ToSave,
     languages: &HashMap<String, LanguageSettings>,
-) {
+    force_all: bool,
+) -> Result<(), SakinyjeError> {
     let new_time = Utc::now();
     let days_passed = new_time
         .signed_duration_since(to_save.last_launched)
@@ -309,7 +320,7 @@ fn set_word_knowledge_from_anki(
             .entry(language_name.to_owned())
             .or_default();
         for (deck, note_parser) in &language.anki_parser {
-            block_on(get_anki_card_statuses(
+            get_anki_card_statuses(
                 deck,
                 &note_parser.0,
                 &mut to_save_language.words,
@@ -317,9 +328,9 @@ fn set_word_knowledge_from_anki(
                 // If the deck has not been added, it means this is the first time it is being
                 // checked, so we should check every card and not just the ones recently
                 // updated
-                !to_save.decks_checked.contains(deck),
-            ))
-            .unwrap();
+                force_all || !to_save.decks_checked.contains(deck),
+            )
+            .await?;
             to_save.decks_checked.push(deck.to_owned());
         }
 
@@ -336,6 +347,7 @@ fn set_word_knowledge_from_anki(
         }
     }
     to_save.last_launched = new_time;
+    Ok(())
 }
 
 fn handle_window_event(event: GlobalWindowEvent) {
