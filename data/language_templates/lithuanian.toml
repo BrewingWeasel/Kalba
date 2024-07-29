@@ -30,5 +30,7 @@ c = ["en", "Lithuanian"]
 
 # Stanza gets these wrong for some reason
 [replace_lemmas]
-"s" = "nes"
-"t" = "bet"
+s = "nes"
+t = "bet"
+nt = "bent"
+veik = "beveik"
