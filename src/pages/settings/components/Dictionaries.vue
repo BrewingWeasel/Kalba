@@ -11,7 +11,6 @@ import {
 import {
   AlertDialog,
   AlertDialogAction,
-  AlertDialogCancel,
   AlertDialogContent,
   AlertDialogFooter,
   AlertDialogHeader,
@@ -119,7 +118,6 @@ function addDictionary() {
                 v-model:checked="dicts[index].fetch_by_default"
               />
               <AlertDialogFooter>
-                <AlertDialogCancel>Cancel</AlertDialogCancel>
                 <AlertDialogAction>Save</AlertDialogAction>
               </AlertDialogFooter>
             </AlertDialogContent>

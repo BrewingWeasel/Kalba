@@ -1,5 +1,3 @@
-import type { Deck } from "@/components/settings/Deck.vue";
-
 export type HistoryItem = string | number;
 
 export interface Definition {
@@ -88,4 +86,21 @@ export interface Dictionary {
 export interface DictionarySpecificSettings {
   t: DictionaryType;
   c: [string, FileType] | [string, string] | string | undefined;
+}
+
+export interface Deck {
+  name: string;
+  notes: Note[];
+}
+
+export interface Note {
+  model: string;
+  handling: NoteToWordHandling;
+}
+
+export interface NoteToWordHandling {
+  field_to_use: string;
+  only_first_word_or_line: boolean;
+  remove_everything_in_parens: boolean;
+  search_params: string;
 }
