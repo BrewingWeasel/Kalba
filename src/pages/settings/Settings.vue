@@ -282,6 +282,7 @@ async function newLanguage(language: string) {
           id="freq"
           v-model="settings.languages[selectedLang].words_known_by_freq"
           class="w-48"
+          :disabled="!settings.languages[selectedLang].frequency_list"
         >
           <NumberFieldContent>
             <NumberFieldDecrement />
