@@ -64,7 +64,9 @@ const props = defineProps<{
 }>();
 
 const languagesOpen: Ref<{ [key: string]: boolean }> = ref({});
+const languageNameChanges: Ref<{ [key: string]: string }> = ref({});
 for (const language in settings.languages) {
+  languageNameChanges.value[language] = language;
   if (props.currentLanguage === language) {
     languagesOpen.value[language] = true;
   } else {
@@ -108,6 +110,7 @@ async function newLanguage(language: string) {
   await invoke("new_language_from_template", { language });
   const updated: Settings = await invoke("get_settings");
   settings.languages = updated.languages;
+  languageNameChanges.value[language] = language;
 }
 </script>
 
@@ -166,6 +169,11 @@ async function newLanguage(language: string) {
                 }
               "
             >
+              <SettingsMenu
+                v-model="section"
+                :rightLanguage="selectedLang === language"
+                section="General"
+              />
               <SettingsMenu
                 v-model="section"
                 :rightLanguage="selectedLang === language"
@@ -241,6 +249,29 @@ async function newLanguage(language: string) {
             root word for over 70 languages.</AlertDescription
           >
         </Alert>
+      </template>
+
+      <template v-else-if="section == 'General' && selectedLang != null">
+        <Heading
+          title_id="general"
+          title="General"
+          description="Configure the general settings for the language"
+        />
+        <Label for="language-name">Language name</Label>
+        <Input
+          v-model="languageNameChanges[selectedLang]"
+          class="w-64"
+          id="language-name"
+          @change="
+            () => {
+              if (selectedLang === null) return;
+              const newName = languageNameChanges[selectedLang];
+              settings.languages[newName] = settings.languages[selectedLang];
+              delete settings.languages[selectedLang];
+              languageNameChanges[newName] = newName;
+            }
+          "
+        />
       </template>
 
       <template v-else-if="section == 'Exporting' && selectedLang != null">

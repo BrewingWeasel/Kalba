@@ -5,6 +5,7 @@ import { cn } from "@/lib/utils";
 export type SettingsSection =
   | "Appearance"
   | "Exporting"
+  | "General"
   | "Word Knowledge"
   | "Dictionaries"
   | "Input"
