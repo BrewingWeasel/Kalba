@@ -24,9 +24,33 @@ pub async fn new_language_from_template(
     language: String,
 ) -> Result<(), SakinyjeError> {
     let language = language.to_lowercase();
+    let mut state = state.0.lock().await;
+
+    let mut language_name = language.clone();
+    if state.settings.languages.contains_key(&language_name) {
+        let mut language_number = 2;
+        while state
+            .settings
+            .languages
+            .contains_key(&format!("{language} {language_number}"))
+        {
+            language_number += 1;
+        }
+        language_name = format!("{language} {language_number}");
+    }
+
     if language == "custom" {
+        state
+            .settings
+            .languages
+            .insert(language_name.clone(), LanguageSettings::default());
+        state
+            .to_save
+            .language_specific
+            .insert(language_name, crate::LanguageSpecficToSave::default());
         return Ok(());
     }
+
     let client = Client::new();
     let template = client.get(format!(
         "https://raw.githubusercontent.com/brewingweasel/sakinyje/main/data/language_templates/{language}.toml",))
@@ -67,7 +91,7 @@ pub async fn new_language_from_template(
     } else {
         String::new()
     };
-    let mut state = state.0.lock().await;
+
     let lang_settings = LanguageSettings {
         model: details.model,
         frequency_list,
@@ -77,18 +101,6 @@ pub async fn new_language_from_template(
         suggest_on_lemmas: details.suggest_on_lemmas,
         ..Default::default()
     };
-    let mut language_name = language.clone();
-    if state.settings.languages.contains_key(&language_name) {
-        let mut language_number = 2;
-        while state
-            .settings
-            .languages
-            .contains_key(&format!("{language} {language_number}"))
-        {
-            language_number += 1;
-        }
-        language_name = format!("{language} {language_number}");
-    }
     state
         .settings
         .languages
