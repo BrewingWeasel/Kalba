@@ -64,6 +64,8 @@ pub async fn time_spent(state: State<'_, SakinyjeState>) -> Result<TimeSpentStat
     })
 }
 
+const WORD_RATING: [&str; 4] = ["Learning", "Recognized", "Familiar", "Known"];
+
 #[tauri::command]
 pub async fn get_words_known_at_levels(
     state: State<'_, SakinyjeState>,
@@ -76,7 +78,7 @@ pub async fn get_words_known_at_levels(
         .get(current_language)
         .expect("language to include")
         .words;
-    let mut words_at_rating = [0; 5];
+    let mut words_at_rating = [0; 4];
     for info in words.values() {
         match info.rating {
             -1 | 0 => (),
@@ -89,7 +91,7 @@ pub async fn get_words_known_at_levels(
         .iter()
         .enumerate()
         .map(|(rating, amount)| NumWordsKnown {
-            name: format!("words rated {}", rating + 1),
+            name: format!("{} words", WORD_RATING[rating]),
             amount: *amount,
         })
         .collect())
