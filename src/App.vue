@@ -213,12 +213,12 @@ onMounted(async () => {
             <PopoverTrigger>
               <div class="flex items-center px-2 rounded-md bg-accent">
                 <Settings2 :size="16" class="mr-1" />
-                {{ currentLanguage ?? "Select a language" }}
+                {{ currentLanguage ?? "Select a profile" }}
               </div>
             </PopoverTrigger>
             <PopoverContent class="w-60">
               <h4 class="pb-2 font-medium leading-none">Quick Settings</h4>
-              <Label for="current-language">Current language:</Label>
+              <Label for="current-language">Current profile:</Label>
               <Select
                 id="current-language"
                 :modelValue="currentLanguage ?? ''"

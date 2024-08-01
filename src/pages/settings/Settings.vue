@@ -126,7 +126,7 @@ async function newLanguage(language: string) {
       <SettingsMenu v-model="section" section="Stanza" :rightLanguage="true" />
       <Collapsible class="px-4" v-model:open="allLanguageMenuOpen">
         <div class="flex justify-between items-center">
-          <h4 class="font-semibold">Languages</h4>
+          <h4 class="font-semibold">Profiles</h4>
           <CollapsibleTrigger as-child>
             <Button variant="ghost" size="sm" class="p-0 w-9">
               <ChevronDown class="w-4 h-4" />
