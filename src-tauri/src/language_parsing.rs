@@ -403,7 +403,7 @@ fn stanza_parser(
         .as_mut()
         .expect("language parser to be started");
 
-    let sent_formatted = format!("{sent}\n");
+    let sent_formatted = format!("{}\n", sent.replace("\n\n", "\n"));
     let bytes_written = language_parser
         .stdin
         .write(sent_formatted.as_bytes())
