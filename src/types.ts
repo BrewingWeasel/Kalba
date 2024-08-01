@@ -55,6 +55,12 @@ export interface Word {
   other_forms: string[];
   length: number;
   whitespace_after: boolean;
+  sentence_index: number;
+}
+
+export interface ParsedWords {
+  sentences: string[];
+  sections: Section[];
 }
 
 export interface FileType {

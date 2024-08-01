@@ -1,4 +1,5 @@
 import stanza
+import json
 
 language = input()
 try:
@@ -19,9 +20,18 @@ while True:
 
     print("[")
     for sent_index, sent in enumerate(doc.sentences):
+        if not (sent_index == 0):
+            print(",")
+        print(f"{{\n\"sentence\": {json.dumps(sent._text)},")
+        print("\"words\": [")
+
         for word_index, word in enumerate(sent.words):
-            # If it's not the first word, print a comma to conform to json syntax
-            if not (word_index == 0 and sent_index == 0):
+            # If it's not the first word, add a comma to the last line to conform to json syntax
+            if not (word_index == 0):
                 print(",")
             print(word, end="")
+
+        print("\n]")
+        print("}", end="")
     print("\n]")
+    print("done")

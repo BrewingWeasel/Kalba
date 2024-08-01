@@ -28,11 +28,18 @@ pub struct Word {
     pub text: String,
     pub lemma: String,
     pub rating: i8,
+    pub sentence_index: usize,
     pub morph: HashMap<String, String>,
     pub clickable: bool,
     pub other_forms: Vec<String>,
     pub length: usize,
     pub whitespace_after: bool,
+}
+
+#[derive(Clone, Serialize, Deserialize, Debug)]
+pub struct ParsedWords {
+    pub sentences: Vec<String>,
+    pub sections: Vec<Section>,
 }
 
 #[derive(Clone, Serialize, Deserialize, Debug)]

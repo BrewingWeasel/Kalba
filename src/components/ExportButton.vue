@@ -124,7 +124,7 @@ function selectWord() {
                   id="sentence"
                   class="select-auto selection:bg-pink-300"
                 >
-                  {{ props.sentence }}
+                  {{ exportDetails.sentence }}
                 </p>
               </div>
             </CardContent>

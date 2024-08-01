@@ -9,6 +9,7 @@ import type {
   Definition,
   HistoryItem,
   ExportDetails,
+  ParsedWords,
 } from "@/types";
 import { toast } from "vue-sonner";
 import {
@@ -29,6 +30,7 @@ const props = defineProps<{
   isUrl: boolean;
 }>();
 const sections: Ref<Section[] | undefined> = ref(undefined);
+const sentences: Ref<string[] | undefined> = ref(undefined);
 const selectedWord: Ref<Word | undefined> = ref(undefined);
 const selectedSectionIndex: Ref<number> = ref(0);
 const selectedWordIndex: Ref<number> = ref(0);
@@ -43,47 +45,25 @@ console.log(sections);
 
 const wordHovered = ref<string | undefined>(undefined);
 
-const DEFAULT_WORDS_AROUND = 25;
-
 const sentence = computed(() => {
-  let intendedSent = "";
-
-  const section = sections.value?.[selectedSectionIndex.value];
-  if (section && typeof section.c != "string") {
-    for (
-      let i = selectedWordIndex.value - DEFAULT_WORDS_AROUND;
-      i < selectedWordIndex.value + DEFAULT_WORDS_AROUND;
-      i++
-    ) {
-      const curWord = section.c[i];
-      if (curWord) {
-        if (curWord.clickable) {
-          intendedSent += ` ${curWord.text}`;
-        } else {
-          intendedSent += curWord.text;
-        }
-      }
-    }
+  if (sentences.value && selectedWord.value) {
+    return sentences.value[selectedWord.value.sentence_index];
   }
-  return intendedSent;
+  return "";
 });
 
 async function set_words() {
-  if (props.isUrl) {
-    sections.value = await invoke<Section[]>("parse_url", {
-      url: props.sentence,
-    }).catch((error) => {
+  const command = props.isUrl ? "parse_url" : "parse_text";
+  const args = props.isUrl ? { url: props.sentence } : { sent: props.sentence };
+
+  const parsedWords = await invoke<ParsedWords>(command, args).catch(
+    (error) => {
       toast.error(error);
-      return [];
-    });
-  } else {
-    sections.value = await invoke<Section[]>("parse_text", {
-      sent: props.sentence,
-    }).catch((error) => {
-      toast.error(error);
-      return [];
-    });
-  }
+      return { sections: [], sentences: [] };
+    },
+  );
+  sections.value = parsedWords.sections;
+  sentences.value = parsedWords.sentences;
 }
 
 const sentenceStats = computed(() => {
@@ -202,6 +182,12 @@ const exportDetails: Ref<ExportDetails> = ref({
   model: "",
   sentence: "",
   fields: {},
+});
+
+watch(sentence, (newSentence) => {
+  if (newSentence) {
+    exportDetails.value.sentence = newSentence;
+  }
 });
 
 watch(

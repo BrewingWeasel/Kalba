@@ -34,7 +34,7 @@ enum SectionContents {
 pub async fn parse_url(
     url: &str,
     state: State<'_, SakinyjeState>,
-) -> Result<Vec<Section>, SakinyjeError> {
+) -> Result<ParsedWords, SakinyjeError> {
     let parsed_url = Url::parse(url).unwrap();
     let root_url = parsed_url.host_str().unwrap().strip_prefix("www.").unwrap();
 
@@ -218,10 +218,9 @@ pub async fn parse_url(
 
     let owned_sections = Arc::into_inner(sections).unwrap();
     let owned_details = owned_sections.into_inner();
-    let mut all_words = words_from_string(&owned_details.2, state)
-        .await?
-        .into_iter()
-        .peekable();
+    let (sentences, all_words) = words_from_string(&owned_details.2, state).await?;
+
+    let mut all_words = all_words.into_iter().peekable();
 
     let mut get_words = |length| {
         log::trace!("section length: {length}");
@@ -254,27 +253,32 @@ pub async fn parse_url(
         sections.push(section);
     }
 
-    Ok(sections)
+    Ok(ParsedWords {
+        sentences,
+        sections,
+    })
 }
 
 #[tauri::command]
 pub async fn parse_text(
     sent: &str,
     state: State<'_, SakinyjeState>,
-) -> Result<Vec<Section>, SakinyjeError> {
-    Ok(vec![Section::Paragraph(dbg!(
-        words_from_string(sent, Arc::new(state)).await?
-    ))])
+) -> Result<ParsedWords, SakinyjeError> {
+    let (sentences, words) = words_from_string(sent, Arc::new(state)).await?;
+    Ok(ParsedWords {
+        sentences,
+        sections: vec![Section::Paragraph(words)],
+    })
 }
 
 pub async fn words_from_string(
     sent: &str,
     state: Arc<State<'_, SakinyjeState>>,
-) -> Result<Vec<Word>, SakinyjeError> {
+) -> Result<(Vec<String>, Vec<Word>), SakinyjeError> {
     let mut state = state.0.lock().await;
 
     if sent.is_empty() {
-        return Ok(Vec::new());
+        return Ok((Vec::new(), Vec::new()));
     }
     log::info!("Parsing text: {}", sent);
 
@@ -284,7 +288,7 @@ pub async fn words_from_string(
         .expect("Language to have already been chosen");
     let interpreter = load_spyglys(&mut state)?;
 
-    let words = if state.language_parser.is_some() && state.settings.stanza_enabled {
+    let (sentences, words) = if state.language_parser.is_some() && state.settings.stanza_enabled {
         log::trace!("Sending to stanza parser");
         stanza_parser(
             &format!("{sent}\n"),
@@ -305,7 +309,13 @@ pub async fn words_from_string(
             chrono::Utc::now(),
             words.iter().filter(|v| v.clickable).count(),
         ));
-    Ok(words)
+    Ok((sentences, words))
+}
+
+#[derive(serde::Deserialize, Clone)]
+struct Sentence {
+    words: Vec<StanzaToken>,
+    sentence: String,
 }
 
 #[derive(serde::Deserialize, Clone)]
@@ -387,7 +397,7 @@ fn stanza_parser(
     state: &mut MutexGuard<SharedInfo>,
     language: String,
     interpreter: &Interpreter,
-) -> Result<Vec<Word>, SakinyjeError> {
+) -> Result<(Vec<String>, Vec<Word>), SakinyjeError> {
     let language_parser = state
         .language_parser
         .as_mut()
@@ -411,75 +421,77 @@ fn stanza_parser(
             .stdout
             .read_line(&mut specific_contents)
             .is_err()
+            || specific_contents == "done\n"
         {
             break;
         }
         contents.push_str(&specific_contents);
-        if specific_contents == "]\n" {
-            break;
-        }
     }
-    let mut details = serde_json::from_str::<Vec<StanzaToken>>(&contents)
-        .unwrap()
-        .into_iter()
-        .peekable();
+    let details =
+        serde_json::from_str::<Vec<Sentence>>(&contents).expect("valid json from stanza parser");
     log::trace!("response parsed");
 
     let mut words = Vec::new();
+    let mut sentences = Vec::new();
 
-    while let Some(token) = details.next() {
-        let lemma = handle_lemma(&token.lemma, interpreter, state)?;
-        let rating = if ["PUNCT", "SYM", "PROPN", "NUM"].contains(&token.upos.as_str()) {
-            -1
-        } else {
-            state
-                .to_save
-                .language_specific
-                .get_mut(&language)
-                .expect("language to be chosen")
-                .words
-                .entry(lemma.clone())
-                .or_insert(crate::WordInfo {
-                    rating: 0,
-                    method: crate::Method::FromSeen,
-                    history: vec![(chrono::Utc::now(), crate::Method::FromSeen, 0)],
-                })
-                .rating
-        };
-
-        let morph = token
-            .feats
-            .map(|feats| {
-                feats
-                    .split('|')
-                    .map(|morph| {
-                        let mut morph_parts = morph.split('=');
-                        let key = morph_parts.next().unwrap().to_string();
-                        let value = morph_parts.next().unwrap().to_string();
-                        (key, value)
+    for (sentence_index, sentence) in details.into_iter().enumerate() {
+        sentences.push(sentence.sentence);
+        let mut tokens = sentence.words.into_iter().peekable();
+        while let Some(token) = tokens.next() {
+            let lemma = handle_lemma(&token.lemma, interpreter, state)?;
+            let rating = if ["PUNCT", "SYM", "PROPN", "NUM"].contains(&token.upos.as_str()) {
+                -1
+            } else {
+                state
+                    .to_save
+                    .language_specific
+                    .get_mut(&language)
+                    .expect("language to be chosen")
+                    .words
+                    .entry(lemma.clone())
+                    .or_insert(crate::WordInfo {
+                        rating: 0,
+                        method: crate::Method::FromSeen,
+                        history: vec![(chrono::Utc::now(), crate::Method::FromSeen, 0)],
                     })
-                    .collect()
+                    .rating
+            };
+
+            let morph = token
+                .feats
+                .map(|feats| {
+                    feats
+                        .split('|')
+                        .map(|morph| {
+                            let mut morph_parts = morph.split('=');
+                            let key = morph_parts.next().unwrap().to_string();
+                            let value = morph_parts.next().unwrap().to_string();
+                            (key, value)
+                        })
+                        .collect()
+                })
+                .unwrap_or_default();
+
+            let whitespace_after = if let Some(next_token) = tokens.peek() {
+                next_token.start_char != token.end_char
+            } else {
+                false
+            };
+
+            words.push(Word {
+                text: token.text,
+                lemma: lemma.clone(),
+                rating,
+                morph,
+                sentence_index,
+                clickable: !["PUNCT", "SYM", "NUM"].contains(&token.upos.as_str()),
+                other_forms: get_alternate_forms(&lemma, interpreter, state)?,
+                length: token.end_char - token.start_char,
+                whitespace_after,
             })
-            .unwrap_or_default();
-
-        let whitespace_after = if let Some(next_token) = details.peek() {
-            next_token.start_char != token.end_char
-        } else {
-            false
-        };
-
-        words.push(Word {
-            text: token.text,
-            lemma: lemma.clone(),
-            rating,
-            morph,
-            clickable: !["PUNCT", "SYM", "NUM"].contains(&token.upos.as_str()),
-            other_forms: get_alternate_forms(&lemma, interpreter, state)?,
-            length: token.end_char - token.start_char,
-            whitespace_after,
-        })
+        }
     }
-    Ok(words)
+    Ok((sentences, words))
 }
 
 fn default_tokenizer(
@@ -487,11 +499,15 @@ fn default_tokenizer(
     language: String,
     state: &mut MutexGuard<SharedInfo>,
     interpreter: &Interpreter,
-) -> Result<Vec<Word>, SakinyjeError> {
+) -> Result<(Vec<String>, Vec<Word>), SakinyjeError> {
     let mut words = Vec::new();
+    let mut sentences = Vec::new();
+    let mut current_sentence = String::new();
+
     let mut currently_building = String::new();
     let mut chars = sent.chars().peekable();
     while let Some(c) = chars.next() {
+        current_sentence.push(c);
         if c.is_alphabetic() {
             currently_building.push(c);
         } else {
@@ -523,6 +539,7 @@ fn default_tokenizer(
                     other_forms: get_alternate_forms(&word, interpreter, state)?,
                     length: word.chars().count(),
                     whitespace_after,
+                    sentence_index: sentences.len(),
                 })
             }
             let mut whitespace_after = false;
@@ -547,8 +564,16 @@ fn default_tokenizer(
                 other_forms: Vec::new(),
                 length: 1,
                 whitespace_after,
-            })
+                sentence_index: sentences.len(),
+            });
+
+            if ['.', '!', '?'].contains(&c) {
+                sentences.push(std::mem::take(&mut current_sentence));
+            }
         }
     }
-    Ok(words)
+    if !current_sentence.is_empty() {
+        sentences.push(current_sentence);
+    }
+    Ok((sentences, words))
 }
