@@ -10,7 +10,7 @@ export interface ExportDetails {
   deck: string;
   model: string;
   sentence: string;
-  defs: string[];
+  defs: Map<string, Definition>;
   fields: { [key: string]: string };
 }
 

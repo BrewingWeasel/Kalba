@@ -136,7 +136,7 @@ async fn get_def_command(lemma: &str, cmd: &str) -> Result<Definition, SakinyjeE
 pub async fn get_defs(
     state: State<'_, SakinyjeState>,
     lemma: String,
-) -> Result<Vec<Definition>, SakinyjeError> {
+) -> Result<HashMap<String, Definition>, SakinyjeError> {
     let mut state = state.0.lock().await;
     let language = state
         .current_language
@@ -149,7 +149,7 @@ pub async fn get_defs(
     {
         Ok(v.clone())
     } else {
-        let mut defs = Vec::new();
+        let mut defs = HashMap::new();
         let mut successful_defs = Vec::new();
         for dict in &state
             .settings
@@ -177,7 +177,7 @@ pub async fn get_defs(
                 successful_defs.push(&dict.name);
             }
 
-            defs.push(def);
+            defs.insert(dict.name.clone(), def);
         }
         state
             .language_cached_data

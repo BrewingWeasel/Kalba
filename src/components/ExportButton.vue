@@ -12,7 +12,6 @@ import {
 import { Button } from "@/components/ui/button";
 import Exporting from "@/components/ExportingConfiguration.vue";
 import { invoke } from "@tauri-apps/api/tauri";
-import { ref, type Ref } from "vue";
 import type { Settings, ExportDetails } from "@/types";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import {
@@ -27,7 +26,6 @@ import { toast } from "vue-sonner";
 const props = defineProps<{
   word: string;
   sentence: string;
-  defs: string[];
   currentLanguage: string;
 }>();
 
@@ -53,16 +51,19 @@ const deckNames: string[] = await invoke<string[]>("get_all_deck_names").catch(
 
 const emit = defineEmits(["change-rating"]);
 
-const exportDetails: Ref<ExportDetails> = ref({
-  word: props.word,
-  defs: props.defs,
-  deck: settings?.languages[props.currentLanguage].deck ?? "",
-  model: settings?.languages[props.currentLanguage].model ?? "Basic",
-  sentence: "",
-  fields: settings?.languages[props.currentLanguage].note_fields ?? {},
+const exportDetails = defineModel<ExportDetails>("exportDetails", {
+  required: true,
 });
 
+exportDetails.value.deck =
+  settings?.languages[props.currentLanguage].deck ?? "";
+exportDetails.value.model =
+  settings?.languages[props.currentLanguage].note_type ?? "";
+exportDetails.value.fields =
+  settings?.languages[props.currentLanguage].note_fields ?? {};
+
 async function exportWord() {
+  console.log(exportDetails.value);
   emit("change-rating", 1, props.word, true);
   await invoke("add_to_anki", { exportDetails: exportDetails.value }).catch(
     (e) => {
@@ -142,6 +143,7 @@ function selectWord() {
                 <Exporting
                   :models
                   :deckNames
+                  :language="props.currentLanguage"
                   v-model:deck="exportDetails.deck"
                   v-model:model="exportDetails.model"
                   v-model:fields="exportDetails.fields"

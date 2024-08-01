@@ -20,12 +20,14 @@ import {
   CommandInput,
   CommandItem,
   CommandList,
+  CommandSeparator,
 } from "@/components/ui/command";
 import { toast } from "vue-sonner";
 
 const props = defineProps<{
   models: string[];
   deckNames: string[];
+  language: string;
 }>();
 
 const deck = defineModel<string>("deck", { required: true });
@@ -61,6 +63,12 @@ const builtins = [
   { name: "Sentence", value: "{sentence}" },
   { name: "All definitions", value: "{def}" },
 ];
+
+const definitionVariables = await invoke<string[]>("get_export_variables", {
+  language: props.language,
+}).catch((error) => {
+  toast.error(error);
+});
 </script>
 
 <template>
@@ -128,6 +136,22 @@ const builtins = [
                   openSelectors[index] = false;
                 "
                 >{{ builtin.name }}</CommandItem
+              >
+            </CommandGroup>
+            <CommandSeparator />
+            <CommandGroup heading="Definitions">
+              <CommandItem
+                v-for="definition in definitionVariables"
+                :value="definition"
+                @select="
+                  if (fields[field]) {
+                    fields[field] += `{def:${definition}}`;
+                  } else {
+                    fields[field] = `{def:${definition}}`;
+                  }
+                  openSelectors[index] = false;
+                "
+                >{{ definition }}</CommandItem
               >
             </CommandGroup>
           </CommandList>

@@ -283,6 +283,7 @@ async function newLanguage(language: string) {
         <Exporting
           :deckNames
           :models
+          :language="selectedLang"
           v-model:deck="settings.languages[selectedLang].deck"
           v-model:model="settings.languages[selectedLang].note_type"
           v-model:fields="settings.languages[selectedLang].note_fields"

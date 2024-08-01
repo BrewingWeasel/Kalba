@@ -3,7 +3,13 @@ import { type Ref, computed, ref, watch } from "vue";
 import { invoke } from "@tauri-apps/api/tauri";
 import IndividualWord from "@/components/Word.vue";
 import SelectedWordView from "@/components/SelectedWordView.vue";
-import type { Word, Section, Definition, HistoryItem } from "@/types";
+import type {
+  Word,
+  Section,
+  Definition,
+  HistoryItem,
+  ExportDetails,
+} from "@/types";
 import { toast } from "vue-sonner";
 import {
   ResizableHandle,
@@ -158,22 +164,26 @@ async function getOnDemandDef(dictionary: string) {
 const isComputingDefinition = ref(false);
 
 const definitions = computedAsync(
-  async (): Promise<Definition[]> => {
+  async (): Promise<Map<string, Definition>> => {
     if (selectedWord.value) {
-      const defs = await invoke<Definition[]>("get_defs", {
-        lemma: selectedWord.value.lemma,
-      });
+      const defs = new Map(
+        Object.entries(
+          await invoke<{ [key: string]: Definition }>("get_defs", {
+            lemma: selectedWord.value.lemma,
+          }),
+        ),
+      );
 
-      for (const def of defs) {
+      for (const [_, def] of defs.entries()) {
         if (def.t === "OnDemand" && def.c) {
           onDemandDefinitions.value.set(def.c, undefined);
         }
       }
       return defs;
     }
-    return [];
+    return new Map();
   },
-  [],
+  new Map(),
   isComputingDefinition,
 );
 
@@ -184,6 +194,31 @@ watch(definitions, () => {
     getOnDemandDef(def);
   }
 });
+
+const exportDetails: Ref<ExportDetails> = ref({
+  word: selectedWord.value?.lemma ?? "",
+  defs: definitions.value,
+  deck: "",
+  model: "",
+  sentence: "",
+  fields: {},
+});
+
+watch(
+  () => selectedWord.value?.lemma,
+  (newWord) => {
+    if (newWord) {
+      exportDetails.value.word = newWord;
+    }
+  },
+);
+
+watch(
+  () => definitions.value,
+  (newDefs) => {
+    exportDetails.value.defs = newDefs;
+  },
+);
 
 const history = ref<HistoryItem[]>([]);
 const historyIndex = ref(0);
@@ -398,6 +433,7 @@ whenever(zero, () => {
           "
           v-model:history="history"
           v-model:historyIndex="historyIndex"
+          v-model:exportDetails="exportDetails"
           :sentence
           :currentLanguage
           :definitions

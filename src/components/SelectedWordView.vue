@@ -5,7 +5,12 @@ import DefinitionView from "@/components/DefinitionView.vue";
 import { Input } from "@/components/ui/input";
 import ExportButton from "@/components/ExportButton.vue";
 import { invoke } from "@tauri-apps/api/tauri";
-import type { Definition, HistoryItem, Word } from "@/types";
+import {
+  ExportDetails,
+  type Definition,
+  type HistoryItem,
+  type Word,
+} from "@/types";
 import { Button } from "@/components/ui/button";
 import { Tags, CheckCircle2, Loader2 } from "lucide-vue-next";
 import { ref, watch } from "vue";
@@ -18,7 +23,7 @@ const separatedDefinitions = defineModel<string[]>("separatedDefinitions", {
 const props = defineProps<{
   sentence: string;
   currentLanguage: string;
-  definitions: Definition[];
+  definitions: Map<string, Definition>;
   isComputingDefinition: boolean;
   onDemandDefinitions: Map<string, undefined | string>;
 }>();
@@ -58,6 +63,10 @@ async function alwaysChangeLemma() {
     updatedLemma: word.value.lemma,
   });
 }
+
+const exportDetails = defineModel<ExportDetails>("exportDetails", {
+  required: true,
+});
 </script>
 
 <template>
@@ -119,7 +128,7 @@ async function alwaysChangeLemma() {
     <Suspense>
       <DefinitionView
         v-if="!props.isComputingDefinition"
-        :definitions="props.definitions"
+        :definitions
         :lemma="word.lemma"
         :onDemandDefinitions="props.onDemandDefinitions"
         :separatedDefinitions
@@ -138,7 +147,8 @@ async function alwaysChangeLemma() {
       <Suspense>
         <BetterTooltip :tooltip="`Save ${word.lemma} to Anki`">
           <ExportButton
-            :defs="definitions.filter((v) => v.t == 'Text').map((v) => v.c!)"
+            v-model:exportDetails="exportDetails"
+            :definitions
             :word="word.lemma"
             :sentence="props.sentence"
             :currentLanguage

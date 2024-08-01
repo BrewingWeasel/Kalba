@@ -17,14 +17,14 @@ const separatedDefinitions = defineModel<string[]>("separatedDefinitions", {
   required: true,
 });
 const props = defineProps<{
-  definitions: Definition[];
+  definitions: Map<string, Definition>;
   lemma: string;
   onDemandDefinitions: Map<string, undefined | string>;
 }>();
 
 const collapsiblesOpen = ref<{ [key: string]: boolean }>({});
 
-for (const def of props.definitions) {
+for (const def of props.definitions.values()) {
   if (def.t === "OnDemand" && def.c) {
     collapsiblesOpen.value[def.c] = false;
   }
@@ -32,7 +32,7 @@ for (const def of props.definitions) {
 </script>
 
 <template>
-  <div v-for="def in props.definitions">
+  <div v-for="[_, def] in props.definitions">
     <span v-if="def.t == 'Text'" v-html="def.c"></span>
     <div
       v-else-if="

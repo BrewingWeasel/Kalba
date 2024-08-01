@@ -1,25 +1,40 @@
 use reqwest::Client;
 use serde_json::json;
-use std::collections::HashMap;
+use shared::Definition;
+use std::{borrow::Cow, collections::HashMap};
+use tauri::State;
 
-use crate::SakinyjeError;
+use crate::{SakinyjeError, SakinyjeState};
 
 fn get_json(export_details: ExportDetails<'_>) -> serde_json::Value {
     let mut def = String::new();
-    for cur_def in &export_details.defs {
+    for definition in export_details.defs.values() {
         def.push('\n');
-        def.push_str(cur_def);
+        if let Definition::Text(t) = definition {
+            def.push_str(t);
+        }
     }
 
     let mut replacements = HashMap::from([
-        (String::from("{sentence}"), export_details.sentence),
-        (String::from("{word}"), export_details.word),
-        (String::from("{def}"), &def),
+        (
+            String::from("{sentence}"),
+            Cow::Borrowed(export_details.sentence),
+        ),
+        (String::from("{word}"), Cow::Borrowed(export_details.word)),
+        (String::from("{def}"), Cow::Owned(def)),
     ]);
 
-    for (i, v) in export_details.defs.iter().enumerate() {
-        replacements.insert(format!("${}", i).to_owned(), v.as_str());
+    for (name, value) in export_details.defs {
+        replacements.insert(
+            format!("{{def:{}}}", name).to_owned(),
+            match value {
+                Definition::Text(t) => Cow::Owned(t),
+                Definition::Empty => Cow::Borrowed(""),
+                Definition::OnDemand(_) => Cow::Borrowed(""),
+            },
+        );
     }
+    log::debug!("Possible replacements: {:?}", replacements);
 
     let mut fields = HashMap::new();
 
@@ -53,6 +68,28 @@ fn get_json(export_details: ExportDetails<'_>) -> serde_json::Value {
     })
 }
 
+#[tauri::command]
+pub async fn get_export_variables(
+    state: State<'_, SakinyjeState>,
+    language: String,
+) -> Result<Vec<String>, SakinyjeError> {
+    let state = state.0.lock().await;
+
+    let mut export_variables = Vec::new();
+
+    for dict in state
+        .settings
+        .languages
+        .get(&language)
+        .expect("Language exists")
+        .dicts
+        .iter()
+    {
+        export_variables.push(dict.name.clone());
+    }
+    Ok(export_variables)
+}
+
 #[derive(serde::Deserialize)]
 pub struct ExportDetails<'a> {
     word: &'a str,
@@ -60,7 +97,7 @@ pub struct ExportDetails<'a> {
     deck: &'a str,
     model: &'a str,
     fields: HashMap<&'a str, &'a str>,
-    defs: Vec<String>,
+    defs: HashMap<String, Definition>,
 }
 
 #[tauri::command]
@@ -88,7 +125,7 @@ mod test {
             sentence: "mmm",
             deck: "Default",
             model: "Basic",
-            defs: Vec::new(),
+            defs: HashMap::new(),
             fields: HashMap::from([("Front", "{sentence}"), ("Back", "{word}:")]),
         };
         let args = get_json(details);
@@ -115,12 +152,24 @@ mod test {
             sentence: "sent:2",
             deck: "Default",
             model: "Basic",
-            defs: vec![
-                String::from("def1"),
-                String::from("def2"),
-                String::from("def3"),
-            ],
-            fields: HashMap::from([("Front", "{sentence}"), ("Back", "{word}:{def}")]),
+            defs: HashMap::from([
+                (
+                    String::from("dict1"),
+                    Definition::Text(String::from("def1")),
+                ),
+                (
+                    String::from("dict2"),
+                    Definition::Text(String::from("def2")),
+                ),
+                (
+                    String::from("dict3"),
+                    Definition::Text(String::from("def3")),
+                ),
+            ]),
+            fields: HashMap::from([
+                ("Front", "{sentence}"),
+                ("Back", "{word}:{def:dict1}{def:dict2}{def:dict3}"),
+            ]),
         };
         let args = get_json(details);
         let params = args.get("params").unwrap();
@@ -135,10 +184,7 @@ mod test {
         );
         assert_eq!(
             note.get("fields").unwrap(),
-            &json!({"Front": "sent:2", "Back": "word:
-def1
-def2
-def3"})
+            &json!({"Front": "sent:2", "Back": "word:def1def2def3",})
         );
     }
 
@@ -149,7 +195,10 @@ def3"})
             sentence: "sent",
             deck: "deck",
             model: "note",
-            defs: vec![String::from("def1")],
+            defs: HashMap::from([(
+                String::from("dict1"),
+                Definition::Text(String::from("def1")),
+            )]),
             fields: HashMap::from([
                 ("sentence", "{sentence}[{word}]"),
                 ("word", "{word}"),
@@ -181,7 +230,7 @@ def3"})
             sentence: "sent",
             deck: "deck",
             model: "note",
-            defs: Vec::new(),
+            defs: HashMap::new(),
             fields: HashMap::from([("sentence", "{sentence}"), ("sentence", "{sentence}")]),
         };
         let args = get_json(details);

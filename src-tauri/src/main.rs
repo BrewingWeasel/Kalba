@@ -2,7 +2,7 @@
 #![cfg_attr(not(debug_assertions), windows_subsystem = "windows")]
 
 use crate::{
-    add_to_anki::add_to_anki,
+    add_to_anki::{add_to_anki, get_export_variables},
     ankiconnect::{get_all_deck_names, get_all_note_names, get_note_field_names, remove_deck},
     dictionary::{get_definition_on_demand, get_defs, DictionaryInfo},
     language_parsing::{parse_text, parse_url, start_stanza},
@@ -95,7 +95,7 @@ struct SharedInfo {
 
 #[derive(Debug, Deserialize, Serialize, Default)]
 struct CachedData {
-    definitions: HashMap<String, Vec<Definition>>,
+    definitions: HashMap<String, HashMap<String, Definition>>,
 }
 
 struct LanguageParser {
@@ -263,6 +263,7 @@ fn main() {
             always_change_lemma,
             setup_stanza,
             check_stanza_installed,
+            get_export_variables,
         ])
         .on_window_event(handle_window_event)
         .run(tauri::generate_context!())
