@@ -12,7 +12,7 @@ import {
 import { Button } from "@/components/ui/button";
 import Exporting from "@/components/ExportingConfiguration.vue";
 import { invoke } from "@tauri-apps/api/tauri";
-import type { Settings, ExportDetails } from "@/types";
+import type { Settings, ExportDetails, Word } from "@/types";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import {
   Card,
@@ -24,7 +24,7 @@ import {
 import { toast } from "vue-sonner";
 
 const props = defineProps<{
-  word: string;
+  word: Word;
   sentence: string;
   currentLanguage: string;
 }>();
@@ -64,7 +64,9 @@ exportDetails.value.fields =
 
 async function exportWord() {
   console.log(exportDetails.value);
-  emit("change-rating", 1, props.word, true);
+  if (props.word.rating <= 0) {
+    emit("change-rating", 1, props.word.lemma, true);
+  }
   await invoke("add_to_anki", { exportDetails: exportDetails.value }).catch(
     (e) => {
       toast.error(e);
@@ -85,7 +87,9 @@ function selectWord() {
   <Dialog>
     <DialogTrigger as-child>
       <div class="flex bottom-0 justify-center py-3">
-        <Button variant="destructive"> Export </Button>
+        <BetterTooltip :tooltip="`Save ${word.lemma} to Anki`">
+          <Button variant="destructive"> Export </Button>
+        </BetterTooltip>
       </div>
     </DialogTrigger>
     <DialogContent class="select-none">
