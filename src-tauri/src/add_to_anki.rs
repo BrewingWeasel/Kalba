@@ -1,8 +1,8 @@
 use reqwest::Client;
 use serde_json::json;
-use shared::Definition;
+use shared::{Definition, ToasterPayload};
 use std::{borrow::Cow, collections::HashMap};
-use tauri::State;
+use tauri::{State, Window};
 
 use crate::{ankiconnect::AnkiResult, SakinyjeError, SakinyjeState};
 
@@ -101,8 +101,12 @@ pub struct ExportDetails<'a> {
 }
 
 #[tauri::command]
-pub async fn add_to_anki(export_details: ExportDetails<'_>) -> Result<(), SakinyjeError> {
+pub async fn add_to_anki(
+    export_details: ExportDetails<'_>,
+    window: Window,
+) -> Result<(), SakinyjeError> {
     log::debug!("Adding to anki using details {:?}", export_details);
+    let selected_word = export_details.word;
     let args = get_json(export_details);
     let client = Client::new();
     let response = client
@@ -111,8 +115,14 @@ pub async fn add_to_anki(export_details: ExportDetails<'_>) -> Result<(), Sakiny
         .send()
         .await
         .map_err(|_| SakinyjeError::AnkiNotAvailable)?;
-    std::convert::Into::<Result<(), SakinyjeError>>::into(
-        response.json::<AnkiResult<()>>().await?,
+    std::convert::Into::<Result<isize, SakinyjeError>>::into(
+        response.json::<AnkiResult<isize>>().await?,
+    )?;
+    window.emit(
+        "added_to_anki",
+        Some(ToasterPayload {
+            message: Some(&format!("Added {} to anki", selected_word)),
+        }),
     )?;
     log::debug!("Added to anki");
     Ok(())

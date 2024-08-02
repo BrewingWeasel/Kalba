@@ -74,6 +74,7 @@ const toasters: Ref<Map<string, number | null>> = ref(
   new Map([
     ["stanza_loading", null],
     ["refresh_anki", null],
+    ["added_to_anki", null],
   ]),
 );
 
