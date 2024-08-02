@@ -439,7 +439,7 @@ fn stanza_parser(
         let mut tokens = sentence.words.into_iter().peekable();
         while let Some(token) = tokens.next() {
             let lemma = handle_lemma(&token.lemma, interpreter, state)?;
-            let rating = if ["PUNCT", "SYM", "PROPN", "NUM"].contains(&token.upos.as_str()) {
+            let rating = if ["PUNCT", "SYM", "NUM"].contains(&token.upos.as_str()) {
                 -1
             } else {
                 state
@@ -450,7 +450,7 @@ fn stanza_parser(
                     .words
                     .entry(lemma.clone())
                     .or_insert(crate::WordInfo {
-                        rating: 0,
+                        rating: if token.upos == "PROPN" { -1 } else { 0 },
                         method: crate::Method::FromSeen,
                         history: vec![(chrono::Utc::now(), crate::Method::FromSeen, 0)],
                     })
