@@ -145,18 +145,19 @@ const exportDetails = defineModel<ExportDetails>("exportDetails", {
     <div class="mt-auto">
       <GrammarDetails :morph="word.morph" separator="true" />
       <Suspense>
-        <ExportButton
-          v-model:exportDetails="exportDetails"
-          :definitions
-          :word="word"
-          :sentence="props.sentence"
-          :currentLanguage
-          @change-rating="
-            (r) => {
-              $emit('set-rating', r, word.lemma, true);
-            }
-          "
-        />
+        <BetterTooltip :tooltip="`Save ${word.lemma} to Anki`">
+          <ExportButton
+            v-model:exportDetails="exportDetails"
+            :definitions
+            :word="word.lemma"
+            :sentence="props.sentence"
+            :currentLanguage
+            @change-rating="
+              (r) => {
+                $emit('set-rating', r, word.lemma, true);
+              }
+            "
+        /></BetterTooltip>
       </Suspense>
     </div>
   </div>
