@@ -4,7 +4,7 @@ use shared::Definition;
 use std::{borrow::Cow, collections::HashMap};
 use tauri::State;
 
-use crate::{SakinyjeError, SakinyjeState};
+use crate::{ankiconnect::AnkiResult, SakinyjeError, SakinyjeState};
 
 fn get_json(export_details: ExportDetails<'_>) -> serde_json::Value {
     let mut def = String::new();
@@ -90,7 +90,7 @@ pub async fn get_export_variables(
     Ok(export_variables)
 }
 
-#[derive(serde::Deserialize)]
+#[derive(serde::Deserialize, Debug)]
 pub struct ExportDetails<'a> {
     word: &'a str,
     sentence: &'a str,
@@ -102,14 +102,19 @@ pub struct ExportDetails<'a> {
 
 #[tauri::command]
 pub async fn add_to_anki(export_details: ExportDetails<'_>) -> Result<(), SakinyjeError> {
+    log::debug!("Adding to anki using details {:?}", export_details);
     let args = get_json(export_details);
     let client = Client::new();
-    client
+    let response = client
         .post("http://localhost:8765/")
         .json(&args)
         .send()
         .await
         .map_err(|_| SakinyjeError::AnkiNotAvailable)?;
+    std::convert::Into::<Result<(), SakinyjeError>>::into(
+        response.json::<AnkiResult<()>>().await?,
+    )?;
+    log::debug!("Added to anki");
     Ok(())
 }
 

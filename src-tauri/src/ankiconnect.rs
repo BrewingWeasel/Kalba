@@ -10,7 +10,7 @@ use tauri::State;
 use crate::{Method, SakinyjeError, SakinyjeState, WordInfo};
 
 #[derive(Deserialize, Debug)]
-struct AnkiResult<T> {
+pub struct AnkiResult<T> {
     result: Option<T>,
     error: Option<String>,
 }
