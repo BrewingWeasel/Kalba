@@ -475,7 +475,7 @@ fn stanza_parser(
             let whitespace_after = if let Some(next_token) = tokens.peek() {
                 next_token.start_char != token.end_char
             } else {
-                false
+                true
             };
 
             words.push(Word {
