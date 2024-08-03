@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { type Ref, computed, ref, watch } from "vue";
+import { type Ref, computed, onMounted, ref, watch } from "vue";
 import { invoke } from "@tauri-apps/api/tauri";
 import IndividualWord from "@/components/Word.vue";
 import SelectedWordView from "@/components/SelectedWordView.vue";
@@ -10,6 +10,7 @@ import type {
   HistoryItem,
   ExportDetails,
   ParsedWords,
+  InputType,
 } from "@/types";
 import { toast } from "vue-sonner";
 import {
@@ -23,25 +24,18 @@ import { useMagicKeys, whenever } from "@vueuse/core";
 import { Button } from "@/components/ui/button";
 import { Separator } from "@/components/ui/separator";
 import BetterTooltip from "@/components/BetterTooltip.vue";
+import { readText } from "@tauri-apps/api/clipboard";
 
+const inputText = defineModel<string>("inputText", { required: true });
 const props = defineProps<{
-  sentence: string;
   currentLanguage: string;
-  isUrl: boolean;
+  inputType: InputType;
 }>();
 const sections: Ref<Section[] | undefined> = ref(undefined);
 const sentences: Ref<string[] | undefined> = ref(undefined);
 const selectedWord: Ref<Word | undefined> = ref(undefined);
 const selectedSectionIndex: Ref<number> = ref(0);
 const selectedWordIndex: Ref<number> = ref(0);
-
-await invoke("start_stanza").catch((error) => {
-  toast.error(error);
-});
-console.log("Stanza loaded");
-
-await set_words();
-console.log(sections);
 
 const wordHovered = ref<string | undefined>(undefined);
 
@@ -52,9 +46,10 @@ const sentence = computed(() => {
   return "";
 });
 
-async function set_words() {
-  const command = props.isUrl ? "parse_url" : "parse_text";
-  const args = props.isUrl ? { url: props.sentence } : { sent: props.sentence };
+async function setWords() {
+  const isUrl = props.inputType === "url";
+  const command = isUrl ? "parse_url" : "parse_text";
+  const args = isUrl ? { url: inputText.value } : { sent: inputText.value };
 
   const parsedWords = await invoke<ParsedWords>(command, args).catch(
     (error) => {
@@ -64,6 +59,7 @@ async function set_words() {
   );
   sections.value = parsedWords.sections;
   sentences.value = parsedWords.sentences;
+  console.log(sections);
 }
 
 const sentenceStats = computed(() => {
@@ -272,6 +268,30 @@ const { one, two, three, four, five, zero } = useMagicKeys({
 whenever(zero, () => {
   if (wordHovered.value) {
     changeRating(-1, wordHovered.value, true);
+  }
+});
+
+onMounted(async () => {
+  await invoke("start_stanza").catch((error) => {
+    toast.error(error);
+  });
+  console.log("Stanza loaded");
+
+  if (props.inputType === "clipboard") {
+    console.log("setting up clipboard listener");
+    await setWords();
+
+    setInterval(async () => {
+      const clipboardText = await readText();
+      if (clipboardText && clipboardText !== inputText.value) {
+        inputText.value = clipboardText;
+        console.log("clipboard text changed", clipboardText);
+        setTimeout(setWords, 200);
+      }
+    }, 600);
+  } else {
+    await setWords();
+    console.log(sections);
   }
 });
 </script>

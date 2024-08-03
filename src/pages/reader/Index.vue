@@ -6,10 +6,12 @@ import ButtonDialog from "@/components/ButtonDialog.vue";
 import FilePicker from "@/components/FilePicker.vue";
 import { readTextFile } from "@tauri-apps/api/fs";
 import { useRouter } from "vue-router";
+import { InputType } from "@/types";
+import { readText } from "@tauri-apps/api/clipboard";
 
-const currentSentence = ref("");
-const sentence = ref("");
-const isUrl = ref(false);
+const currentInput = ref("");
+const inputText = ref("");
+const inputType = ref<InputType>("normal");
 
 const props = defineProps<{ currentLanguage: string }>();
 
@@ -17,14 +19,14 @@ const router = useRouter();
 router.replace("/reader/input");
 
 function set_sentence() {
-  sentence.value = currentSentence.value;
+  inputText.value = currentInput.value;
 }
 </script>
 
 <template>
   <div v-if="props.currentLanguage" class="h-full">
     <div
-      v-if="sentence.length == 0"
+      v-if="inputText.length == 0"
       class="flex flex-wrap py-4 px-10 space-x-5 basis-auto"
     >
       <ButtonDialog
@@ -36,10 +38,7 @@ function set_sentence() {
         "
         button-name="Input content"
       >
-        <Textarea
-          placeholder="Enter text to analyze"
-          v-model="currentSentence"
-        />
+        <Textarea placeholder="Enter text to analyze" v-model="currentInput" />
       </ButtonDialog>
       <ButtonDialog
         class="flex-1 my-2 max-w-md"
@@ -47,29 +46,48 @@ function set_sentence() {
         button-name="Select file"
         @submitted="
           async () => {
-            router.replace(`/reader/file/${currentSentence}`);
-            currentSentence = await readTextFile(currentSentence);
+            router.replace(`/reader/file/${currentInput}`);
+            currentInput = await readTextFile(currentInput);
             set_sentence();
           }
         "
       >
-        <FilePicker v-model="currentSentence" />
+        <FilePicker v-model="currentInput" />
       </ButtonDialog>
       <ButtonDialog
         class="flex-1 my-2 max-w-md"
         title="Url"
         @submitted="
           router.replace('/reader/url');
-          isUrl = true;
+          inputType = 'url';
           set_sentence();
         "
         button-name="Enter a url"
       >
-        <Textarea placeholder="Enter url to use" v-model="currentSentence" />
+        <Textarea placeholder="Enter url to use" v-model="currentInput" />
+      </ButtonDialog>
+      <ButtonDialog
+        class="flex-1 my-2 max-w-md"
+        title="Clipboard"
+        @submitted="
+          async () => {
+            router.replace('/reader/clipboard');
+            inputType = 'clipboard';
+            currentInput = (await readText()) ?? 'Empty clipboard';
+            set_sentence();
+          }
+        "
+        button-name="Use clipboard"
+      >
       </ButtonDialog>
     </div>
     <div v-else class="h-full">
-      <ReaderView :sentence :currentLanguage :isUrl class="h-full" />
+      <ReaderView
+        v-model:inputText="inputText"
+        :currentLanguage
+        :inputType
+        class="h-full"
+      />
     </div>
   </div>
   <div v-else>

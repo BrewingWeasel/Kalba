@@ -18,11 +18,15 @@
         "open": true
       },
       "fs": {
-         "all": false,
+        "all": false,
         "readFile": true
       },
       "dialog": {
-         "all": true
+        "all": true
+      },
+      "clipboard": {
+        "all": false,
+        "readText": true
       }
     },
     "bundle": {

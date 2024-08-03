@@ -1,4 +1,5 @@
 export type HistoryItem = string | number;
+export type InputType = "url" | "clipboard" | "normal";
 
 export interface Definition {
   t: "Empty" | "Text" | "OnDemand";
