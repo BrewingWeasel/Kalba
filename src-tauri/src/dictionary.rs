@@ -2,16 +2,11 @@ use lol_html::{element, html_content::ContentType, rewrite_str, text, RewriteStr
 use reqwest::Client;
 use select::{document::Document, predicate::Attr};
 use serde::{Deserialize, Serialize};
-use shared::{Definition, DictFileType, DictionarySpecificSettings};
+use shared::{Definition, DefinitionStyling, DictFileType, DictionarySpecificSettings};
 use std::{collections::HashMap, fs, sync::Arc};
 use tauri::State;
 
 use crate::{commands::run_command, SakinyjeError, SakinyjeState};
-
-// TODO: should be customizable
-const DEFINITION: &str = "color: #eb6f92; font-weight: 900;";
-const MAIN_DETAIL: &str = "color: #f6c177; font-weight: bold; font-size: large;";
-const INFO: &str = "color: #c4a7e7; font-style: italic;";
 
 #[derive(Default, Clone)]
 pub struct DictionaryInfo {
@@ -168,6 +163,7 @@ pub async fn get_defs(
                     Arc::clone(&state.dict_info),
                     &dict.specific_settings,
                     &lemma,
+                    &state.settings.definition_styling,
                 )
                 .await?
             } else {
@@ -212,6 +208,7 @@ pub async fn get_definition_on_demand(
                 Arc::clone(&state.dict_info),
                 &dict.specific_settings,
                 &lemma,
+                &state.settings.definition_styling,
             )
             .await;
         }
@@ -223,17 +220,27 @@ async fn get_def(
     dict_info: Arc<tauri::async_runtime::Mutex<DictionaryInfo>>,
     dict: &DictionarySpecificSettings,
     lemma: &str,
+    definition_styling: &DefinitionStyling,
 ) -> Result<Definition, SakinyjeError> {
     match dict {
         DictionarySpecificSettings::File(f, dict_type) => get_def_from_file(lemma, f, dict_type),
         DictionarySpecificSettings::Url(url) => get_def_url(lemma, url).await,
         DictionarySpecificSettings::Command(cmd) => get_def_command(lemma, cmd).await,
-        DictionarySpecificSettings::EkalbaBendrines => get_ekalba_bendrines(dict_info, lemma).await,
+        DictionarySpecificSettings::EkalbaBendrines => {
+            get_ekalba_bendrines(dict_info, lemma, definition_styling).await
+        }
         DictionarySpecificSettings::EkalbaDabartines => {
-            get_ekalba_dabartines(dict_info, lemma).await
+            get_ekalba_dabartines(dict_info, lemma, definition_styling).await
         }
         DictionarySpecificSettings::Wiktionary(definition_lang, target_lang) => {
-            get_wiktionary(dict_info, lemma, definition_lang, target_lang).await
+            get_wiktionary(
+                dict_info,
+                lemma,
+                definition_lang,
+                target_lang,
+                definition_styling,
+            )
+            .await
         }
     }
 }
@@ -243,6 +250,7 @@ async fn get_wiktionary(
     lemma: &str,
     definition_lang: &str,
     target_lang: &str,
+    definition_styling: &DefinitionStyling,
 ) -> Result<Definition, SakinyjeError> {
     let mut lock = dict_info.lock().await;
     let response = lock
@@ -268,19 +276,19 @@ async fn get_wiktionary(
 
     let element_content_handlers = vec![
         element!("ol li", |el| {
-            el.set_attribute("style", DEFINITION).unwrap();
+            el.set_attribute("style", &definition_styling.definition).unwrap();
             Ok(())
         }),
         element!(".h-usage-example", |el| {
-            el.set_attribute("style", INFO).unwrap();
+            el.set_attribute("style", &definition_styling.info).unwrap();
             Ok(())
         }),
         element!(".headword-line", |el| {
-            el.set_attribute("style", MAIN_DETAIL).unwrap();
+            el.set_attribute("style", &definition_styling.main_detail).unwrap();
             Ok(())
         }),
         element!(".usage-label-sense, .antonym, .gender, ul li", |el| {
-            el.set_attribute("style", INFO).unwrap();
+            el.set_attribute("style", &definition_styling.info).unwrap();
             Ok(())
         }),
         element!(".mw-heading4", |el| {
@@ -323,6 +331,7 @@ pub struct EkalbaDetails {
 async fn get_ekalba_bendrines(
     dict_info: Arc<tauri::async_runtime::Mutex<DictionaryInfo>>,
     word: &str,
+    definition_styling: &DefinitionStyling,
 ) -> Result<Definition, SakinyjeError> {
     let response = {
         let mut lock = dict_info.lock().await;
@@ -341,15 +350,17 @@ async fn get_ekalba_bendrines(
     let element_content_handlers = vec![
         // Titles
         element!("span.bzpusjuodis", |el| {
-            el.set_attribute("style", MAIN_DETAIL).unwrap();
+            el.set_attribute("style", &definition_styling.main_detail)
+                .unwrap();
             Ok(())
         }),
         element!("span.bzpaprastas", |el| {
-            el.set_attribute("style", DEFINITION).unwrap();
+            el.set_attribute("style", &definition_styling.definition)
+                .unwrap();
             Ok(())
         }),
         element!("span.bzpetitas", |el| {
-            el.set_attribute("style", INFO).unwrap();
+            el.set_attribute("style", &definition_styling.info).unwrap();
             Ok(())
         }),
         element!("p.bz-update-date", |el| {
@@ -375,6 +386,7 @@ async fn get_ekalba_bendrines(
 async fn get_ekalba_dabartines(
     dict_info: Arc<tauri::async_runtime::Mutex<DictionaryInfo>>,
     word: &str,
+    definition_styling: &DefinitionStyling,
 ) -> Result<Definition, SakinyjeError> {
     let response = {
         let mut lock = dict_info.lock().await;
@@ -396,11 +408,13 @@ async fn get_ekalba_dabartines(
             Ok(())
         }),
         element!(".dz_antraste", |el| {
-            el.set_attribute("style", MAIN_DETAIL).unwrap();
+            el.set_attribute("style", &definition_styling.main_detail)
+                .unwrap();
             Ok(())
         }),
         element!(".dz_forms", |el| {
-            el.set_attribute("style", MAIN_DETAIL).unwrap();
+            el.set_attribute("style", &definition_styling.main_detail)
+                .unwrap();
             Ok(())
         }),
         element!(".dz_valnumber", |el| {
@@ -408,14 +422,17 @@ async fn get_ekalba_dabartines(
             Ok(())
         }),
         element!(".dz_tags", |el| {
-            el.set_attribute("style", INFO).unwrap();
+            el.set_attribute("style", &definition_styling.info).unwrap();
             Ok(())
         }),
         text!("*", |t| {
             let content = t.as_str();
             if content.ends_with(':') && content.starts_with(' ') {
                 t.replace(
-                    &format!("<span style=\"{DEFINITION}\">{content}</span>"),
+                    &format!(
+                        "<span style=\"{}\">{content}</span>",
+                        &definition_styling.definition,
+                    ),
                     ContentType::Html,
                 )
             }

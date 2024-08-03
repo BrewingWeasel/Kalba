@@ -15,10 +15,17 @@ export interface ExportDetails {
   fields: { [key: string]: string };
 }
 
+export interface DefinitionStyling {
+  definition: string;
+  info: string;
+  main_detail: string;
+}
+
 export interface Settings {
   dark_mode: boolean;
   languages: { [key: string]: LanguageSettings };
   site_configurations: { [key: string]: SiteConfiguration };
+  definition_styling: DefinitionStyling;
   stanza_enabled: boolean;
 }
 

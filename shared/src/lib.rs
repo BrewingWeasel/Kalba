@@ -164,9 +164,28 @@ pub enum Section {
 }
 
 #[derive(Deserialize, Serialize, Clone)]
+pub struct DefinitionStyling {
+    pub definition: String,
+    pub info: String,
+    pub main_detail: String,
+}
+
+impl Default for DefinitionStyling {
+    fn default() -> Self {
+        Self {
+            definition: String::from("color: #eb6f92; font-weight: 900;"),
+            info: String::from("color: #f6c177; font-weight: bold; font-size: large;"),
+            main_detail: String::from("color: #c4a7e7; font-style: italic;"),
+        }
+    }
+}
+
+#[derive(Deserialize, Serialize, Clone)]
 pub struct Settings {
     pub to_run: Option<Vec<String>>,
     pub dark_mode: bool,
+    #[serde(default)]
+    pub definition_styling: DefinitionStyling,
     pub site_configurations: HashMap<String, SiteConfiguration>,
     pub languages: HashMap<String, LanguageSettings>,
     pub stanza_enabled: bool,
@@ -194,6 +213,7 @@ impl Default for Settings {
             .expect("Failed to parse site_templates.toml");
         Self {
             to_run: None,
+            definition_styling: DefinitionStyling::default(),
             dark_mode: true,
             languages: HashMap::new(),
             site_configurations,

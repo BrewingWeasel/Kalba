@@ -41,6 +41,7 @@ import {
   NumberFieldInput,
 } from "@/components/ui/number-field";
 import EnableStanza from "@/components/EnableStanza.vue";
+import { Separator } from "@/components/ui/separator";
 
 const isDark = useDark();
 const router = useRouter();
@@ -211,6 +212,27 @@ async function newLanguage(language: string) {
         />
         <Switch id="theme" v-model:checked="isDark" />
         <Label for="theme">Use dark mode</Label>
+
+        <h2 class="mt-1">Definintion styling</h2>
+        <Separator class="mb-1" />
+
+        <Label for="def_styling">Definition style</Label>
+        <Input
+          v-model="settings.definition_styling.definition"
+          id="def_styling"
+        ></Input>
+
+        <Label for="info_styling">Info style</Label>
+        <Input
+          v-model="settings.definition_styling.info"
+          id="info_styling"
+        ></Input>
+
+        <Label for="main_styling">Detail style</Label>
+        <Input
+          v-model="settings.definition_styling.main_detail"
+          id="main_styling"
+        ></Input>
       </template>
 
       <template v-if="section == 'Input'">
