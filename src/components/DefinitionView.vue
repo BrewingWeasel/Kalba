@@ -34,8 +34,10 @@ for (const def of props.definitions.values()) {
 <template>
   <div v-for="[_, def] in props.definitions">
     <span v-if="def.t == 'Text'" v-html="def.c"></span>
+  </div>
+  <div v-for="[_, def] in props.definitions">
     <div
-      v-else-if="
+      v-if="
         def.t == 'OnDemand' && def.c && !separatedDefinitions.includes(def.c)
       "
       class="p-1 my-1 bg-background rounded-md"
