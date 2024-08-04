@@ -90,7 +90,7 @@ watch(
   },
 );
 
-const emit = defineEmits(["settingsChanged"]);
+const emit = defineEmits(["settingsChanged", "newCurrentLanguage"]);
 
 console.log(settings);
 
@@ -294,12 +294,20 @@ async function newLanguage(language: string) {
           class="w-64"
           id="language-name"
           @change="
-            () => {
+            async () => {
               if (selectedLang === null) return;
               const newName = languageNameChanges[selectedLang];
               settings.languages[newName] = settings.languages[selectedLang];
               delete settings.languages[selectedLang];
               languageNameChanges[newName] = newName;
+              if (selectedLang === props.currentLanguage) {
+                await invoke('rename_language', {
+                  originalName: selectedLang,
+                  newName,
+                });
+              }
+              $emit('newCurrentLanguage', newName);
+              selectedLang = newName;
             }
           "
         />

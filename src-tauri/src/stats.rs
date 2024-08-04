@@ -72,6 +72,7 @@ pub async fn get_words_known_at_levels(
 ) -> Result<Vec<NumWordsKnown>, String> {
     let state = state.0.lock().await;
     let current_language = state.current_language.as_ref().expect("language to be set");
+    log::info!("loading stats for profile {current_language}");
     let words = &state
         .to_save
         .language_specific

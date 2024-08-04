@@ -264,6 +264,7 @@ fn main() {
             setup_stanza,
             check_stanza_installed,
             get_export_variables,
+            rename_language,
         ])
         .on_window_event(handle_window_event)
         .run(tauri::generate_context!())
@@ -467,6 +468,26 @@ async fn set_language(state: State<'_, KalbaState>, language: String) -> Result<
     let mut state = state.0.lock().await;
     state.language_parser = None;
     state.current_language = Some(language);
+    Ok(())
+}
+
+#[tauri::command]
+async fn rename_language(
+    state: State<'_, KalbaState>,
+    original_name: String,
+    new_name: String,
+) -> Result<(), String> {
+    let mut state = state.0.lock().await;
+    if let Some(old) = state.to_save.language_specific.remove(&original_name) {
+        state
+            .to_save
+            .language_specific
+            .insert(new_name.clone(), old);
+    }
+    if let Some(old) = state.language_cached_data.remove(&original_name) {
+        state.language_cached_data.insert(new_name.clone(), old);
+    }
+    state.current_language = Some(new_name);
     Ok(())
 }
 

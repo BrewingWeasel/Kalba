@@ -252,6 +252,11 @@ onMounted(async () => {
           <router-view
             :currentLanguage="currentLanguage"
             @settingsChanged="updateLanguages"
+            @newCurrentLanguage="
+              updateLanguages();
+              console.log($event);
+              currentLanguage = $event;
+            "
           ></router-view>
         </Suspense>
       </main>

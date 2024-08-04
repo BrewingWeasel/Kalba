@@ -8,5 +8,9 @@ const props = defineProps<{
 </script>
 
 <template>
-  <Suspense><Settings :current-language="props.currentLanguage" /></Suspense>
+  <Suspense
+    ><Settings
+      :current-language="props.currentLanguage"
+      @newCurrentLanguage="$emit('newCurrentLanguage', $event)"
+  /></Suspense>
 </template>
