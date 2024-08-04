@@ -23,6 +23,7 @@ import {
 } from "@/components/ui/card";
 import { toast } from "vue-sonner";
 import { ref } from "vue";
+import { useMagicKeys, whenever } from "@vueuse/core";
 
 const props = defineProps<{
   word: string;
@@ -82,6 +83,18 @@ function selectWord() {
 }
 
 const exportDialogOpen = ref(false);
+
+const keys = useMagicKeys();
+
+whenever(keys.ctrl_e, () => {
+  if (!keys.shift.value) {
+    exportDialogOpen.value = true;
+  }
+});
+
+whenever(keys.ctrl_shift_e, async () => {
+  await exportWord();
+});
 </script>
 
 <template>
