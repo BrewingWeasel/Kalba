@@ -178,6 +178,7 @@ const exportDetails: Ref<ExportDetails> = ref({
   model: "",
   sentence: "",
   fields: {},
+  original_form: selectedWord.value?.text ?? "",
 });
 
 watch(sentence, (newSentence) => {
@@ -187,10 +188,11 @@ watch(sentence, (newSentence) => {
 });
 
 watch(
-  () => selectedWord.value?.lemma,
+  () => selectedWord.value,
   (newWord) => {
     if (newWord) {
-      exportDetails.value.word = newWord;
+      exportDetails.value.word = newWord.lemma;
+      exportDetails.value.original_form = newWord.text;
     }
   },
 );

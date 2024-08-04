@@ -13,6 +13,7 @@ export interface ExportDetails {
   sentence: string;
   defs: Map<string, Definition>;
   fields: { [key: string]: string };
+  original_form: string;
 }
 
 export interface DefinitionStyling {
@@ -21,11 +22,16 @@ export interface DefinitionStyling {
   main_detail: string;
 }
 
+export interface ExportStyling {
+  word_in_sentence: string;
+}
+
 export interface Settings {
   dark_mode: boolean;
   languages: { [key: string]: LanguageSettings };
   site_configurations: { [key: string]: SiteConfiguration };
   definition_styling: DefinitionStyling;
+  export_styling: ExportStyling;
   stanza_enabled: boolean;
 }
 

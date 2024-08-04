@@ -233,6 +233,15 @@ async function newLanguage(language: string) {
           v-model="settings.definition_styling.main_detail"
           id="main_styling"
         ></Input>
+
+        <h2 class="mt-1">Export styling</h2>
+        <Separator class="mb-1" />
+
+        <Label for="main_styling">Word style</Label>
+        <Input
+          v-model="settings.export_styling.word_in_sentence"
+          id="main_styling"
+        ></Input>
       </template>
 
       <template v-if="section == 'Input'">

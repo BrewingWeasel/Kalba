@@ -153,11 +153,26 @@ impl Default for DefinitionStyling {
 }
 
 #[derive(Deserialize, Serialize, Clone)]
+pub struct ExportStyling {
+    pub word_in_sentence: String,
+}
+
+impl Default for ExportStyling {
+    fn default() -> Self {
+        Self {
+            word_in_sentence: String::from("color: #ea9a97; font-weight: 800; font-style: italic;"),
+        }
+    }
+}
+
+#[derive(Deserialize, Serialize, Clone)]
 pub struct Settings {
     pub to_run: Option<Vec<String>>,
     pub dark_mode: bool,
     #[serde(default)]
     pub definition_styling: DefinitionStyling,
+    #[serde(default)]
+    pub export_styling: ExportStyling,
     pub site_configurations: HashMap<String, SiteConfiguration>,
     pub languages: HashMap<String, LanguageSettings>,
     pub stanza_enabled: bool,
@@ -186,6 +201,7 @@ impl Default for Settings {
         Self {
             to_run: None,
             definition_styling: DefinitionStyling::default(),
+            export_styling: ExportStyling::default(),
             dark_mode: true,
             languages: HashMap::new(),
             site_configurations,

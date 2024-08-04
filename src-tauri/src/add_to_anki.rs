@@ -1,12 +1,15 @@
 use reqwest::Client;
 use serde_json::json;
-use shared::{Definition, ToasterPayload};
+use shared::{Definition, ExportStyling, ToasterPayload};
 use std::{borrow::Cow, collections::HashMap};
 use tauri::{State, Window};
 
 use crate::{ankiconnect::AnkiResult, KalbaError, KalbaState};
 
-fn get_json(export_details: ExportDetails<'_>) -> serde_json::Value {
+fn get_json(
+    export_details: ExportDetails<'_>,
+    export_styling: &ExportStyling,
+) -> serde_json::Value {
     let mut def = String::new();
     for definition in export_details.defs.values() {
         def.push('\n');
@@ -15,11 +18,16 @@ fn get_json(export_details: ExportDetails<'_>) -> serde_json::Value {
         }
     }
 
-    let mut replacements = HashMap::from([
-        (
-            String::from("{sentence}"),
-            Cow::Borrowed(export_details.sentence),
+    let updated_sentence = export_details.sentence.replace(
+        export_details.original_form,
+        &format!(
+            "<span style=\"{}\">{}</span>",
+            export_styling.word_in_sentence, export_details.original_form
         ),
+    );
+
+    let mut replacements = HashMap::from([
+        (String::from("{sentence}"), Cow::Owned(updated_sentence)),
         (String::from("{word}"), Cow::Borrowed(export_details.word)),
         (String::from("{def}"), Cow::Owned(def)),
     ]);
@@ -93,6 +101,7 @@ pub async fn get_export_variables(
 #[derive(serde::Deserialize, Debug)]
 pub struct ExportDetails<'a> {
     word: &'a str,
+    original_form: &'a str,
     sentence: &'a str,
     deck: &'a str,
     model: &'a str,
@@ -103,11 +112,13 @@ pub struct ExportDetails<'a> {
 #[tauri::command]
 pub async fn add_to_anki(
     export_details: ExportDetails<'_>,
+    state: State<'_, KalbaState>,
     window: Window,
 ) -> Result<(), KalbaError> {
+    let state = state.0.lock().await;
     log::debug!("Adding to anki using details {:?}", export_details);
     let selected_word = export_details.word;
-    let args = get_json(export_details);
+    let args = get_json(export_details, &state.settings.export_styling);
     let client = Client::new();
     let response = client
         .post("http://localhost:8765/")
@@ -137,13 +148,14 @@ mod test {
     fn default_settings_no_defs() {
         let details = ExportDetails {
             word: "word",
+            original_form: "word",
             sentence: "mmm",
             deck: "Default",
             model: "Basic",
             defs: HashMap::new(),
             fields: HashMap::from([("Front", "{sentence}"), ("Back", "{word}:")]),
         };
-        let args = get_json(details);
+        let args = get_json(details, &ExportStyling::default());
         let params = args.get("params").unwrap();
         let note = params.get("note").unwrap();
         assert_eq!(
@@ -164,7 +176,8 @@ mod test {
     fn default_settings_defs() {
         let details = ExportDetails {
             word: "word",
-            sentence: "sent:2",
+            original_form: "word",
+            sentence: "sent with word:2",
             deck: "Default",
             model: "Basic",
             defs: HashMap::from([
@@ -186,7 +199,7 @@ mod test {
                 ("Back", "{word}:{def:dict1}{def:dict2}{def:dict3}"),
             ]),
         };
-        let args = get_json(details);
+        let args = get_json(details, &ExportStyling::default());
         let params = args.get("params").unwrap();
         let note = params.get("note").unwrap();
         assert_eq!(
@@ -199,7 +212,7 @@ mod test {
         );
         assert_eq!(
             note.get("fields").unwrap(),
-            &json!({"Front": "sent:2", "Back": "word:def1def2def3",})
+            &json!({"Front": "sent with <span style=\"color: #ea9a97; font-weight: 800; font-style: italic;\">word</span>:2", "Back": "word:def1def2def3",})
         );
     }
 
@@ -207,6 +220,7 @@ mod test {
     fn custom_fields_and_deck_defs_1() {
         let details = ExportDetails {
             word: "word",
+            original_form: "word",
             sentence: "sent",
             deck: "deck",
             model: "note",
@@ -221,7 +235,7 @@ mod test {
             ]),
         };
 
-        let args = get_json(details);
+        let args = get_json(details, &ExportStyling::default());
         let params = args.get("params").unwrap();
         let note = params.get("note").unwrap();
         assert_eq!(
@@ -242,13 +256,14 @@ mod test {
     fn custom_fields_and_deck_same_field_twice() {
         let details = ExportDetails {
             word: "word",
+            original_form: "word",
             sentence: "sent",
             deck: "deck",
             model: "note",
             defs: HashMap::new(),
             fields: HashMap::from([("sentence", "{sentence}"), ("sentence", "{sentence}")]),
         };
-        let args = get_json(details);
+        let args = get_json(details, &ExportStyling::default());
         let params = args.get("params").unwrap();
         let note = params.get("note").unwrap();
         assert_eq!(note.get("fields").unwrap(), &json!({"sentence": "sent"}));
