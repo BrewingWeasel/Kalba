@@ -22,6 +22,7 @@ import {
   CardTitle,
 } from "@/components/ui/card";
 import { toast } from "vue-sonner";
+import { ref } from "vue";
 
 const props = defineProps<{
   word: string;
@@ -79,11 +80,19 @@ function selectWord() {
       exportDetails.value.sentence = selection.toString();
   }
 }
+
+const exportDialogOpen = ref(false);
 </script>
 
 <template>
-  <Dialog>
-    <DialogTrigger as-child>
+  <Dialog v-model:open="exportDialogOpen">
+    <DialogTrigger
+      as-child
+      @click.shift="
+        exportDialogOpen = false;
+        exportWord();
+      "
+    >
       <div class="flex bottom-0 justify-center py-3">
         <Button variant="destructive"> Export </Button>
       </div>
