@@ -662,6 +662,20 @@ dependencies = [
 ]
 
 [[package]]
+name = "dashmap"
+version = "6.0.1"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "804c8821570c3f8b70230c2ba75ffa5c0f9a4189b9a432b6656c536712acae28"
+dependencies = [
+ "cfg-if",
+ "crossbeam-utils",
+ "hashbrown 0.14.5",
+ "lock_api",
+ "once_cell",
+ "parking_lot_core",
+]
+
+[[package]]
 name = "deranged"
 version = "0.3.11"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -3311,10 +3325,11 @@ dependencies = [
 
 [[package]]
 name = "spyglys"
-version = "0.2.2"
+version = "0.2.3"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "c32b11ba4a2751a7a2c3bb6978e8fd3e4ede45cf5c6e971ee37516fca65f4645"
+checksum = "e9b0b1b044c71d6ce6b643ca31d6ce6cf3477d02faae6809d1842aa6b823068c"
 dependencies = [
+ "dashmap",
  "pretty",
  "regex",
 ]
