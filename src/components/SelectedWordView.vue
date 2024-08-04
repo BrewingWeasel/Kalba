@@ -12,7 +12,7 @@ import {
   type Word,
 } from "@/types";
 import { Button } from "@/components/ui/button";
-import { Tags, CheckCircle2, Loader2 } from "lucide-vue-next";
+import { CheckCircle2, Loader2, Link } from "lucide-vue-next";
 import { ref, watch } from "vue";
 import BetterTooltip from "./BetterTooltip.vue";
 
@@ -77,8 +77,8 @@ const exportDetails = defineModel<ExportDetails>("exportDetails", {
     <div class="p-2 bg-border rounded-lg mb-2">
       <div class="flex justify-center gap-1 items-center">
         <Button variant="outline" size="icon" :disabled="true">
-          <BetterTooltip tooltip="Edit tags">
-            <Tags />
+          <BetterTooltip tooltip="Edit linked Anki card">
+            <Link />
           </BetterTooltip>
         </Button>
         <Input
