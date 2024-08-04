@@ -80,9 +80,16 @@ const toasters: Ref<Map<string, number | null>> = ref(
 
 onMounted(async () => {
   await invoke("check_startup_errors").catch((errors) => {
+    console.log(errors);
     for (const error of errors) {
       console.log(error);
-      toast.error(`${error} (state and settings will not be saved)`);
+      if (error.includes("Anki")) {
+        toast.error(error, { duration: 6000 });
+      } else {
+        toast.error(`${error} (state and settings will not be saved)`, {
+          duration: 6000,
+        });
+      }
     }
   });
 
