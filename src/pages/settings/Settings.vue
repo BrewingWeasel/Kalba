@@ -208,7 +208,7 @@ async function newLanguage(language: string) {
         <Heading
           title_id="appearance"
           title="Appearance"
-          description="Configure how Sakinyje looks"
+          description="Configure how Kalba looks"
         />
         <Switch id="theme" v-model:checked="isDark" />
         <Label for="theme">Use dark mode</Label>

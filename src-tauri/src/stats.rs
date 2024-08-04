@@ -2,10 +2,10 @@ use chrono::{Datelike, TimeDelta, Utc};
 use shared::{NumWordsKnown, TimeSpentPoint, TimeSpentStats};
 use tauri::State;
 
-use crate::SakinyjeState;
+use crate::KalbaState;
 
 #[tauri::command]
-pub async fn time_spent(state: State<'_, SakinyjeState>) -> Result<TimeSpentStats, String> {
+pub async fn time_spent(state: State<'_, KalbaState>) -> Result<TimeSpentStats, String> {
     let state = state.0.lock().await;
 
     let mut time_spent_days_this_week = [TimeDelta::default(); 7];
@@ -68,7 +68,7 @@ const WORD_RATING: [&str; 4] = ["Learning", "Recognized", "Familiar", "Known"];
 
 #[tauri::command]
 pub async fn get_words_known_at_levels(
-    state: State<'_, SakinyjeState>,
+    state: State<'_, KalbaState>,
 ) -> Result<Vec<NumWordsKnown>, String> {
     let state = state.0.lock().await;
     let current_language = state.current_language.as_ref().expect("language to be set");

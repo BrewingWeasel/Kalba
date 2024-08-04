@@ -31,7 +31,7 @@ mod spyglys_integration;
 mod stats;
 
 #[derive(Debug, thiserror::Error)]
-enum SakinyjeError {
+enum KalbaError {
     #[error(transparent)]
     Io(#[from] std::io::Error),
     #[error(transparent)]
@@ -71,7 +71,7 @@ enum SakinyjeError {
 }
 
 // we must manually implement serde::Serialize
-impl serde::Serialize for SakinyjeError {
+impl serde::Serialize for KalbaError {
     fn serialize<S>(&self, serializer: S) -> Result<S::Ok, S::Error>
     where
         S: serde::ser::Serializer,
@@ -80,7 +80,7 @@ impl serde::Serialize for SakinyjeError {
     }
 }
 
-struct SakinyjeState(tauri::async_runtime::Mutex<SharedInfo>);
+struct KalbaState(tauri::async_runtime::Mutex<SharedInfo>);
 
 struct SharedInfo {
     settings: Settings,
@@ -88,7 +88,7 @@ struct SharedInfo {
     language_parser: Option<LanguageParser>,
     current_language: Option<String>,
     dict_info: Arc<tauri::async_runtime::Mutex<DictionaryInfo>>,
-    errors: Vec<SakinyjeError>,
+    errors: Vec<KalbaError>,
     can_save: bool,
     language_cached_data: HashMap<String, CachedData>,
 }
@@ -128,15 +128,15 @@ impl Default for SharedInfo {
         let mut can_save = true;
 
         let mut to_save: ToSave = match dirs::data_dir()
-            .ok_or_else(|| SakinyjeError::MissingDir(String::from("data")))
+            .ok_or_else(|| KalbaError::MissingDir(String::from("data")))
             .and_then(|saved_state_file| {
-                fs::read_to_string(saved_state_file.join("sakinyje_saved_data.toml"))
-                    .map_err(SakinyjeError::Io)
-                    .and_then(|v| toml::from_str(&v).map_err(SakinyjeError::TomlDe))
+                fs::read_to_string(saved_state_file.join("kalba").join("saved_data.toml"))
+                    .map_err(KalbaError::Io)
+                    .and_then(|v| toml::from_str(&v).map_err(KalbaError::TomlDe))
             }) {
             Ok(v) => v,
             Err(e) => {
-                if !matches!(e, SakinyjeError::Io(_)) {
+                if !matches!(e, KalbaError::Io(_)) {
                     can_save = false;
                     errors.push(e);
                 }
@@ -145,15 +145,15 @@ impl Default for SharedInfo {
         };
 
         let settings: Settings = match dirs::config_dir()
-            .ok_or_else(|| SakinyjeError::MissingDir(String::from("config")))
+            .ok_or_else(|| KalbaError::MissingDir(String::from("config")))
             .and_then(|config_file| {
-                fs::read_to_string(config_file.join("sakinyje.toml"))
-                    .map_err(SakinyjeError::Io)
-                    .and_then(|v| toml::from_str(&v).map_err(SakinyjeError::TomlDe))
+                fs::read_to_string(config_file.join("kalba.toml"))
+                    .map_err(KalbaError::Io)
+                    .and_then(|v| toml::from_str(&v).map_err(KalbaError::TomlDe))
             }) {
             Ok(v) => v,
             Err(e) => {
-                if !matches!(e, SakinyjeError::Io(_)) {
+                if !matches!(e, KalbaError::Io(_)) {
                     can_save = false;
                     errors.push(e);
                 }
@@ -162,15 +162,15 @@ impl Default for SharedInfo {
         };
 
         let language_cached_data = match dirs::cache_dir()
-            .ok_or_else(|| SakinyjeError::MissingDir(String::from("cache")))
+            .ok_or_else(|| KalbaError::MissingDir(String::from("cache")))
             .and_then(|cache_dir| {
-                fs::read(cache_dir.join("sakinyje.cache"))
-                    .map_err(SakinyjeError::Io)
-                    .and_then(|v| rmp_serde::from_slice(&v).map_err(SakinyjeError::CacheDecode))
+                fs::read(cache_dir.join("kalba").join("dictionaries"))
+                    .map_err(KalbaError::Io)
+                    .and_then(|v| rmp_serde::from_slice(&v).map_err(KalbaError::CacheDecode))
             }) {
             Ok(v) => v,
             Err(e) => {
-                if !matches!(e, SakinyjeError::Io(_)) {
+                if !matches!(e, KalbaError::Io(_)) {
                     errors.push(e);
                 }
                 HashMap::new()
@@ -233,7 +233,7 @@ fn main() {
         .init()
         .unwrap();
     tauri::Builder::default()
-        .manage(SakinyjeState(Default::default()))
+        .manage(KalbaState(Default::default()))
         .invoke_handler(tauri::generate_handler![
             parse_text,
             get_defs,
@@ -272,10 +272,10 @@ fn main() {
 
 #[tauri::command]
 async fn refresh_anki(
-    state: State<'_, SakinyjeState>,
+    state: State<'_, KalbaState>,
     window: Window,
     force_all: bool,
-) -> Result<(), SakinyjeError> {
+) -> Result<(), KalbaError> {
     window
         .emit(
             "refresh_anki",
@@ -294,7 +294,7 @@ async fn refresh_anki(
 }
 
 #[tauri::command]
-async fn check_startup_errors(state: State<'_, SakinyjeState>) -> Result<(), Vec<SakinyjeError>> {
+async fn check_startup_errors(state: State<'_, KalbaState>) -> Result<(), Vec<KalbaError>> {
     let mut state = state.0.lock().await;
     let errs = std::mem::take(&mut state.errors);
     if errs.is_empty() {
@@ -308,7 +308,7 @@ async fn set_word_knowledge_from_anki(
     to_save: &mut ToSave,
     languages: &HashMap<String, LanguageSettings>,
     force_all: bool,
-) -> Result<(), SakinyjeError> {
+) -> Result<(), KalbaError> {
     let new_time = Utc::now();
     let days_passed = new_time
         .signed_duration_since(to_save.last_launched)
@@ -356,12 +356,14 @@ fn handle_window_event(event: GlobalWindowEvent) {
         #[allow(clippy::single_match)] // Will probably be expanded in the future
         match event.event() {
             &WindowEvent::Destroyed => {
-                let state: State<'_, SakinyjeState> = event.window().state();
+                let state: State<'_, KalbaState> = event.window().state();
                 let mut locked_state = state.0.lock().await;
                 if locked_state.can_save {
                     log::info!("saving details");
-                    let saved_state_file =
-                        dirs::data_dir().unwrap().join("sakinyje_saved_data.toml");
+                    let saved_state_file = dirs::data_dir()
+                        .unwrap()
+                        .join("kalba")
+                        .join("saved_data.toml");
                     locked_state.to_save.last_language = locked_state.current_language.clone();
                     let session = locked_state
                         .to_save
@@ -376,7 +378,8 @@ fn handle_window_event(event: GlobalWindowEvent) {
                 }
                 let cache_file = dirs::cache_dir()
                     .expect("cache dir does not exist")
-                    .join("sakinyje.cache");
+                    .join("kalba")
+                    .join("dictionaries");
                 fs::write(
                     cache_file,
                     rmp_serde::to_vec(&locked_state.language_cached_data)
@@ -412,20 +415,20 @@ fn update_words_known(
 }
 
 #[tauri::command]
-async fn get_settings(state: State<'_, SakinyjeState>) -> Result<Settings, String> {
+async fn get_settings(state: State<'_, KalbaState>) -> Result<Settings, String> {
     log::trace!("Settings requested");
     let state = state.0.lock().await;
     Ok(state.settings.clone())
 }
 
 #[tauri::command]
-async fn get_dark_mode(state: State<'_, SakinyjeState>) -> Result<bool, String> {
+async fn get_dark_mode(state: State<'_, KalbaState>) -> Result<bool, String> {
     let state = state.0.lock().await;
     Ok(state.settings.dark_mode)
 }
 
 #[tauri::command]
-async fn get_rating(lemma: String, state: State<'_, SakinyjeState>) -> Result<i8, String> {
+async fn get_rating(lemma: String, state: State<'_, KalbaState>) -> Result<i8, String> {
     log::trace!("Getting rating for word: {lemma}");
     let mut state = state.0.lock().await;
     let language = state
@@ -448,19 +451,19 @@ async fn get_rating(lemma: String, state: State<'_, SakinyjeState>) -> Result<i8
 }
 
 #[tauri::command]
-async fn get_languages(state: State<'_, SakinyjeState>) -> Result<Vec<String>, String> {
+async fn get_languages(state: State<'_, KalbaState>) -> Result<Vec<String>, String> {
     let state = state.0.lock().await;
     Ok(state.settings.languages.keys().cloned().collect())
 }
 
 #[tauri::command]
-async fn get_language(state: State<'_, SakinyjeState>) -> Result<Option<String>, String> {
+async fn get_language(state: State<'_, KalbaState>) -> Result<Option<String>, String> {
     let state = state.0.lock().await;
     Ok(state.current_language.to_owned())
 }
 
 #[tauri::command]
-async fn set_language(state: State<'_, SakinyjeState>, language: String) -> Result<(), String> {
+async fn set_language(state: State<'_, KalbaState>, language: String) -> Result<(), String> {
     let mut state = state.0.lock().await;
     state.language_parser = None;
     state.current_language = Some(language);
@@ -469,12 +472,12 @@ async fn set_language(state: State<'_, SakinyjeState>, language: String) -> Resu
 
 #[tauri::command]
 async fn write_settings(
-    state: State<'_, SakinyjeState>,
+    state: State<'_, KalbaState>,
     settings: Settings,
-) -> Result<(), SakinyjeError> {
+) -> Result<(), KalbaError> {
     let config_file = dirs::config_dir()
-        .ok_or(SakinyjeError::MissingDir("config".to_string()))?
-        .join("sakinyje.toml");
+        .ok_or(KalbaError::MissingDir("config".to_string()))?
+        .join("kalba.toml");
     let conts = toml::to_string_pretty(&settings)?;
 
     let mut state = state.0.lock().await;
@@ -500,7 +503,7 @@ async fn write_settings(
 
 #[tauri::command]
 async fn update_word_knowledge(
-    state: State<'_, SakinyjeState>,
+    state: State<'_, KalbaState>,
     word: &str,
     rating: i8,
     modifiable: bool,
@@ -534,7 +537,7 @@ async fn update_word_knowledge(
 
 #[tauri::command]
 async fn always_change_lemma(
-    state: State<'_, SakinyjeState>,
+    state: State<'_, KalbaState>,
     lemma: String,
     updated_lemma: String,
 ) -> Result<(), String> {

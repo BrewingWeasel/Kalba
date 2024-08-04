@@ -98,34 +98,6 @@ pub enum Definition {
     Empty,
 }
 
-#[derive(Serialize, Deserialize, PartialEq, Eq, Clone, Debug)]
-#[serde(tag = "t", content = "conts")]
-pub enum SakinyjeResult<T> {
-    Ok(T),
-    Err(String),
-}
-
-impl<T, E> From<Result<T, E>> for SakinyjeResult<T>
-where
-    E: ToString,
-{
-    fn from(value: Result<T, E>) -> Self {
-        match value {
-            Ok(v) => Self::Ok(v),
-            Err(e) => Self::Err(e.to_string()),
-        }
-    }
-}
-
-impl<T> From<SakinyjeResult<T>> for Result<T, String> {
-    fn from(value: SakinyjeResult<T>) -> Self {
-        match value {
-            SakinyjeResult::Ok(v) => Self::Ok(v),
-            SakinyjeResult::Err(e) => Self::Err(e),
-        }
-    }
-}
-
 #[derive(Deserialize, Serialize, Clone)]
 pub struct NoteToWordHandling {
     pub field_to_use: String,

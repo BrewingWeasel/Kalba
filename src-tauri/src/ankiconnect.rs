@@ -7,7 +7,7 @@ use serde_json::{json, value::Value};
 use shared::NoteToWordHandling;
 use tauri::State;
 
-use crate::{Method, SakinyjeError, SakinyjeState, WordInfo};
+use crate::{KalbaError, KalbaState, Method, WordInfo};
 
 #[derive(Deserialize, Debug)]
 pub struct AnkiResult<T> {
@@ -15,12 +15,12 @@ pub struct AnkiResult<T> {
     error: Option<String>,
 }
 
-impl<T> From<AnkiResult<T>> for Result<T, SakinyjeError> {
+impl<T> From<AnkiResult<T>> for Result<T, KalbaError> {
     fn from(val: AnkiResult<T>) -> Self {
         if let Some(r) = val.result {
             Ok(r)
         } else {
-            Err(SakinyjeError::AnkiConnectError(
+            Err(KalbaError::AnkiConnectError(
                 val.error.expect("either an error or a value"),
             ))
         }
@@ -33,7 +33,7 @@ pub async fn get_anki_card_statuses(
     original_words: &mut HashMap<String, WordInfo>,
     days_passed: i64,
     first_time_run: bool,
-) -> Result<(), SakinyjeError> {
+) -> Result<(), KalbaError> {
     log::info!("getting anki card statuses");
     let client = reqwest::Client::new();
     let days_passed_query = if first_time_run {
@@ -53,7 +53,7 @@ pub async fn get_anki_card_statuses(
 
         let notes_info_res =
             generic_anki_connect_action("notesInfo", json!({ "notes": notes }), &client).await?;
-        let notes_info = Into::<Result<Vec<NoteInfo>, SakinyjeError>>::into(
+        let notes_info = Into::<Result<Vec<NoteInfo>, KalbaError>>::into(
             notes_info_res
                 .json::<AnkiResult<Vec<NoteInfo>>>()
                 .await
@@ -114,7 +114,7 @@ async fn generic_anki_connect_action(
     action: &str,
     data: Value,
     client: &reqwest::Client,
-) -> Result<Response, SakinyjeError> {
+) -> Result<Response, KalbaError> {
     let request = if data == Value::Null {
         json!({
             "action": action,
@@ -143,7 +143,7 @@ async fn generic_anki_connect_action(
                 .json(&request)
                 .send()
                 .await
-                .map_err(|_| SakinyjeError::AnkiNotAvailable)
+                .map_err(|_| KalbaError::AnkiNotAvailable)
         }
     }
 }
@@ -152,7 +152,7 @@ async fn get_card_or_note_vals(
     action: &str,
     data: Value,
     client: &reqwest::Client,
-) -> Result<Vec<isize>, SakinyjeError> {
+) -> Result<Vec<isize>, KalbaError> {
     let res = generic_anki_connect_action(action, data, client).await?;
     res.json::<AnkiResult<Vec<isize>>>().await.unwrap().into()
 }
@@ -194,7 +194,7 @@ fn get_word_from_field(selected_field: &str, handler: &NoteToWordHandling) -> St
 }
 
 #[tauri::command]
-pub async fn get_all_deck_names() -> Result<Vec<String>, SakinyjeError> {
+pub async fn get_all_deck_names() -> Result<Vec<String>, KalbaError> {
     let res =
         generic_anki_connect_action("deckNames", Value::Null, &reqwest::Client::new()).await?;
     res.json::<AnkiResult<Vec<String>>>()
@@ -204,7 +204,7 @@ pub async fn get_all_deck_names() -> Result<Vec<String>, SakinyjeError> {
 }
 
 #[tauri::command]
-pub async fn get_all_note_names() -> Result<Vec<String>, SakinyjeError> {
+pub async fn get_all_note_names() -> Result<Vec<String>, KalbaError> {
     let res =
         generic_anki_connect_action("modelNames", Value::Null, &reqwest::Client::new()).await?;
     res.json::<AnkiResult<Vec<String>>>()
@@ -214,7 +214,7 @@ pub async fn get_all_note_names() -> Result<Vec<String>, SakinyjeError> {
 }
 
 #[tauri::command]
-pub async fn get_note_field_names(model: &str) -> Result<Vec<String>, SakinyjeError> {
+pub async fn get_note_field_names(model: &str) -> Result<Vec<String>, KalbaError> {
     let res = generic_anki_connect_action(
         "modelFieldNames",
         json!({ "modelName": model }),
@@ -228,7 +228,7 @@ pub async fn get_note_field_names(model: &str) -> Result<Vec<String>, SakinyjeEr
 }
 
 #[tauri::command]
-pub async fn remove_deck(deck: String, state: State<'_, SakinyjeState>) -> Result<(), String> {
+pub async fn remove_deck(deck: String, state: State<'_, KalbaState>) -> Result<(), String> {
     state
         .0
         .lock()

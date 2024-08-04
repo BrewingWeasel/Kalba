@@ -117,10 +117,7 @@ console.log(wordsLevels);
           </CardHeader>
           <CardContent>
             <div class="flex flex-col items-center justify-center gap-1">
-              <a
-                target="_blank"
-                href="https://github.com/BrewingWeasel/sakinyje"
-              >
+              <a target="_blank" href="https://github.com/BrewingWeasel/kalba">
                 <Button class="w-48" variant="outline">
                   <GithubLogoIcon />
                   <h2 class="ml-1">Repository</h2>
@@ -128,7 +125,7 @@ console.log(wordsLevels);
               </a>
               <a
                 target="_blank"
-                href="https://github.com/BrewingWeasel/sakinyje/wiki"
+                href="https://github.com/BrewingWeasel/kalba/wiki"
               >
                 <Button class="w-48" variant="outline">
                   <BookText />

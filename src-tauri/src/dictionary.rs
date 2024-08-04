@@ -6,7 +6,7 @@ use shared::{Definition, DefinitionStyling, DictFileType, DictionarySpecificSett
 use std::{collections::HashMap, fs, sync::Arc};
 use tauri::State;
 
-use crate::{commands::run_command, SakinyjeError, SakinyjeState};
+use crate::{commands::run_command, KalbaError, KalbaState};
 
 #[derive(Default, Clone)]
 pub struct DictionaryInfo {
@@ -42,11 +42,11 @@ impl DictionaryInfo {
         } else {
             let path = dirs::data_dir()
                 .unwrap()
-                .join("sakinyje")
+                .join("kalba")
                 .join("language_data")
                 .join(uuid_file);
             if !path.exists() {
-                let contents = self.send_request(&format!("https://raw.githubusercontent.com/BrewingWeasel/sakinyje/main/data/{uuid_file}")).await.text_with_charset("utf-8").await.unwrap();
+                let contents = self.send_request(&format!("https://raw.githubusercontent.com/BrewingWeasel/kalba/main/data/{uuid_file}")).await.text_with_charset("utf-8").await.unwrap();
                 fs::write(path.clone(), contents).unwrap();
             };
             let mut_dict_file = match dict {
@@ -78,7 +78,7 @@ fn get_def_from_file(
     lemma: &str,
     file: &str,
     dict_type: &DictFileType,
-) -> Result<Definition, SakinyjeError> {
+) -> Result<Definition, KalbaError> {
     match dict_type {
         DictFileType::StarDict => {
             let mut dict = stardict::no_cache(file)?;
@@ -113,7 +113,7 @@ fn get_def_from_file(
     }
 }
 
-async fn get_def_url(lemma: &str, url: &str) -> Result<Definition, SakinyjeError> {
+async fn get_def_url(lemma: &str, url: &str) -> Result<Definition, KalbaError> {
     let new_url = url.replacen("{word}", lemma, 1);
     let client = reqwest::Client::new();
     Ok(Definition::Text(
@@ -121,7 +121,7 @@ async fn get_def_url(lemma: &str, url: &str) -> Result<Definition, SakinyjeError
     ))
 }
 
-async fn get_def_command(lemma: &str, cmd: &str) -> Result<Definition, SakinyjeError> {
+async fn get_def_command(lemma: &str, cmd: &str) -> Result<Definition, KalbaError> {
     let real_command = cmd.replacen("{word}", lemma, 1);
     let output = run_command(&real_command)?;
     Ok(Definition::Text(String::from_utf8(output.stdout)?))
@@ -129,9 +129,9 @@ async fn get_def_command(lemma: &str, cmd: &str) -> Result<Definition, SakinyjeE
 
 #[tauri::command]
 pub async fn get_defs(
-    state: State<'_, SakinyjeState>,
+    state: State<'_, KalbaState>,
     lemma: String,
-) -> Result<HashMap<String, Definition>, SakinyjeError> {
+) -> Result<HashMap<String, Definition>, KalbaError> {
     let mut state = state.0.lock().await;
     let language = state
         .current_language
@@ -187,10 +187,10 @@ pub async fn get_defs(
 
 #[tauri::command]
 pub async fn get_definition_on_demand(
-    state: State<'_, SakinyjeState>,
+    state: State<'_, KalbaState>,
     lemma: String,
     dictionary: String,
-) -> Result<Definition, SakinyjeError> {
+) -> Result<Definition, KalbaError> {
     let state = state.0.lock().await;
     let language = state
         .current_language
@@ -221,7 +221,7 @@ async fn get_def(
     dict: &DictionarySpecificSettings,
     lemma: &str,
     definition_styling: &DefinitionStyling,
-) -> Result<Definition, SakinyjeError> {
+) -> Result<Definition, KalbaError> {
     match dict {
         DictionarySpecificSettings::File(f, dict_type) => get_def_from_file(lemma, f, dict_type),
         DictionarySpecificSettings::Url(url) => get_def_url(lemma, url).await,
@@ -251,7 +251,7 @@ async fn get_wiktionary(
     definition_lang: &str,
     target_lang: &str,
     definition_styling: &DefinitionStyling,
-) -> Result<Definition, SakinyjeError> {
+) -> Result<Definition, KalbaError> {
     let mut lock = dict_info.lock().await;
     let response = lock
         .send_request(&format!(
@@ -332,7 +332,7 @@ async fn get_ekalba_bendrines(
     dict_info: Arc<tauri::async_runtime::Mutex<DictionaryInfo>>,
     word: &str,
     definition_styling: &DefinitionStyling,
-) -> Result<Definition, SakinyjeError> {
+) -> Result<Definition, KalbaError> {
     let response = {
         let mut lock = dict_info.lock().await;
         let Some(uuid) = lock.get_bendrines(EkalbaDictionary::Bendrines, word).await else {
@@ -387,7 +387,7 @@ async fn get_ekalba_dabartines(
     dict_info: Arc<tauri::async_runtime::Mutex<DictionaryInfo>>,
     word: &str,
     definition_styling: &DefinitionStyling,
-) -> Result<Definition, SakinyjeError> {
+) -> Result<Definition, KalbaError> {
     let response = {
         let mut lock = dict_info.lock().await;
         let Some(uuid) = lock.get_bendrines(EkalbaDictionary::Dabartines, word).await else {

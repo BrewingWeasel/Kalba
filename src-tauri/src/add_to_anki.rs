@@ -4,7 +4,7 @@ use shared::{Definition, ToasterPayload};
 use std::{borrow::Cow, collections::HashMap};
 use tauri::{State, Window};
 
-use crate::{ankiconnect::AnkiResult, SakinyjeError, SakinyjeState};
+use crate::{ankiconnect::AnkiResult, KalbaError, KalbaState};
 
 fn get_json(export_details: ExportDetails<'_>) -> serde_json::Value {
     let mut def = String::new();
@@ -70,9 +70,9 @@ fn get_json(export_details: ExportDetails<'_>) -> serde_json::Value {
 
 #[tauri::command]
 pub async fn get_export_variables(
-    state: State<'_, SakinyjeState>,
+    state: State<'_, KalbaState>,
     language: String,
-) -> Result<Vec<String>, SakinyjeError> {
+) -> Result<Vec<String>, KalbaError> {
     let state = state.0.lock().await;
 
     let mut export_variables = Vec::new();
@@ -104,7 +104,7 @@ pub struct ExportDetails<'a> {
 pub async fn add_to_anki(
     export_details: ExportDetails<'_>,
     window: Window,
-) -> Result<(), SakinyjeError> {
+) -> Result<(), KalbaError> {
     log::debug!("Adding to anki using details {:?}", export_details);
     let selected_word = export_details.word;
     let args = get_json(export_details);
@@ -114,8 +114,8 @@ pub async fn add_to_anki(
         .json(&args)
         .send()
         .await
-        .map_err(|_| SakinyjeError::AnkiNotAvailable)?;
-    std::convert::Into::<Result<isize, SakinyjeError>>::into(
+        .map_err(|_| KalbaError::AnkiNotAvailable)?;
+    std::convert::Into::<Result<isize, KalbaError>>::into(
         response.json::<AnkiResult<isize>>().await?,
     )?;
     window.emit(

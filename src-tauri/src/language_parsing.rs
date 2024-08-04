@@ -7,7 +7,7 @@ use std::{
 
 use crate::{
     spyglys_integration::{get_alternate_forms, handle_lemma, load_spyglys},
-    LanguageParser, SakinyjeError, SakinyjeState, SharedInfo,
+    KalbaError, KalbaState, LanguageParser, SharedInfo,
 };
 use log::{info, trace};
 use lol_html::{element, text, RewriteStrSettings};
@@ -31,10 +31,7 @@ enum SectionContents {
 }
 
 #[tauri::command]
-pub async fn parse_url(
-    url: &str,
-    state: State<'_, SakinyjeState>,
-) -> Result<ParsedWords, SakinyjeError> {
+pub async fn parse_url(url: &str, state: State<'_, KalbaState>) -> Result<ParsedWords, KalbaError> {
     let parsed_url = Url::parse(url).unwrap();
     let root_url = parsed_url.host_str().unwrap().strip_prefix("www.").unwrap();
 
@@ -45,7 +42,7 @@ pub async fn parse_url(
             "Site configurations: {:?}",
             locked_state.settings.site_configurations
         );
-        let mut site_config = Err(SakinyjeError::MissingSiteConfig(root_url.to_owned()));
+        let mut site_config = Err(KalbaError::MissingSiteConfig(root_url.to_owned()));
         for possible_site in locked_state.settings.site_configurations.values() {
             if possible_site.sites.contains(&root_url.to_owned()) {
                 site_config = Ok(possible_site.to_owned());
@@ -84,7 +81,7 @@ pub async fn parse_url(
                         sections.1.push(SectionContents::Title(
                             text.as_str().trim_start().chars().count(),
                         ));
-                        Ok::<(), SakinyjeError>(())
+                        Ok::<(), KalbaError>(())
                     })
                 })?;
                 Ok(())
@@ -111,7 +108,7 @@ pub async fn parse_url(
                         section_details.1.push(SectionContents::Subtitle(
                             text.as_str().trim_start().chars().count(),
                         ));
-                        Ok::<(), SakinyjeError>(())
+                        Ok::<(), KalbaError>(())
                     })
                 })?;
                 Ok(())
@@ -145,7 +142,7 @@ pub async fn parse_url(
                         section_details
                             .1
                             .push(SectionContents::Caption(text.chars().count()));
-                        Ok::<(), SakinyjeError>(())
+                        Ok::<(), KalbaError>(())
                     })
                 })?;
                 Ok(())
@@ -166,14 +163,14 @@ pub async fn parse_url(
                     handle.block_on(async move {
                         let mut section_details = paragraph_sections.lock().await;
                         if section_details.0.contains(text.as_str()) {
-                            return Ok::<(), SakinyjeError>(());
+                            return Ok::<(), KalbaError>(());
                         }
                         section_details.2.push_str(text.as_str());
                         section_details.2.push('\n');
                         section_details.1.push(SectionContents::Paragraph(
                             text.as_str().trim_start().chars().count(),
                         ));
-                        Ok::<(), SakinyjeError>(())
+                        Ok::<(), KalbaError>(())
                     })
                 })?;
                 Ok(())
@@ -262,8 +259,8 @@ pub async fn parse_url(
 #[tauri::command]
 pub async fn parse_text(
     sent: &str,
-    state: State<'_, SakinyjeState>,
-) -> Result<ParsedWords, SakinyjeError> {
+    state: State<'_, KalbaState>,
+) -> Result<ParsedWords, KalbaError> {
     let (sentences, words) = words_from_string(sent, Arc::new(state)).await?;
     Ok(ParsedWords {
         sentences,
@@ -273,8 +270,8 @@ pub async fn parse_text(
 
 pub async fn words_from_string(
     sent: &str,
-    state: Arc<State<'_, SakinyjeState>>,
-) -> Result<(Vec<String>, Vec<Word>), SakinyjeError> {
+    state: Arc<State<'_, KalbaState>>,
+) -> Result<(Vec<String>, Vec<Word>), KalbaError> {
     let mut state = state.0.lock().await;
 
     if sent.is_empty() {
@@ -329,18 +326,15 @@ struct StanzaToken {
 }
 
 #[tauri::command]
-pub async fn start_stanza(
-    state: State<'_, SakinyjeState>,
-    window: Window,
-) -> Result<(), SakinyjeError> {
+pub async fn start_stanza(state: State<'_, KalbaState>, window: Window) -> Result<(), KalbaError> {
     let mut state = state.0.lock().await;
     if state.language_parser.is_some() || !state.settings.stanza_enabled {
         return Ok(());
     }
 
     let stanza_path = dirs::data_dir()
-        .ok_or_else(|| SakinyjeError::MissingDir("data".to_owned()))?
-        .join("sakinyje")
+        .ok_or_else(|| KalbaError::MissingDir("data".to_owned()))?
+        .join("kalba")
         .join("stanza");
     let mut process = process::Command::new(stanza_path.join(".venv").join("bin").join("python3"))
         .arg(stanza_path.join("run.py"))
@@ -367,10 +361,7 @@ pub async fn start_stanza(
     let model_formatted = format!("{model}\n");
     let bytes_written = stdin.write(model_formatted.as_bytes())?;
     if bytes_written != model_formatted.as_bytes().len() {
-        return Err(SakinyjeError::IncorrectWrite(
-            model_formatted,
-            bytes_written,
-        ));
+        return Err(KalbaError::IncorrectWrite(model_formatted, bytes_written));
     }
     log::info!("Loading stanza model {model} for language {language}");
     window.emit(
@@ -397,7 +388,7 @@ fn stanza_parser(
     state: &mut MutexGuard<SharedInfo>,
     language: String,
     interpreter: &Interpreter,
-) -> Result<(Vec<String>, Vec<Word>), SakinyjeError> {
+) -> Result<(Vec<String>, Vec<Word>), KalbaError> {
     let language_parser = state
         .language_parser
         .as_mut()
@@ -409,7 +400,7 @@ fn stanza_parser(
         .write(sent_formatted.as_bytes())
         .expect("to write to stdin");
     if bytes_written != sent_formatted.as_bytes().len() {
-        return Err(SakinyjeError::IncorrectWrite(sent_formatted, bytes_written));
+        return Err(KalbaError::IncorrectWrite(sent_formatted, bytes_written));
     }
 
     log::trace!("sentence written");
@@ -499,7 +490,7 @@ fn default_tokenizer(
     language: String,
     state: &mut MutexGuard<SharedInfo>,
     interpreter: &Interpreter,
-) -> Result<(Vec<String>, Vec<Word>), SakinyjeError> {
+) -> Result<(Vec<String>, Vec<Word>), KalbaError> {
     let mut words = Vec::new();
     let mut sentences = Vec::new();
     let mut current_sentence = String::new();

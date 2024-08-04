@@ -2,13 +2,13 @@ use spyglys::interpreter::{Interpreter, RuntimeError, Value};
 use tauri::State;
 use tokio::sync::MutexGuard;
 
-use crate::{SakinyjeError, SakinyjeState, SharedInfo};
+use crate::{KalbaError, KalbaState, SharedInfo};
 
 pub fn handle_lemma(
     lemma: &str,
     interpreter: &Interpreter,
     state: &mut MutexGuard<SharedInfo>,
-) -> Result<String, SakinyjeError> {
+) -> Result<String, KalbaError> {
     let language = state
         .current_language
         .as_ref()
@@ -47,7 +47,7 @@ pub fn get_alternate_forms(
     lemma: &str,
     interpreter: &Interpreter,
     state: &mut MutexGuard<SharedInfo>,
-) -> Result<Vec<String>, SakinyjeError> {
+) -> Result<Vec<String>, KalbaError> {
     let language = state
         .current_language
         .as_ref()
@@ -78,7 +78,7 @@ pub fn get_alternate_forms(
     Ok(responses)
 }
 
-pub fn load_spyglys(state: &mut MutexGuard<SharedInfo>) -> Result<Interpreter, SakinyjeError> {
+pub fn load_spyglys(state: &mut MutexGuard<SharedInfo>) -> Result<Interpreter, KalbaError> {
     let lang = state
         .current_language
         .as_ref()
@@ -95,14 +95,14 @@ pub fn load_spyglys(state: &mut MutexGuard<SharedInfo>) -> Result<Interpreter, S
 
 #[tauri::command]
 pub async fn get_spyglys_functions(
-    state: State<'_, SakinyjeState>,
-) -> Result<Vec<String>, SakinyjeError> {
+    state: State<'_, KalbaState>,
+) -> Result<Vec<String>, KalbaError> {
     let current_interpreter = load_spyglys(&mut state.0.lock().await)?;
     Ok(current_interpreter.get_functions())
 }
 
 #[tauri::command]
-pub async fn format_spyglys(state: State<'_, SakinyjeState>) -> Result<String, SakinyjeError> {
+pub async fn format_spyglys(state: State<'_, KalbaState>) -> Result<String, KalbaError> {
     let state = state.0.lock().await;
     let current_language = state
         .current_language

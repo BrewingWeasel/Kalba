@@ -5,7 +5,7 @@ use serde::Deserialize;
 use shared::{Dictionary, LanguageSettings};
 use tauri::State;
 
-use crate::{SakinyjeError, SakinyjeState};
+use crate::{KalbaError, KalbaState};
 
 #[derive(Debug, Deserialize, Clone)]
 struct TemplateDetails {
@@ -20,9 +20,9 @@ struct TemplateDetails {
 
 #[tauri::command]
 pub async fn new_language_from_template(
-    state: State<'_, SakinyjeState>,
+    state: State<'_, KalbaState>,
     language: String,
-) -> Result<(), SakinyjeError> {
+) -> Result<(), KalbaError> {
     let language = language.to_lowercase();
     let mut state = state.0.lock().await;
 
@@ -53,7 +53,7 @@ pub async fn new_language_from_template(
 
     let client = Client::new();
     let template = client.get(format!(
-        "https://raw.githubusercontent.com/brewingweasel/sakinyje/main/data/language_templates/{language}.toml",))
+        "https://raw.githubusercontent.com/brewingweasel/kalba/main/data/language_templates/{language}.toml",))
         .send()
         .await?
         .text()
@@ -62,13 +62,13 @@ pub async fn new_language_from_template(
     let details: TemplateDetails = toml::from_str(&template).unwrap();
     let frequency_list = if details.frequency_list {
         let path = dirs::data_dir()
-            .ok_or_else(|| SakinyjeError::MissingDir("data".to_owned()))?
-            .join("sakinyje")
+            .ok_or_else(|| KalbaError::MissingDir("data".to_owned()))?
+            .join("kalba")
             .join("language_data")
             .join(format!("{language}_frequency"));
         if !path.exists() {
             let contents = client.get(format!(
-                "https://raw.githubusercontent.com/brewingweasel/sakinyje/main/data/frequency_lists/{language}",))
+                "https://raw.githubusercontent.com/brewingweasel/kalba/main/data/frequency_lists/{language}",))
                 .send()
                 .await?
                 .text()
@@ -82,7 +82,7 @@ pub async fn new_language_from_template(
     };
     let grammar_parser = if details.spyglys_details {
         client.get(format!(
-                "https://raw.githubusercontent.com/brewingweasel/sakinyje/main/data/spyglys/{language}.spyglys",))
+                "https://raw.githubusercontent.com/brewingweasel/kalba/main/data/spyglys/{language}.spyglys",))
                 .send()
                 .await?
                 .text()
