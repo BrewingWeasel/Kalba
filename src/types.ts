@@ -105,7 +105,12 @@ export interface Dictionary {
 
 export interface DictionarySpecificSettings {
   t: DictionaryType;
-  c: [string, FileType] | [string, string] | string | undefined;
+  c:
+    | [string, FileType]
+    | [string, string]
+    | [string, boolean]
+    | string
+    | undefined;
 }
 
 export interface Deck {

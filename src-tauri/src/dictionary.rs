@@ -113,12 +113,19 @@ fn get_def_from_file(
     }
 }
 
-async fn get_def_url(lemma: &str, url: &str) -> Result<Definition, KalbaError> {
+async fn get_def_url(lemma: &str, url: &str, embed: bool) -> Result<Definition, KalbaError> {
     let new_url = url.replacen("{word}", lemma, 1);
-    let client = reqwest::Client::new();
-    Ok(Definition::Text(
-        client.get(new_url).send().await?.text().await?,
-    ))
+    if embed {
+        Ok(Definition::Text(format!(
+            "<iframe class=\"w-full\" src=\"{}\"></iframe>",
+            new_url
+        )))
+    } else {
+        let client = reqwest::Client::new();
+        Ok(Definition::Text(
+            client.get(new_url).send().await?.text().await?,
+        ))
+    }
 }
 
 async fn get_def_command(lemma: &str, cmd: &str) -> Result<Definition, KalbaError> {
@@ -224,7 +231,7 @@ async fn get_def(
 ) -> Result<Definition, KalbaError> {
     match dict {
         DictionarySpecificSettings::File(f, dict_type) => get_def_from_file(lemma, f, dict_type),
-        DictionarySpecificSettings::Url(url) => get_def_url(lemma, url).await,
+        DictionarySpecificSettings::Url(url, embed) => get_def_url(lemma, url, *embed).await,
         DictionarySpecificSettings::Command(cmd) => get_def_command(lemma, cmd).await,
         DictionarySpecificSettings::EkalbaBendrines => {
             get_ekalba_bendrines(dict_info, lemma, definition_styling).await

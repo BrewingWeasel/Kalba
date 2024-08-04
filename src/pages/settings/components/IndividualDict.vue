@@ -8,6 +8,8 @@ import {
   type FileType,
 } from "@/types";
 import { watch } from "vue";
+import { Switch } from "@/components/ui/switch";
+import { Label } from "@/components/ui/label";
 
 const dict = defineModel<DictionarySpecificSettings>({ required: true });
 
@@ -39,7 +41,10 @@ watch(
         dict.value.c = undefined;
         break;
       }
-      case DictionaryType.Url:
+      case DictionaryType.Url: {
+        dict.value.c = ["", true];
+        break;
+      }
       case DictionaryType.Command: {
         dict.value.c = "";
         break;
@@ -53,6 +58,13 @@ function isWiktionary(
   _contents: any,
 ): _contents is [string, string] {
   return dictType === "Wiktionary";
+}
+
+function isUrl(
+  dictType: DictionaryType,
+  _contents: any,
+): _contents is [string, boolean] {
+  return dictType === "Url";
 }
 
 function isFile(
@@ -109,8 +121,11 @@ function isFile(
     <Label for="wordlang">Word Language:</Label>
     <Input type="text" v-model="dict.c[1]" class="w-100" id="wordlang" />
   </div>
-  <div v-else-if="dict.t == 'Url' && typeof dict.c === 'string'">
+  <div v-else-if="isUrl(dict.t, dict.c)">
     <Label for="command">Url:</Label>
-    <Input type="text" id="command" v-model="dict.c" />
+    <Input type="text" id="command" v-model="dict.c[0]" />
+
+    <Label for="embed">Embed page</Label>
+    <Switch id="embed" v-model:checked="dict.c[1]" />
   </div>
 </template>
