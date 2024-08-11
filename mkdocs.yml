@@ -1,0 +1,12 @@
+site_name: Kalba
+nav:
+  - Home: "index.md"
+  - "Word Knowledge": "word_knowledge.md"
+  - Usage:
+      - Reader: "reader.md"
+  - Configuration:
+      - Profiles: "profiles.md"
+      - Grammar: "grammar.md"
+      - Dictionaries: "dictionaries.md"
+      - Input: "input.md"
+theme: readthedocs
