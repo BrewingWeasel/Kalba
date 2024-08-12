@@ -11,19 +11,30 @@ By checking the interval rate of the notes, Kalba can automatically keep your Wo
 
 Words can be one of six states
 
-- Unknown:
-  This is the state that all words begin as.
-- Learning:
-  This state is automatically assigned to words that have been added to Anki but have yet to be reviewed or have an interval of one.
-- Recognized:
-  This state is automatically assigned to words that have an interval of less than 9
-- Familiar:
-  This state is automatically assigned to words that have an interval of less than 23
-- Known:
-  This state is automatically assigned to words that have an interval of over 23.
-- Ignored:
-  If stanza is enabled, any words that are detected as proper nouns will automatically be set to ignored. (TODO: you should be able to disable this feature)
-  This state is generally meant for names or other "words" the user doesn't want to learn.
+##### Unknown
+
+This is the state that all words begin as.
+
+##### Learning
+
+This state is automatically assigned to words that have been added to Anki but have yet to be reviewed or have an interval of one.
+
+##### Recognized
+
+This state is automatically assigned to words that have an interval of less than 9
+
+##### Familiar
+
+This state is automatically assigned to words that have an interval of less than 23
+
+##### Known
+
+This state is automatically assigned to words that have an interval of over 23.
+
+##### Ignored
+
+If stanza is enabled, any words that are detected as proper nouns will automatically be set to ignored. (TODO: you should be able to disable this feature)
+This state is generally meant for names or other "words" the user doesn't want to learn.
 
 TODO: You should be able to customize the intervals
 

@@ -1,12 +1,19 @@
 site_name: Kalba
 nav:
   - Home: "index.md"
-  - "Word Knowledge": "word_knowledge.md"
+  - Concepts:
+      - "Word Knowledge": "word_knowledge.md"
+      - Stanza: "stanza.md"
   - Usage:
       - Reader: "reader.md"
   - Configuration:
       - Profiles: "profiles.md"
       - Grammar: "grammar.md"
       - Dictionaries: "dictionaries.md"
+      - "Word Knowledge": "word_knowledge_settings.md"
+      - Exporting: "exporting.md"
       - Input: "input.md"
+      - Stanza: "stanza_settings.md"
+  - "Advanced Configuration":
+      - "Writing a spyglys parser": "spyglys_parser.md"
 theme: readthedocs

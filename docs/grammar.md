@@ -8,4 +8,4 @@ If you have stanza enabled (see [Stanza](stanza.md) for the benefits and downsid
 
 Another important setting is the frequency list. This can be used to automatically assign [Word Knowledge](word_knowledge.md) and will have other uses in the future.
 
-Finally, the Grammar Parser section allows writing custom [spyglys](https://github.com/BrewingWeasel/spyglys) code to automatically transform lemmas. See [Writing a custom spyglys parser] or the existing templates for more.
+Finally, the Grammar Parser section allows writing custom [spyglys](https://github.com/BrewingWeasel/spyglys) code to automatically transform lemmas. See [Writing a spyglys parser](spyglys_parser.md) or the existing templates for more.
