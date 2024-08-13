@@ -14,6 +14,7 @@ import { GithubLogoIcon } from "@radix-icons/vue";
 
 import { invoke } from "@tauri-apps/api";
 import { BookText, ClipboardPaste, File, Link, Pencil } from "lucide-vue-next";
+import { ref, watch } from "vue";
 
 interface TimeSpent {
   days_this_week: { name: string; duration: number }[];
@@ -24,16 +25,24 @@ interface TimeSpent {
   streak: number;
 }
 
-const timeSpent = await invoke<TimeSpent>("time_spent");
-console.log(timeSpent);
+type WordLevel = { name: string; amount: number };
+type WordsAdded = [number, number, number, number];
 
-const wordsLevels = await invoke<{ name: string; amount: number }[]>(
-  "get_words_known_at_levels",
+const props = defineProps<{ currrentLanguage: string }>();
+
+const timeSpent = ref<TimeSpent | undefined>(undefined);
+const wordsLevels = ref<WordLevel[] | undefined>(undefined);
+const wordsExportedByTime = ref<WordsAdded | undefined>(undefined);
+
+watch(
+  () => props.currrentLanguage,
+  async () => {
+    timeSpent.value = await invoke<TimeSpent>("time_spent");
+    wordsLevels.value = await invoke<WordLevel[]>("get_words_known_at_levels");
+    wordsExportedByTime.value = await invoke<WordsAdded>("get_words_added");
+  },
+  { immediate: true },
 );
-console.log(wordsLevels);
-
-const wordsExportedByTime =
-  await invoke<[number, number, number, number]>("get_words_added");
 </script>
 
 <template>
@@ -50,7 +59,7 @@ const wordsExportedByTime =
               class="p-12 w-48 h-48 bg-accent mb-3 rounded-full flex items-center justify-center flex-col ease-in-out duration-200 hover:scale-110"
             >
               <h1 class="text-center text-5xl font-black text-teal-600">
-                {{ timeSpent.streak }}
+                {{ timeSpent?.streak }}
               </h1>
               <h3 class="text-center text-xl">day streak</h3>
             </div>
@@ -59,7 +68,7 @@ const wordsExportedByTime =
           <h4 class="text-xl font-bold mb-1 mt-3">This week</h4>
 
           <BarChart
-            :data="timeSpent.days_this_week"
+            :data="timeSpent?.days_this_week ?? []"
             :categories="['duration']"
             index="name"
             :showLegend="false"
@@ -69,9 +78,9 @@ const wordsExportedByTime =
 
           <div class="flex items-baseline justify-center mb-4">
             <h2 class="font-bold">
-              {{ timeSpent.total_this_week[0] }}
+              {{ timeSpent?.total_this_week[0] }}
             </h2>
-            <h4>{{ timeSpent.total_this_week[1] }}</h4>
+            <h4>{{ timeSpent?.total_this_week[1] }}</h4>
             <h4>&nbsp;spent learning total</h4>
           </div>
 
@@ -82,9 +91,9 @@ const wordsExportedByTime =
               <h4>This month</h4>
               <div class="flex items-baseline">
                 <h2 class="text-xl font-bold px-0.5">
-                  {{ timeSpent.this_month[0] }}
+                  {{ timeSpent?.this_month[0] }}
                 </h2>
-                <h4>{{ timeSpent.this_month[1] }}</h4>
+                <h4>{{ timeSpent?.this_month[1] }}</h4>
               </div>
             </div>
             <div
@@ -93,9 +102,9 @@ const wordsExportedByTime =
               <h4>This year</h4>
               <div class="flex items-baseline">
                 <h2 class="text-xl font-bold px-0.5">
-                  {{ timeSpent.this_year[0] }}
+                  {{ timeSpent?.this_year[0] }}
                 </h2>
-                <h4>{{ timeSpent.this_year[1] }}</h4>
+                <h4>{{ timeSpent?.this_year[1] }}</h4>
               </div>
             </div>
             <div
@@ -104,9 +113,9 @@ const wordsExportedByTime =
               <h4>All time</h4>
               <div class="flex items-baseline">
                 <h2 class="text-xl font-bold px-0.5">
-                  {{ timeSpent.total[0] }}
+                  {{ timeSpent?.total[0] }}
                 </h2>
-                <h4>{{ timeSpent.total[1] }}</h4>
+                <h4>{{ timeSpent?.total[1] }}</h4>
               </div>
             </div>
           </div>
@@ -146,7 +155,7 @@ const wordsExportedByTime =
             <DonutChart
               index="name"
               category="amount"
-              :data="wordsLevels"
+              :data="wordsLevels ?? []"
               :showTooltip="true"
               :show-legend="true"
               :colors="['#ef5350', '#ffa726', '#ffd54f', 'black']"
@@ -170,7 +179,7 @@ const wordsExportedByTime =
             <CardDescription>Words added to Anki</CardDescription>
           </CardHeader>
           <CardContent>
-            <div class="bg-accent rounded-md">
+            <div class="bg-accent rounded-md" v-if="wordsExportedByTime">
               <div
                 class="flex justify-between items-baseline px-2 py-1 rounded-md hover:bg-background"
               >
