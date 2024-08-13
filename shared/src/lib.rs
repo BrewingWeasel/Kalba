@@ -219,7 +219,7 @@ impl Default for LanguageSettings {
                 (String::from("Front"), String::from("{sent}")),
                 (String::from("Back"), String::from("{word}:{def}")),
             ]),
-            model: String::from("lt_core_news_sm"),
+            model: String::new(),
             dicts: Vec::new(),
             anki_parser: HashMap::new(),
             frequency_list: String::from(""),
