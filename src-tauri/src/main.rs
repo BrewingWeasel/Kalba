@@ -16,7 +16,7 @@ use serde::{Deserialize, Serialize};
 use shared::{Definition, LanguageSettings, Settings, ToasterPayload};
 use simple_logger::SimpleLogger;
 use spyglys_integration::{format_spyglys, get_spyglys_functions};
-use stats::{get_words_known_at_levels, time_spent};
+use stats::{get_words_added, get_words_known_at_levels, time_spent};
 use std::{collections::HashMap, fs, io::BufReader, process, sync::Arc, time::Duration};
 use tauri::{async_runtime::block_on, GlobalWindowEvent, Manager, State, Window, WindowEvent};
 
@@ -120,6 +120,7 @@ struct LanguageSpecficToSave {
     lemmas_to_replace: HashMap<String, String>,
     previous_amount: usize,
     words_seen: Vec<(DateTime<Utc>, usize)>,
+    added_to_anki: Vec<(DateTime<Utc>, String)>,
 }
 
 impl Default for SharedInfo {
@@ -265,6 +266,7 @@ fn main() {
             check_stanza_installed,
             get_export_variables,
             rename_language,
+            get_words_added,
         ])
         .on_window_event(handle_window_event)
         .run(tauri::generate_context!())

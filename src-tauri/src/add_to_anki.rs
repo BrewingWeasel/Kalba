@@ -1,3 +1,4 @@
+use chrono::Utc;
 use reqwest::Client;
 use serde_json::json;
 use shared::{Definition, ExportStyling, ToasterPayload};
@@ -115,7 +116,7 @@ pub async fn add_to_anki(
     state: State<'_, KalbaState>,
     window: Window,
 ) -> Result<(), KalbaError> {
-    let state = state.0.lock().await;
+    let mut state = state.0.lock().await;
     log::debug!("Adding to anki using details {:?}", export_details);
     let selected_word = export_details.word;
     let args = get_json(export_details, &state.settings.export_styling);
@@ -129,6 +130,15 @@ pub async fn add_to_anki(
     std::convert::Into::<Result<isize, KalbaError>>::into(
         response.json::<AnkiResult<isize>>().await?,
     )?;
+    let current_language = state.current_language.clone().expect("language to exist");
+
+    state
+        .to_save
+        .language_specific
+        .get_mut(&current_language)
+        .expect("language to exist")
+        .added_to_anki
+        .push((Utc::now(), selected_word.to_string()));
     window.emit(
         "added_to_anki",
         Some(ToasterPayload {

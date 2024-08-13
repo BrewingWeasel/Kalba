@@ -111,6 +111,8 @@ onMounted(async () => {
     });
   }
 });
+
+const profileSetterOpen = ref(false);
 </script>
 
 <template>
@@ -217,7 +219,7 @@ onMounted(async () => {
         </Breadcrumb>
 
         <div class="pr-4 ml-auto">
-          <Popover>
+          <Popover v-model:open="profileSetterOpen">
             <PopoverTrigger>
               <div class="flex items-center px-2 rounded-md bg-accent">
                 <Settings2 :size="16" class="mr-1" />
@@ -238,7 +240,7 @@ onMounted(async () => {
                 "
               >
                 <SelectTrigger class="w-[180px]">
-                  <SelectValue placeholder="Select a language" />
+                  <SelectValue placeholder="Select a profile" />
                 </SelectTrigger>
                 <SelectContent>
                   <SelectGroup>
@@ -264,6 +266,7 @@ onMounted(async () => {
               console.log($event);
               currentLanguage = $event;
             "
+            @setProfile="profileSetterOpen = true"
           ></router-view>
         </Suspense>
       </main>

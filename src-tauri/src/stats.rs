@@ -98,6 +98,34 @@ pub async fn get_words_known_at_levels(
         .collect())
 }
 
+#[tauri::command]
+pub async fn get_words_added(state: State<'_, KalbaState>) -> Result<[usize; 4], String> {
+    let state = state.0.lock().await;
+    let current_language = state.current_language.as_ref().expect("language to be set");
+    log::info!("loading stats for profile {current_language}");
+    let words_added = &state
+        .to_save
+        .language_specific
+        .get(current_language)
+        .expect("language to include")
+        .added_to_anki;
+    let mut words_added_at_times = [0; 4];
+    for (time, _) in words_added.iter().rev() {
+        let days_since = Utc::now().signed_duration_since(*time).num_days();
+        if days_since < 7 {
+            words_added_at_times[0] += 1;
+        }
+        if days_since < 30 {
+            words_added_at_times[1] += 1;
+        }
+        if days_since < 365 {
+            words_added_at_times[2] += 1;
+        }
+        words_added_at_times[3] += 1;
+    }
+    Ok(words_added_at_times)
+}
+
 fn formatted_duration(duration: &TimeDelta) -> (String, String) {
     let minutes = duration.num_minutes() as f64;
     if minutes < 60.0 {

@@ -13,7 +13,7 @@ import { DonutChart } from "@/components/ui/chart-donut";
 import { GithubLogoIcon } from "@radix-icons/vue";
 
 import { invoke } from "@tauri-apps/api";
-import { BookText } from "lucide-vue-next";
+import { BookText, ClipboardPaste, File, Link, Pencil } from "lucide-vue-next";
 
 interface TimeSpent {
   days_this_week: { name: string; duration: number }[];
@@ -31,12 +31,15 @@ const wordsLevels = await invoke<{ name: string; amount: number }[]>(
   "get_words_known_at_levels",
 );
 console.log(wordsLevels);
+
+const wordsExportedByTime =
+  await invoke<[number, number, number, number]>("get_words_added");
 </script>
 
 <template>
   <div class="flex items-center justify-center p-3">
     <div class="flex gap-3">
-      <Card class="w-80">
+      <Card class="w-80 h-[45rem]">
         <CardHeader>
           <CardTitle>Activity</CardTitle>
           <CardDescription>Time spent learning the language</CardDescription>
@@ -109,7 +112,7 @@ console.log(wordsLevels);
           </div>
         </CardContent>
       </Card>
-      <div class="flex flex-col gap-3">
+      <div class="flex flex-col gap-3 h-[45rem]">
         <Card class="w-80 h-fit">
           <CardHeader>
             <CardTitle>Getting Started</CardTitle>
@@ -123,10 +126,7 @@ console.log(wordsLevels);
                   <h2 class="ml-1">Repository</h2>
                 </Button>
               </a>
-              <a
-                target="_blank"
-                href="https://github.com/BrewingWeasel/kalba/wiki"
-              >
+              <a target="_blank" href="https://kalba.readthedocs.io/en/latest/">
                 <Button class="w-48" variant="outline">
                   <BookText />
                   <h2 class="ml-1">Docs</h2>
@@ -151,6 +151,117 @@ console.log(wordsLevels);
               :show-legend="true"
               :colors="['#ef5350', '#ffa726', '#ffd54f', 'black']"
             />
+          </CardContent>
+        </Card>
+        <Card class="w-80 h-full">
+          <CardHeader>
+            <CardTitle>Profile</CardTitle>
+            <CardDescription>Switch profiles</CardDescription>
+          </CardHeader>
+          <CardContent>
+            <Button @click="$emit('setProfile')">Set profile</Button>
+          </CardContent>
+        </Card>
+      </div>
+      <div class="flex flex-col gap-3 h-[45rem]">
+        <Card class="w-80 h-fit">
+          <CardHeader>
+            <CardTitle>Exported Words</CardTitle>
+            <CardDescription>Words added to Anki</CardDescription>
+          </CardHeader>
+          <CardContent>
+            <div class="bg-accent rounded-md">
+              <div
+                class="flex justify-between items-baseline px-2 py-1 rounded-md hover:bg-background"
+              >
+                <h4>This week</h4>
+                <div class="flex items-baseline">
+                  <h2 class="text-xl font-bold px-0.5">
+                    {{ wordsExportedByTime[0] }}
+                  </h2>
+                </div>
+              </div>
+              <div
+                class="flex justify-between items-baseline px-2 py-1 rounded-md hover:bg-background"
+              >
+                <h4>This month</h4>
+                <div class="flex items-baseline">
+                  <h2 class="text-xl font-bold px-0.5">
+                    {{ wordsExportedByTime[1] }}
+                  </h2>
+                </div>
+              </div>
+              <div
+                class="flex justify-between items-baseline px-2 py-1 rounded-md hover:bg-background"
+              >
+                <h4>This year</h4>
+                <div class="flex items-baseline">
+                  <h2 class="text-xl font-bold px-0.5">
+                    {{ wordsExportedByTime[2] }}
+                  </h2>
+                </div>
+              </div>
+              <div
+                class="flex justify-between items-baseline px-2 py-1 rounded-md hover:bg-background"
+              >
+                <h4>All time</h4>
+                <div class="flex items-baseline">
+                  <h2 class="text-xl font-bold px-0.5">
+                    {{ wordsExportedByTime[3] }}
+                  </h2>
+                </div>
+              </div>
+            </div>
+          </CardContent>
+        </Card>
+        <Card class="w-80 h-full">
+          <CardHeader>
+            <CardTitle>Reader</CardTitle>
+            <CardDescription>Suggested content</CardDescription>
+          </CardHeader>
+          <CardContent>
+            <h3 class="font-semibold text-lg">Builtin inputs</h3>
+            <div class="p-2 border-2 rounded-md flex justify-around">
+              <Button variant="secondary" as-child>
+                <a href="/reader/input"><File :size="18" /></a>
+              </Button>
+              <Button variant="secondary" as-child>
+                <a href="/reader/input"><Link :size="18" /></a>
+              </Button>
+              <Button variant="secondary" as-child>
+                <a href="/reader/input"><ClipboardPaste :size="18" /></a>
+              </Button>
+              <Button variant="secondary" as-child>
+                <a href="/reader/input"><Pencil :size="18" /></a>
+              </Button>
+            </div>
+            <h3 class="font-semibold text-lg mt-2">Suggested sites</h3>
+            <div class="p-2 border-2 rounded-md flex flex-col justify-around">
+              <Button variant="link" as-child>
+                <a href="https://www.wikibooks.org/" target="_blank"
+                  >Wikibooks</a
+                >
+              </Button>
+              <Button variant="link" as-child>
+                <a href="https://openlibrary.org/languages" target="_blank"
+                  >Open Library</a
+                >
+              </Button>
+              <Button variant="link" as-child>
+                <a
+                  href="https://www.gutenberg.org/browse/languages/en"
+                  target="_blank"
+                  >Project Gutenburg</a
+                >
+              </Button>
+              <Button variant="link" as-child>
+                <a
+                  href="https://meta.wikimedia.org/wiki/List_of_Wikipedias"
+                  target="_blank"
+                  >Wikipedia</a
+                >
+              </Button>
+            </div>
           </CardContent>
         </Card>
       </div>
