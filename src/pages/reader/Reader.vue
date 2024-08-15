@@ -163,7 +163,7 @@ const definitions = computedAsync(
   isComputingDefinition,
 );
 
-const selectedWordPoppedOut = ref(false);
+const selectedWordPoppedOut = ref(props.inputType === "clipboard");
 const separatedDefinitions = ref<string[]>([]);
 
 watch(definitions, () => {
