@@ -32,7 +32,7 @@
     "bundle": {
       "active": true,
       "targets": "all",
-      "identifier": "com.tauri.dev",
+      "identifier": "com.kalbareader.kalba",
       "icon": [
         "icons/32x32.png",
         "icons/128x128.png",
@@ -48,7 +48,7 @@
       {
         "fullscreen": false,
         "resizable": true,
-        "title": "kalba",
+        "title": "Kalba",
         "width": 800,
         "height": 600
       }
