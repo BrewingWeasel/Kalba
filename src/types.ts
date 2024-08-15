@@ -1,6 +1,11 @@
 export type HistoryItem = string | number;
 export type InputType = "url" | "clipboard" | "normal";
 
+export interface StartupState {
+  errors: string[];
+  first_time: boolean;
+}
+
 export interface Definition {
   t: "Empty" | "Text" | "OnDemand";
   c: undefined | string;

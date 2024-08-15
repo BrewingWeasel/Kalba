@@ -4,8 +4,9 @@ use reqwest::Client;
 use serde::Deserialize;
 use shared::{Dictionary, LanguageSettings};
 use tauri::State;
+use tokio::sync::MutexGuard;
 
-use crate::{KalbaError, KalbaState};
+use crate::{KalbaError, KalbaState, SharedInfo};
 
 #[derive(Debug, Deserialize, Clone)]
 struct TemplateDetails {
@@ -21,10 +22,17 @@ struct TemplateDetails {
 #[tauri::command]
 pub async fn new_language_from_template(
     state: State<'_, KalbaState>,
-    language: String,
-) -> Result<(), KalbaError> {
-    let language = language.to_lowercase();
+    language: &str,
+) -> Result<String, KalbaError> {
     let mut state = state.0.lock().await;
+    use_language_template(&mut state, language).await
+}
+
+pub async fn use_language_template(
+    state: &mut MutexGuard<'_, SharedInfo>,
+    language: &str,
+) -> Result<String, KalbaError> {
+    let language = language.to_lowercase();
 
     let mut language_name = language.clone();
     if state.settings.languages.contains_key(&language_name) {
@@ -44,11 +52,11 @@ pub async fn new_language_from_template(
             .settings
             .languages
             .insert(language_name.clone(), LanguageSettings::default());
-        state
-            .to_save
-            .language_specific
-            .insert(language_name, crate::LanguageSpecficToSave::default());
-        return Ok(());
+        state.to_save.language_specific.insert(
+            language_name.clone(),
+            crate::LanguageSpecficToSave::default(),
+        );
+        return Ok(language_name);
     }
 
     let client = Client::new();
@@ -61,11 +69,20 @@ pub async fn new_language_from_template(
         .expect("githubusercontent to return valid text");
     let details: TemplateDetails = toml::from_str(&template).unwrap();
     let frequency_list = if details.frequency_list {
-        let path = dirs::data_dir()
-            .ok_or_else(|| KalbaError::MissingDir("data".to_owned()))?
+        let data_dir = dirs::data_dir().ok_or_else(|| KalbaError::MissingDir("data".to_owned()))?;
+        let path = data_dir
             .join("kalba")
             .join("language_data")
             .join(format!("{language}_frequency"));
+
+        if data_dir.exists() {
+            if let Some(parent) = path.parent() {
+                if !parent.exists() {
+                    fs::create_dir_all(parent)?;
+                }
+            }
+        }
+
         if !path.exists() {
             let contents = client.get(format!(
                 "https://raw.githubusercontent.com/brewingweasel/kalba/main/data/frequency_lists/{language}",))
@@ -106,11 +123,11 @@ pub async fn new_language_from_template(
         .languages
         .insert(language_name.clone(), lang_settings);
     state.to_save.language_specific.insert(
-        language_name,
+        language_name.clone(),
         crate::LanguageSpecficToSave {
             lemmas_to_replace: details.replace_lemmas,
             ..Default::default()
         },
     );
-    Ok(())
+    Ok(language_name)
 }

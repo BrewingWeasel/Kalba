@@ -31,7 +31,6 @@ import { toast } from "vue-sonner";
 import Grammar from "./components/Grammar.vue";
 import { useRouter } from "vue-router";
 import SiteConfigurationTable from "./components/SiteConfigurationTable.vue";
-import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 
 import {
   NumberField,
@@ -259,27 +258,10 @@ async function newLanguage(language: string) {
           title="Stanza"
           description="Configure and enable grammar parsing with Stanza"
         />
-        <div v-if="installed">
-          <Label for="stanza-enabled">Enable Stanza</Label>
-          <Switch
-            id="stanza-enabled"
-            v-model:checked="settings.stanza_enabled"
-          />
-        </div>
-        <div v-else>
-          <EnableStanza
-            v-model:installed="installed"
-            v-model:enabled="settings.stanza_enabled"
-          />
-        </div>
-        <Alert class="mt-4 w-fit">
-          <Info class="h-4 w-4" />
-          <AlertTitle>Stanza Usage</AlertTitle>
-          <AlertDescription>
-            Stanza can be used to automatically parse grammar and determine the
-            root word for over 70 languages.</AlertDescription
-          >
-        </Alert>
+        <EnableStanza
+          v-model:installed="installed"
+          v-model:enabled="settings.stanza_enabled"
+        />
       </template>
 
       <template v-else-if="section == 'General' && selectedLang != null">

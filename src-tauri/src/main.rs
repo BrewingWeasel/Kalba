@@ -12,8 +12,9 @@ use crate::{
 use ankiconnect::get_anki_card_statuses;
 use chrono::{DateTime, TimeDelta, Utc};
 use commands::run_command;
+use new_language_template::use_language_template;
 use serde::{Deserialize, Serialize};
-use shared::{Definition, LanguageSettings, Settings, ToasterPayload};
+use shared::{Definition, LanguageSettings, Settings, StartingSettings, ToasterPayload};
 use simple_logger::SimpleLogger;
 use spyglys_integration::{format_spyglys, get_spyglys_functions};
 use stats::{get_words_added, get_words_known_at_levels, time_spent};
@@ -258,7 +259,7 @@ fn main() {
             get_spyglys_functions,
             time_spent,
             get_words_known_at_levels,
-            check_startup_errors,
+            get_startup_state,
             parse_url,
             get_definition_on_demand,
             always_change_lemma,
@@ -267,6 +268,7 @@ fn main() {
             get_export_variables,
             rename_language,
             get_words_added,
+            get_started,
         ])
         .on_window_event(handle_window_event)
         .run(tauri::generate_context!())
@@ -296,15 +298,39 @@ async fn refresh_anki(
     Ok(())
 }
 
+#[derive(Serialize, Debug)]
+struct StartupState {
+    errors: Vec<KalbaError>,
+    first_time: bool,
+}
+
 #[tauri::command]
-async fn check_startup_errors(state: State<'_, KalbaState>) -> Result<(), Vec<KalbaError>> {
+async fn get_startup_state(state: State<'_, KalbaState>) -> Result<StartupState, String> {
     let mut state = state.0.lock().await;
     let errs = std::mem::take(&mut state.errors);
-    if errs.is_empty() {
-        Ok(())
-    } else {
-        Err(errs)
-    }
+    Ok(StartupState {
+        errors: errs,
+        first_time: state.to_save.last_language.is_none(),
+    })
+}
+
+#[tauri::command]
+async fn get_started(
+    state: State<'_, KalbaState>,
+    starting: StartingSettings,
+) -> Result<(), KalbaError> {
+    let mut state = state.0.lock().await;
+    let name = use_language_template(&mut state, &starting.template).await?;
+    state
+        .settings
+        .languages
+        .get_mut(&name)
+        .expect("language to be added")
+        .anki_parser = starting.decks;
+    state.settings.stanza_enabled = starting.stanza_enabled;
+    state.to_save.last_language = Some(name.clone());
+    state.current_language = Some(name);
+    Ok(())
 }
 
 async fn set_word_knowledge_from_anki(

@@ -18,6 +18,14 @@ impl KeyValueLabels for NoteKeyValueLabels {
     const VALUE: &'static str = "handling";
 }
 
+#[derive(Deserialize)]
+pub struct StartingSettings {
+    pub template: String,
+    #[serde(with = "HashMapToArray::<String, Note, DeckKeyValueLabels>")]
+    pub decks: HashMap<String, Note>,
+    pub stanza_enabled: bool,
+}
+
 #[derive(Clone, serde::Serialize)]
 pub struct ToasterPayload<'a> {
     pub message: Option<&'a str>,
