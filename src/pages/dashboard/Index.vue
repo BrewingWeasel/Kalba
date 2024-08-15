@@ -28,14 +28,14 @@ interface TimeSpent {
 type WordLevel = { name: string; amount: number };
 type WordsAdded = [number, number, number, number];
 
-const props = defineProps<{ currrentLanguage: string }>();
+const props = defineProps<{ currentLanguage: string }>();
 
 const timeSpent = ref<TimeSpent | undefined>(undefined);
 const wordsLevels = ref<WordLevel[] | undefined>(undefined);
 const wordsExportedByTime = ref<WordsAdded | undefined>(undefined);
 
 watch(
-  () => props.currrentLanguage,
+  () => props.currentLanguage,
   async () => {
     timeSpent.value = await invoke<TimeSpent>("time_spent");
     wordsLevels.value = await invoke<WordLevel[]>("get_words_known_at_levels");

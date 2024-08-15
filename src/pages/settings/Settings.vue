@@ -212,7 +212,7 @@ async function newLanguage(language: string) {
         <Switch id="theme" v-model:checked="isDark" />
         <Label for="theme">Use dark mode</Label>
 
-        <h2 class="mt-1">Definintion styling</h2>
+        <h2 class="mt-1">Definition styling</h2>
         <Separator class="mb-1" />
 
         <Label for="def_styling">Definition style</Label>

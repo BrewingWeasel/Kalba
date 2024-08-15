@@ -58,7 +58,7 @@ enum KalbaError {
     #[error("Anki is not available. This may be because it is not open or ankiconnect is not installed.")]
     AnkiNotAvailable,
     #[error("Unable to download language details from github: {0}")]
-    LanugageDetailsDownloading(#[from] reqwest::Error),
+    LanguageDetailsDownloading(#[from] reqwest::Error),
     #[error("Ankiconnect return an error: {0}")]
     AnkiConnectError(String),
     #[error("No site configuration found for {0}")]
@@ -110,12 +110,12 @@ struct ToSave {
     last_launched: DateTime<Utc>,
     last_language: Option<String>,
     decks_checked: Vec<String>,
-    language_specific: HashMap<String, LanguageSpecficToSave>,
+    language_specific: HashMap<String, LanguageSpecificToSave>,
     sessions: Vec<(DateTime<Utc>, Duration)>,
 }
 
 #[derive(Serialize, Deserialize, Default)]
-struct LanguageSpecficToSave {
+struct LanguageSpecificToSave {
     words: HashMap<String, WordInfo>,
     previous_file: Option<String>,
     lemmas_to_replace: HashMap<String, String>,

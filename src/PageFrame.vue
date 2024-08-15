@@ -259,7 +259,7 @@ const profileSetterOpen = ref(false);
       <main class="flex-grow">
         <Suspense>
           <router-view
-            :currentLanguage="currentLanguage"
+            :currentLanguage
             @settingsChanged="updateLanguages"
             @newCurrentLanguage="
               updateLanguages();

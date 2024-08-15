@@ -127,7 +127,7 @@ async function getOnDemandDef(dictionary: string) {
   if (onDemandDefinitions.value.get(dictionary) || !selectedWord.value) {
     return;
   }
-  console.log(`getting on demand definiton from dictionary ${dictionary}`);
+  console.log(`getting on demand definition from dictionary ${dictionary}`);
   onDemandDefinitions.value.set(
     dictionary,
     await invoke<Definition>("get_definition_on_demand", {

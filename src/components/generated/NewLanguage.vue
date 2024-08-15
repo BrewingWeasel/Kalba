@@ -26,7 +26,7 @@ import LanguageList from "@/components/LanguageList.vue";
       <LanguageList
         :isDialog="true"
         existingSelection=""
-        @langSelected="$emit('langSelcted', $event)"
+        @langSelected="$emit('langSelected', $event)"
       />
     </DialogScrollContent>
   </Dialog>

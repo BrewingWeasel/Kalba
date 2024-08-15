@@ -54,7 +54,7 @@ pub async fn use_language_template(
             .insert(language_name.clone(), LanguageSettings::default());
         state.to_save.language_specific.insert(
             language_name.clone(),
-            crate::LanguageSpecficToSave::default(),
+            crate::LanguageSpecificToSave::default(),
         );
         return Ok(language_name);
     }
@@ -124,7 +124,7 @@ pub async fn use_language_template(
         .insert(language_name.clone(), lang_settings);
     state.to_save.language_specific.insert(
         language_name.clone(),
-        crate::LanguageSpecficToSave {
+        crate::LanguageSpecificToSave {
             lemmas_to_replace: details.replace_lemmas,
             ..Default::default()
         },
