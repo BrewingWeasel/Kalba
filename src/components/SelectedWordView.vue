@@ -12,11 +12,20 @@ import {
   type Word,
 } from "@/types";
 import { Button } from "@/components/ui/button";
-import { CheckCircle2, Loader2, Link } from "lucide-vue-next";
+import {
+  CheckCircle2,
+  Loader2,
+  PanelRightOpen,
+  PanelBottomClose,
+} from "lucide-vue-next";
 import { ref, watch } from "vue";
 import BetterTooltip from "./BetterTooltip.vue";
 
 const separatedDefinitions = defineModel<string[]>("separatedDefinitions", {
+  required: true,
+});
+
+const isOpenInOtherPanel = defineModel<boolean>("isOpenInOtherPanel", {
   required: true,
 });
 
@@ -71,14 +80,19 @@ const exportDetails = defineModel<ExportDetails>("exportDetails", {
 
 <template>
   <div
-    class="px-7 bg-accent w-full h-[calc(100vh-3.25rem)] flex flex-col overflow-auto"
+    class="px-7 pt-3 bg-accent w-full h-[calc(100vh-3.25rem)] flex flex-col overflow-auto"
   >
-    <br />
     <div class="p-2 bg-border rounded-lg mb-2">
       <div class="flex justify-center gap-1 items-center">
-        <Button variant="outline" size="icon" :disabled="true">
-          <BetterTooltip tooltip="Edit linked Anki card">
-            <Link />
+        <Button
+          variant="outline"
+          size="icon"
+          @click="isOpenInOtherPanel = !isOpenInOtherPanel"
+        >
+          <BetterTooltip tooltip="Switch to other panel">
+            <component
+              :is="isOpenInOtherPanel ? PanelBottomClose : PanelRightOpen"
+            />
           </BetterTooltip>
         </Button>
         <Input

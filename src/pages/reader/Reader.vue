@@ -163,6 +163,7 @@ const definitions = computedAsync(
   isComputingDefinition,
 );
 
+const selectedWordPoppedOut = ref(false);
 const separatedDefinitions = ref<string[]>([]);
 
 watch(definitions, () => {
@@ -333,6 +334,35 @@ onMounted(async () => {
             </div>
           </div>
         </ResizablePanel>
+        <template v-if="selectedWord && sections && selectedWordPoppedOut">
+          <ResizableHandle />
+          <ResizablePanel
+            :min-size="20"
+            :max-size="70"
+            :default-size="32"
+            class="max-h-full"
+          >
+            <Suspense class="h-full">
+              <SelectedWordView
+                v-model:word="
+                  sections[selectedSectionIndex].c[selectedWordIndex] as Word
+                "
+                v-model:history="history"
+                v-model:historyIndex="historyIndex"
+                v-model:exportDetails="exportDetails"
+                v-model:isOpenInOtherPanel="selectedWordPoppedOut"
+                :sentence
+                :currentLanguage
+                :definitions
+                :isComputingDefinition
+                :onDemandDefinitions
+                v-model:separatedDefinitions="separatedDefinitions"
+                @set-rating="changeRating"
+                @getOnDemandDef="getOnDemandDef"
+                class="max-h-full"
+              />
+            </Suspense> </ResizablePanel
+        ></template>
         <template v-for="(definition, index) in separatedDefinitions">
           <ResizableHandle />
           <ResizablePanel :default-size="25">
@@ -428,7 +458,7 @@ onMounted(async () => {
     </ResizablePanel>
     <ResizableHandle />
     <ResizablePanel
-      v-if="selectedWord && sections"
+      v-if="selectedWord && sections && !selectedWordPoppedOut"
       :min-size="20"
       :max-size="70"
       :default-size="32"
@@ -442,6 +472,7 @@ onMounted(async () => {
           v-model:history="history"
           v-model:historyIndex="historyIndex"
           v-model:exportDetails="exportDetails"
+          v-model:isOpenInOtherPanel="selectedWordPoppedOut"
           :sentence
           :currentLanguage
           :definitions
