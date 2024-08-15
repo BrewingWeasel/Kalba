@@ -129,5 +129,11 @@ pub async fn use_language_template(
             ..Default::default()
         },
     );
+
+    let config_file = dirs::config_dir()
+        .ok_or(KalbaError::MissingDir("config".to_string()))?
+        .join("kalba.toml");
+    fs::write(config_file, toml::to_string_pretty(&state.settings)?)?;
+
     Ok(language_name)
 }
