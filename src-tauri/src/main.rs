@@ -311,6 +311,7 @@ async fn refresh_anki(
 struct StartupState {
     errors: Vec<KalbaError>,
     first_time: bool,
+    can_save: bool,
 }
 
 #[tauri::command]
@@ -320,6 +321,7 @@ async fn get_startup_state(state: State<'_, KalbaState>) -> Result<StartupState,
     Ok(StartupState {
         errors: errs,
         first_time: state.to_save.last_language.is_none(),
+        can_save: state.can_save,
     })
 }
 

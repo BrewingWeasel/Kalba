@@ -85,7 +85,7 @@ onMounted(async () => {
   console.log(props.startup.errors);
   for (const error of props.startup.errors) {
     console.log(error);
-    if (error.includes("Anki")) {
+    if (!props.startup.can_save) {
       toast.error(error, { duration: 6000 });
     } else {
       toast.error(`${error} (state and settings will not be saved)`, {

@@ -4,6 +4,7 @@ export type InputType = "url" | "clipboard" | "normal";
 export interface StartupState {
   errors: string[];
   first_time: boolean;
+  can_save: boolean;
 }
 
 export interface Definition {
