@@ -1,8 +1,7 @@
 use spyglys::interpreter::{Interpreter, RuntimeError, Value};
-use tauri::State;
 use tokio::sync::MutexGuard;
 
-use crate::{KalbaError, KalbaState, SharedInfo};
+use crate::{KalbaError, SharedInfo};
 
 pub fn handle_lemma(
     lemma: &str,
@@ -94,28 +93,14 @@ pub fn load_spyglys(state: &mut MutexGuard<SharedInfo>) -> Result<Interpreter, K
 }
 
 #[tauri::command]
-pub async fn get_spyglys_functions(
-    state: State<'_, KalbaState>,
-) -> Result<Vec<String>, KalbaError> {
-    let current_interpreter = load_spyglys(&mut state.0.lock().await)?;
+pub async fn get_spyglys_functions(spyglys_grammar: String) -> Result<Vec<String>, KalbaError> {
+    let current_interpreter = spyglys::contents_to_interpreter(&spyglys_grammar)?;
     Ok(current_interpreter.get_functions())
 }
 
 #[tauri::command]
-pub async fn format_spyglys(state: State<'_, KalbaState>) -> Result<String, KalbaError> {
-    let state = state.0.lock().await;
-    let current_language = state
-        .current_language
-        .as_ref()
-        .expect("language to already be selected");
-    let parsed = spyglys::parse_string(
-        &state
-            .settings
-            .languages
-            .get(current_language)
-            .expect("language to exist")
-            .grammar_parser,
-    )?;
+pub async fn format_spyglys(spyglys_grammar: String) -> Result<String, KalbaError> {
+    let parsed = spyglys::parse_string(&spyglys_grammar)?;
 
     Ok(spyglys::formatter::pretty_file(&parsed))
 }
