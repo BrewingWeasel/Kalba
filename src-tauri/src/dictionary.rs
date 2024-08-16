@@ -392,7 +392,17 @@ async fn get_wordreference(
         for (i, cell) in row.children().enumerate() {
             match i {
                 0 => {
-                    last_definition.title.push_str(&cell.text());
+                    for title_part in cell.children() {
+                        if title_part.html().starts_with("<em") {
+                            last_definition.title.push_str(&format!(
+                                "<span style=\"{}\">{}</span>",
+                                definition_styling.main_detail,
+                                title_part.text()
+                            ));
+                        } else {
+                            last_definition.title.push_str(&title_part.text());
+                        }
+                    }
                     last_definition.title.push('\n');
                 }
                 1 => {
@@ -407,7 +417,17 @@ async fn get_wordreference(
                     section.push('\n');
                 }
                 2 => {
-                    last_definition.definition.push_str(&cell.text());
+                    for definition_part in cell.children() {
+                        if definition_part.html().starts_with("<em") {
+                            last_definition.definition.push_str(&format!(
+                                "<span style=\"{}\">{}</span>",
+                                definition_styling.main_detail,
+                                definition_part.text()
+                            ));
+                        } else {
+                            last_definition.definition.push_str(&definition_part.text());
+                        }
+                    }
                     last_definition.definition.push('\n');
                 }
                 _ => continue,
@@ -415,13 +435,19 @@ async fn get_wordreference(
         }
     }
     let mut generated_html = String::new();
-    for definition in definitions {
+    let num_definitions = definitions.len();
+    for (i, definition) in definitions.into_iter().enumerate() {
         generated_html.push_str(&format!(
-            "<h2 style=\"{}\">{}</h2>",
-            definition_styling.main_detail, definition.title
+            "<div><span style=\"{}\">{} </span>",
+            definition_styling.info,
+            definition.title.trim()
         ));
         if !definition.notes.is_empty() {
-            generated_html.push_str(&format!("<p>{}</p>", definition.notes));
+            generated_html.push_str(&format!(
+                "<span style=\"{}\">{}</span></div>",
+                definition_styling.main_detail,
+                definition.notes.trim()
+            ));
         }
         if !definition.definition.is_empty() {
             generated_html.push_str(&format!(
@@ -430,10 +456,10 @@ async fn get_wordreference(
             ));
         }
         if !definition.examples.is_empty() {
-            generated_html.push_str(&format!(
-                "<p style=\"{}\">{}</p>",
-                definition_styling.info, definition.examples
-            ));
+            generated_html.push_str(&format!("<p>{}</p>", definition.examples));
+        }
+        if i + 1 < num_definitions {
+            generated_html.push_str("<hr>");
         }
     }
     Ok(Definition::Text(generated_html))
