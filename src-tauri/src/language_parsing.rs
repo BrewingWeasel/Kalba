@@ -358,6 +358,8 @@ pub async fn start_stanza(state: State<'_, KalbaState>, window: Window) -> Resul
         BufReader::new(std::mem::take(&mut process.stdout).expect("stdout to be piped"));
     let mut stdin = std::mem::take(&mut process.stdin).expect("stdin to be piped");
 
+    let model_exists = stanza_path.join("stanza_models").join(model).exists();
+
     let model_formatted = format!("{model}\n");
     let bytes_written = stdin.write(model_formatted.as_bytes())?;
     if bytes_written != model_formatted.as_bytes().len() {
@@ -367,7 +369,11 @@ pub async fn start_stanza(state: State<'_, KalbaState>, window: Window) -> Resul
     window.emit(
         "stanza_loading",
         Some(ToasterPayload {
-            message: Some(&format!("Loading model {model}")),
+            message: Some(&if model_exists {
+                format!("Loading model {model}")
+            } else {
+                format!("Installing model {model} (this may take a minute)")
+            }),
         }),
     )?;
 
