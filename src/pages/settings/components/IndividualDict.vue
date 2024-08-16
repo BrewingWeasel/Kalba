@@ -42,7 +42,7 @@ watch(
         break;
       }
       case DictionaryType.Url: {
-        dict.value.c = ["", true];
+        dict.value.c = ["", true, ""];
         break;
       }
       case DictionaryType.Command: {
@@ -70,7 +70,7 @@ function isWordReference(
 function isUrl(
   dictType: DictionaryType,
   _contents: any,
-): _contents is [string, boolean] {
+): _contents is [string, boolean, string] {
   return dictType === "Url";
 }
 
@@ -141,5 +141,10 @@ function isFile(
 
     <Label for="embed">Embed page</Label>
     <Switch id="embed" v-model:checked="dict.c[1]" />
+
+    <div v-if="!dict.c[1]">
+      <Label for="selector">CSS selector</Label>
+      <Input id="selector" v-model="dict.c[2]" />
+    </div>
   </div>
 </template>

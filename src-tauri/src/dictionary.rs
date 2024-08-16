@@ -120,7 +120,12 @@ fn get_def_from_file(
     }
 }
 
-async fn get_def_url(lemma: &str, url: &str, embed: bool) -> Result<Definition, KalbaError> {
+async fn get_def_url(
+    lemma: &str,
+    url: &str,
+    embed: bool,
+    selector: &str,
+) -> Result<Definition, KalbaError> {
     let new_url = url.replacen("{word}", lemma, 1);
     if embed {
         Ok(Definition::Text(format!(
@@ -129,9 +134,29 @@ async fn get_def_url(lemma: &str, url: &str, embed: bool) -> Result<Definition, 
         )))
     } else {
         let client = reqwest::Client::new();
-        Ok(Definition::Text(
-            client.get(new_url).send().await?.text().await?,
-        ))
+        let response = client.get(new_url).send().await?.text().await?;
+        if selector.is_empty() {
+            Ok(Definition::Text(response))
+        } else {
+            let mut text = String::new();
+            let element_content_handlers = vec![text!(&selector, |t| {
+                text.push_str(t.as_str());
+                text.push('\n');
+                Ok(())
+            })];
+            rewrite_str(
+                &response,
+                RewriteStrSettings {
+                    element_content_handlers,
+                    ..RewriteStrSettings::default()
+                },
+            )?;
+            if text.is_empty() {
+                Ok(Definition::Empty)
+            } else {
+                Ok(Definition::Text(text))
+            }
+        }
     }
 }
 
@@ -238,7 +263,9 @@ async fn get_def(
 ) -> Result<Definition, KalbaError> {
     match dict {
         DictionarySpecificSettings::File(f, dict_type) => get_def_from_file(lemma, f, dict_type),
-        DictionarySpecificSettings::Url(url, embed) => get_def_url(lemma, url, *embed).await,
+        DictionarySpecificSettings::Url(url, embed, selector) => {
+            get_def_url(lemma, url, *embed, selector).await
+        }
         DictionarySpecificSettings::Command(cmd) => get_def_command(lemma, cmd).await,
         DictionarySpecificSettings::EkalbaBendrines => {
             get_ekalba_bendrines(dict_info, lemma, definition_styling).await
@@ -331,13 +358,18 @@ async fn get_wiktionary(
         }),
     ];
 
-    Ok(Definition::Text(rewrite_str(
+    let finished = rewrite_str(
         &def_html,
         RewriteStrSettings {
             element_content_handlers,
             ..RewriteStrSettings::default()
         },
-    )?))
+    )?;
+    if finished.is_empty() {
+        Ok(Definition::Empty)
+    } else {
+        Ok(Definition::Text(finished))
+    }
 }
 
 #[derive(Debug, Clone, PartialEq, Default)]

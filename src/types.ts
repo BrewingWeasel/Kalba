@@ -115,7 +115,7 @@ export interface DictionarySpecificSettings {
   c:
     | [string, FileType]
     | [string, string]
-    | [string, boolean]
+    | [string, boolean, string]
     | string
     | undefined;
 }

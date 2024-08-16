@@ -91,7 +91,7 @@ pub struct Dictionary {
 #[serde(tag = "t", content = "c")]
 pub enum DictionarySpecificSettings {
     File(String, DictFileType),
-    Url(String, bool),
+    Url(String, bool, String),
     Command(String),
     EkalbaBendrines,
     EkalbaDabartines,
