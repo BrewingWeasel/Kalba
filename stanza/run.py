@@ -1,9 +1,12 @@
 import stanza
 import json
+import os
 
 language = input()
+script_dir = os.path.dirname(os.path.realpath(__file__))
+
 try:
-    nlp = stanza.Pipeline(language)
+    nlp = stanza.Pipeline(language, model_dir=os.path.join(script_dir, "stanza_models"), processors='tokenize,pos,lemma')
 except ValueError:
     exit(1)
 print("done")
@@ -35,3 +38,4 @@ while True:
         print("}", end="")
     print("\n]")
     print("done")
+
