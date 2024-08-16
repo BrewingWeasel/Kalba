@@ -60,6 +60,13 @@ function isWiktionary(
   return dictType === "Wiktionary";
 }
 
+function isWordReference(
+  dictType: DictionaryType,
+  _contents: any,
+): _contents is [string, string] {
+  return dictType === "WordReference";
+}
+
 function isUrl(
   dictType: DictionaryType,
   _contents: any,
@@ -83,6 +90,7 @@ function isFile(
       ['Url', 'Url'],
       ['Command', 'Command'],
       ['Wiktionary', 'Wiktionary'],
+      ['WordReference', 'WordReference'],
       ['EkalbaBendrines', 'Bendrinės lietuvių kalbos žodynas'],
       ['EkalbaDabartines', 'Dabartinės lietuvių kalbos žodynas'],
     ]"
@@ -120,6 +128,12 @@ function isFile(
     <Input type="text" v-model="dict.c[0]" class="w-20" id="definitionlang" />
     <Label for="wordlang">Word Language:</Label>
     <Input type="text" v-model="dict.c[1]" class="w-100" id="wordlang" />
+  </div>
+  <div v-else-if="isWordReference(dict.t, dict.c)">
+    <Label for="definitionlang">Definition Language (two letter code):</Label>
+    <Input type="text" v-model="dict.c[0]" class="w-20" id="definitionlang" />
+    <Label for="wordlang">Word Language (two letter code):</Label>
+    <Input type="text" v-model="dict.c[1]" class="w-20" id="wordlang" />
   </div>
   <div v-else-if="isUrl(dict.t, dict.c)">
     <Label for="command">Url:</Label>

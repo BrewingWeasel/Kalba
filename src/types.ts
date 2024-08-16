@@ -100,6 +100,7 @@ export enum DictionaryType {
   Wiktionary = "Wiktionary",
   EkalbaBendrines = "EkalbaBendrines",
   EkalbaDabartines = "EkalbaDabartines",
+  WordReference = "WordReference",
 }
 
 export interface Dictionary {
