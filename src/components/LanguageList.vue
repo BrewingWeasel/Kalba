@@ -12,6 +12,7 @@ const props = defineProps<{
 const tagColors = new Map<string, string>([
   ["Indo-European", "bg-rose-500"],
   ["Baltic", "bg-pink-500"],
+  ["Romance", "bg-blue-400"],
   ["Full Support", "bg-emerald-500"],
 ]);
 

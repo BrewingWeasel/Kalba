@@ -1,0 +1,3 @@
+def unreflexify ($re:only($re:named('.*(a|i|e)r', "root") + 'se$')):
+    root
+end

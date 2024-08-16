@@ -1,0 +1,24 @@
+model = "es"
+frequency_list = true
+spyglys_details = true
+run_on_lemmas = []
+suggest_on_lemmas = ["unreflexify"]
+
+[[dicts]]
+name = "Main"
+fetch_by_default = true
+
+[dicts.specific_settings]
+t = "WordReference"
+c = ["en", "es"]
+
+[[dicts]]
+name = "Wiktionary"
+fetch_by_default = false
+
+[dicts.specific_settings]
+t = "Wiktionary"
+c = ["en", "Spanish"]
+
+# Stanza gets these wrong for some reason
+[replace_lemmas]
