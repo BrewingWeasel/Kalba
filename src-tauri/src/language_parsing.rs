@@ -321,8 +321,10 @@ struct StanzaToken {
     lemma: String,
     upos: String,
     feats: Option<String>,
-    start_char: usize,
-    end_char: usize,
+    // For some ungodly reason, these are not included with mwt (at least for spanish)
+    // in these cases, we have to calculate them ourselves based on the previous words
+    start_char: Option<usize>,
+    end_char: Option<usize>,
 }
 
 #[tauri::command]
@@ -434,6 +436,7 @@ fn stanza_parser(
     for (sentence_index, sentence) in details.into_iter().enumerate() {
         sentences.push(sentence.sentence);
         let mut tokens = sentence.words.into_iter().peekable();
+        let mut last_end = 0;
         while let Some(token) = tokens.next() {
             let lemma = handle_lemma(&token.lemma, interpreter, state)?;
             let rating = if ["PUNCT", "SYM", "NUM"].contains(&token.upos.as_str()) {
@@ -469,21 +472,51 @@ fn stanza_parser(
                 })
                 .unwrap_or_default();
 
-            let whitespace_after = if let Some(next_token) = tokens.peek() {
-                next_token.start_char != token.end_char
-            } else {
+            let mut end_char = token.end_char.unwrap_or(sent.len());
+            let start_char = token.start_char.unwrap_or(last_end);
+            let mut text = token.text;
+
+            // mwt
+            if token.end_char.is_none() {
+                while let Some(next_token) = tokens.peek() {
+                    if let Some(next_start) = next_token.start_char {
+                        end_char = next_start;
+                        break;
+                    }
+                    tokens.next();
+                }
+                text = sent
+                    .chars()
+                    .skip(start_char)
+                    .take(end_char - start_char)
+                    .collect();
+            }
+
+            let whitespace_after = if token.end_char.is_some() {
+                if let Some(next_start) = tokens.peek().and_then(|t| t.start_char) {
+                    next_start != end_char
+                } else {
+                    true
+                }
+            } else if text.trim_end().chars().count() != text.chars().count() {
+                text = text.trim_end().to_owned();
+                end_char -= 1;
                 true
+            } else {
+                false
             };
 
+            last_end = end_char;
+
             words.push(Word {
-                text: token.text,
+                text,
                 lemma: lemma.clone(),
                 rating,
                 morph,
                 sentence_index,
                 clickable: !["PUNCT", "SYM", "NUM"].contains(&token.upos.as_str()),
                 other_forms: get_alternate_forms(&lemma, interpreter, state)?,
-                length: token.end_char - token.start_char,
+                length: end_char - start_char,
                 whitespace_after,
             })
         }
