@@ -52,12 +52,9 @@ const models = await invoke<string[]>("get_all_note_names").catch((error) => {
   toast.error(error);
   return [];
 });
-const deckNames = await invoke<string[]>("get_all_deck_names").catch(
-  (error) => {
-    toast.error(error);
-    return [];
-  },
-);
+const deckNames = await invoke<string[]>("get_all_deck_names").catch((_) => {
+  return [];
+});
 
 const props = defineProps<{
   currentLanguage: string | null;

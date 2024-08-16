@@ -45,8 +45,7 @@ const models: string[] = await invoke<string[]>("get_all_note_names").catch(
   },
 );
 const deckNames: string[] = await invoke<string[]>("get_all_deck_names").catch(
-  (e) => {
-    toast.error(e);
+  (_) => {
     return [];
   },
 );
