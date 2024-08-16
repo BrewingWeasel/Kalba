@@ -37,8 +37,8 @@ enum KalbaError {
     Io(#[from] std::io::Error),
     #[error(transparent)]
     TomlSer(#[from] toml::ser::Error),
-    #[error(transparent)]
-    TomlDe(#[from] toml::de::Error),
+    #[error("Error reading {0}: {1}")]
+    TomlDe(String, toml::de::Error),
     #[error(transparent)]
     Tauri(#[from] tauri::Error),
     #[error(transparent)]
@@ -134,7 +134,9 @@ impl Default for SharedInfo {
             .and_then(|saved_state_file| {
                 fs::read_to_string(saved_state_file.join("kalba").join("saved_data.toml"))
                     .map_err(KalbaError::Io)
-                    .and_then(|v| toml::from_str(&v).map_err(KalbaError::TomlDe))
+                    .and_then(|v| {
+                        toml::from_str(&v).map_err(|e| KalbaError::TomlDe(String::from("data"), e))
+                    })
             }) {
             Ok(v) => v,
             Err(e) => {
@@ -151,7 +153,10 @@ impl Default for SharedInfo {
             .and_then(|config_file| {
                 fs::read_to_string(config_file.join("kalba.toml"))
                     .map_err(KalbaError::Io)
-                    .and_then(|v| toml::from_str(&v).map_err(KalbaError::TomlDe))
+                    .and_then(|v| {
+                        toml::from_str(&v)
+                            .map_err(|e| KalbaError::TomlDe(String::from("config"), e))
+                    })
             }) {
             Ok(v) => v,
             Err(e) => {
@@ -198,6 +203,10 @@ impl Default for SharedInfo {
             .clone()
             .or_else(|| settings.languages.keys().next().cloned());
         to_save.sessions.push((Utc::now(), Duration::new(0, 0)));
+        for err in &errors {
+            log::warn!("{}", err);
+            log::warn!("{:?}", err);
+        }
 
         Self {
             errors,
@@ -411,7 +420,7 @@ fn handle_window_event(event: GlobalWindowEvent) {
                     .join("dictionaries");
                 fs::write(
                     cache_file,
-                    rmp_serde::to_vec(&locked_state.language_cached_data)
+                    rmp_serde::to_vec_named(&locked_state.language_cached_data)
                         .expect("error serializing cache"),
                 )
                 .expect("error writing cache");
