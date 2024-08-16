@@ -1,6 +1,8 @@
 <script setup lang="ts">
 import StyledCheckbox from "@/components/StyledCheckbox.vue";
 import StyledCombobox from "@/components/StyledCombobox.vue";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
 import { Note } from "@/types";
 
 import { invoke } from "@tauri-apps/api/tauri";
@@ -36,7 +38,19 @@ const fields = computedAsync(async (): Promise<string[]> => {
     <StyledCheckbox
       label="Remove everything in parentheses"
       name="removeparens"
+      v-model="note.handling.remove_everything_in_parens"
     />
-    <StyledCheckbox label="Only use the first word" name="firstword" />
+    <StyledCheckbox
+      label="Only use the first word"
+      name="firstword"
+      v-model="note.handling.only_first_word_or_line"
+    />
+    <div class="pt-2">
+      <Label for="search">
+        Anki search parameters (these use the same syntax as the browse menu in
+        Anki)
+      </Label>
+      <Input id="search" v-model="note.handling.search_params" />
+    </div>
   </div>
 </template>
