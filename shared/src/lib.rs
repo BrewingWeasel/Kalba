@@ -96,6 +96,7 @@ pub enum DictionarySpecificSettings {
     EkalbaBendrines,
     EkalbaDabartines,
     Wiktionary(String, String),
+    WordReference(String, String),
 }
 
 #[derive(Serialize, Deserialize, PartialEq, Eq, Clone, Debug)]

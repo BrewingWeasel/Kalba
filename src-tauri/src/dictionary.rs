@@ -1,6 +1,9 @@
 use lol_html::{element, html_content::ContentType, rewrite_str, text, RewriteStrSettings};
-use reqwest::Client;
-use select::{document::Document, predicate::Attr};
+use reqwest::{header::USER_AGENT, Client};
+use select::{
+    document::Document,
+    predicate::{self, Attr},
+};
 use serde::{Deserialize, Serialize};
 use shared::{Definition, DefinitionStyling, DictFileType, DictionarySpecificSettings};
 use std::{collections::HashMap, fs, sync::Arc};
@@ -27,6 +30,10 @@ impl DictionaryInfo {
         self.client
             .get_or_insert_with(Client::new)
             .get(url)
+            .header(
+                USER_AGENT,
+                "Mozilla/5.0 (X11; Linux x86_64; rv:129.0) Gecko/20100101 Firefox/129.0",
+            )
             .send()
             .await
             .unwrap()
@@ -249,6 +256,16 @@ async fn get_def(
             )
             .await
         }
+        DictionarySpecificSettings::WordReference(definition_lang, target_lang) => {
+            get_wordreference(
+                dict_info,
+                lemma,
+                definition_lang,
+                target_lang,
+                definition_styling,
+            )
+            .await
+        }
     }
 }
 
@@ -321,6 +338,105 @@ async fn get_wiktionary(
             ..RewriteStrSettings::default()
         },
     )?))
+}
+
+#[derive(Debug, Clone, PartialEq, Default)]
+struct DefinitionDetails {
+    title: String,
+    definition: String,
+    notes: String,
+    examples: String,
+}
+
+async fn get_wordreference(
+    dict_info: Arc<tauri::async_runtime::Mutex<DictionaryInfo>>,
+    lemma: &str,
+    definition_lang: &str,
+    target_lang: &str,
+    definition_styling: &DefinitionStyling,
+) -> Result<Definition, KalbaError> {
+    let mut lock = dict_info.lock().await;
+    let response = lock
+        .send_request(&format!(
+            "https://www.wordreference.com/{target_lang}{definition_lang}/{lemma}"
+        ))
+        .await
+        .text()
+        .await?;
+
+    let doc = Document::from_read(response.as_bytes()).unwrap();
+    let Some(article_node) = doc
+        .find(predicate::Descendant(
+            predicate::Attr("id", "articleWRD"),
+            predicate::Name("tbody"),
+        ))
+        .next()
+    else {
+        return Ok(Definition::Empty);
+    };
+
+    let children = article_node.children();
+
+    let mut is_even = true;
+    let mut definitions = vec![DefinitionDetails::default()];
+
+    for row in children.skip(2) {
+        if let Some(class) = row.attr("class") {
+            let is_even_now = class == "even";
+            if is_even_now != is_even {
+                definitions.push(DefinitionDetails::default());
+            }
+            is_even = is_even_now;
+        }
+        let last_definition = definitions.last_mut().unwrap();
+        for (i, cell) in row.children().enumerate() {
+            match i {
+                0 => {
+                    last_definition.title.push_str(&cell.text());
+                    last_definition.title.push('\n');
+                }
+                1 => {
+                    let text = cell.text();
+                    let final_text = text.trim();
+                    let section = if final_text.starts_with('(') {
+                        &mut last_definition.notes
+                    } else {
+                        &mut last_definition.examples
+                    };
+                    section.push_str(final_text);
+                    section.push('\n');
+                }
+                2 => {
+                    last_definition.definition.push_str(&cell.text());
+                    last_definition.definition.push('\n');
+                }
+                _ => continue,
+            }
+        }
+    }
+    let mut generated_html = String::new();
+    for definition in definitions {
+        generated_html.push_str(&format!(
+            "<h2 style=\"{}\">{}</h2>",
+            definition_styling.main_detail, definition.title
+        ));
+        if !definition.notes.is_empty() {
+            generated_html.push_str(&format!("<p>{}</p>", definition.notes));
+        }
+        if !definition.definition.is_empty() {
+            generated_html.push_str(&format!(
+                "<p style=\"{}\">{}</p>",
+                definition_styling.definition, definition.definition
+            ));
+        }
+        if !definition.examples.is_empty() {
+            generated_html.push_str(&format!(
+                "<p style=\"{}\">{}</p>",
+                definition_styling.info, definition.examples
+            ));
+        }
+    }
+    Ok(Definition::Text(generated_html))
 }
 
 #[derive(Default, Debug, Clone, PartialEq, Serialize, Deserialize)]
