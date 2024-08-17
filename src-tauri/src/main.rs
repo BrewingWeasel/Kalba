@@ -241,6 +241,7 @@ fn main() {
         .env()
         .init()
         .unwrap();
+    let _ = fix_path_env::fix();
     tauri::Builder::default()
         .manage(KalbaState(Default::default()))
         .invoke_handler(tauri::generate_handler![
