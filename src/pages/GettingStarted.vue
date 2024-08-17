@@ -143,7 +143,15 @@ async function finishWizard() {
         </p>
       </template>
       <template v-if="stepIndex === 2">
-        <h1 class="text-xl font-semibold">Select a template</h1>
+        <h1 class="text-xl font-semibold">Select a starter template</h1>
+        <p>
+          Templates offer a quick way to get started with certain languages.
+          They can always be modified later.
+        </p>
+        <p>
+          Languages that do not have a tempalte can still be used by editing the
+          custom template to include dictionaries and grammar information
+        </p>
         <LanguageList
           @langSelected="
             (template) => {
