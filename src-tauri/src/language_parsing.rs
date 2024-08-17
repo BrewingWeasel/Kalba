@@ -43,6 +43,8 @@ struct SectionDetails {
     sections: Vec<SectionContents>,
     text: String,
     last_subtitle: Option<String>,
+    last_link: Option<String>,
+    was_just_link: bool,
 }
 
 #[tauri::command]
@@ -77,6 +79,8 @@ pub async fn parse_url(
         sections: vec![SectionContents::Title(title.chars().count())],
         text: format!("{title}\n"),
         last_subtitle: None,
+        last_link: None,
+        was_just_link: false,
     }));
     let state = Arc::new(state);
 
@@ -154,6 +158,32 @@ pub async fn parse_url(
             });
             Ok(())
         }),
+        text!("p > a", |text| {
+            if text.as_str().trim().is_empty()
+                || site_config
+                    .as_ref()
+                    .is_some_and(|v| v.ignore_strings.contains(&text.as_str().to_owned()))
+            {
+                return Ok(());
+            }
+            let paragraph_sections = Arc::clone(&sections);
+            let handle = Handle::current();
+            task::block_in_place(|| {
+                handle.block_on(async move {
+                    let mut section_details = paragraph_sections.lock().await;
+                    log::info!("Found link {}", text.as_str());
+                    section_details.text = section_details.text.trim_end().to_owned();
+                    section_details.text.push(' ');
+                    section_details.text.push_str(text.as_str());
+                    if let Some(SectionContents::Paragraph(v)) = section_details.sections.last_mut()
+                    {
+                        *v += text.as_str().trim_start().chars().count() + 1;
+                    }
+                    section_details.last_subtitle = Some(text.as_str().to_owned());
+                })
+            });
+            Ok(())
+        }),
         text!("p", |text| {
             if text.as_str().trim().is_empty()
                 || site_config
@@ -172,11 +202,36 @@ pub async fn parse_url(
                             return;
                         }
                     }
+
+                    if section_details
+                        .last_link
+                        .as_ref()
+                        .is_some_and(|l| l == text.as_str())
+                    {
+                        section_details.last_link = None;
+                        if text.last_in_text_node() {
+                            section_details.text.push('\n');
+                        } else {
+                            section_details.was_just_link = true;
+                            section_details.text.push(' ');
+                        }
+                        return;
+                    }
+
                     section_details.text.push_str(text.as_str());
                     section_details.text.push('\n');
-                    section_details.sections.push(SectionContents::Paragraph(
-                        text.as_str().trim_start().chars().count(),
-                    ));
+                    if section_details.was_just_link {
+                        section_details.was_just_link = false;
+                        if let Some(SectionContents::Paragraph(v)) =
+                            section_details.sections.last_mut()
+                        {
+                            *v += text.as_str().trim_start().chars().count();
+                        }
+                    } else {
+                        section_details.sections.push(SectionContents::Paragraph(
+                            text.as_str().trim_start().chars().count(),
+                        ));
+                    }
                 })
             });
             Ok(())
