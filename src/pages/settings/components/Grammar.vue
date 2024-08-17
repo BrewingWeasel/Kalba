@@ -22,7 +22,7 @@ console.log(suggestOnLemmas.value);
 
 async function checkSpyglys() {
   await invoke<string[]>("get_spyglys_functions", {
-    spyglys_grammar: parser.value,
+    spyglysGrammar: parser.value,
   })
     .then((response) => {
       functions.value = response;
@@ -34,7 +34,7 @@ async function checkSpyglys() {
 }
 
 async function formatSpyglys() {
-  await invoke<string>("format_spyglys", { spyglys_grammar: parser.value })
+  await invoke<string>("format_spyglys", { spyglysGrammar: parser.value })
     .then((formmated) => {
       parser.value = formmated;
     })
