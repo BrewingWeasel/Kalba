@@ -10,6 +10,7 @@
     "tauri": "tauri"
   },
   "dependencies": {
+    "@mozilla/readability": "^0.5.0",
     "@radix-icons/vue": "^1.0.0",
     "@tauri-apps/api": "^1.6.0",
     "@unovis/ts": "^1.4.3",
@@ -17,6 +18,7 @@
     "@vueuse/core": "^10.11.0",
     "class-variance-authority": "^0.7.0",
     "clsx": "^2.1.1",
+    "dompurify": "^3.1.6",
     "lucide-vue": "^0.316.0",
     "lucide-vue-next": "^0.312.0",
     "radix-vue": "^1.9.2",
@@ -29,6 +31,7 @@
   "devDependencies": {
     "@biomejs/biome": "1.8.2",
     "@tauri-apps/cli": "^1.6.0",
+    "@types/dompurify": "^3.0.5",
     "@types/node": "^20.14.12",
     "@vitejs/plugin-vue": "^4.6.2",
     "autoprefixer": "^10.4.19",

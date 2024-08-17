@@ -25,6 +25,8 @@ import { Button } from "@/components/ui/button";
 import { Separator } from "@/components/ui/separator";
 import BetterTooltip from "@/components/BetterTooltip.vue";
 import { readText } from "@tauri-apps/api/clipboard";
+import { Readability } from "@mozilla/readability";
+import DOMPurify from "dompurify";
 
 const inputText = defineModel<string>("inputText", { required: true });
 const props = defineProps<{
@@ -48,17 +50,41 @@ const sentence = computed(() => {
 
 async function setWords() {
   const isUrl = props.inputType === "url";
-  const command = isUrl ? "parse_url" : "parse_text";
-  const args = isUrl ? { url: inputText.value } : { sent: inputText.value };
 
-  const parsedWords = await invoke<ParsedWords>(command, args).catch(
-    (error) => {
+  if (isUrl) {
+    const response = await invoke<string>("get_url_contents", {
+      url: inputText.value,
+    });
+    const clean = DOMPurify.sanitize(response);
+    const parser = new DOMParser();
+    const document = parser.parseFromString(clean, "text/html");
+    let article = new Readability(document).parse();
+    if (!article) {
+      return;
+    }
+
+    const parsedWords = await invoke<ParsedWords>("parse_url", {
+      contents: article.content,
+      url: inputText.value,
+      title: article.title,
+    }).catch((error) => {
       toast.error(error);
       return { sections: [], sentences: [] };
-    },
-  );
-  sections.value = parsedWords.sections;
-  sentences.value = parsedWords.sentences;
+    });
+
+    sections.value = parsedWords.sections;
+    sentences.value = parsedWords.sentences;
+  } else {
+    const parsedWords = await invoke<ParsedWords>("parse_text", {
+      sent: inputText.value,
+    }).catch((error) => {
+      toast.error(error);
+      return { sections: [], sentences: [] };
+    });
+
+    sections.value = parsedWords.sections;
+    sentences.value = parsedWords.sentences;
+  }
   console.log(sections);
 }
 

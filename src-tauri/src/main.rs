@@ -5,7 +5,7 @@ use crate::{
     add_to_anki::{add_to_anki, get_export_variables},
     ankiconnect::{get_all_deck_names, get_all_note_names, get_note_field_names, remove_deck},
     dictionary::{get_definition_on_demand, get_defs, DictionaryInfo},
-    language_parsing::{parse_text, parse_url, start_stanza},
+    language_parsing::{get_url_contents, parse_text, parse_url, start_stanza},
     new_language_template::new_language_from_template,
     setup_stanza::{check_stanza_installed, setup_stanza},
 };
@@ -61,8 +61,6 @@ enum KalbaError {
     LanguageDetailsDownloading(#[from] reqwest::Error),
     #[error("Ankiconnect return an error: {0}")]
     AnkiConnectError(String),
-    #[error("No site configuration found for {0}")]
-    MissingSiteConfig(String),
     #[error("Only wrote {1} bytes of `{0}`")]
     IncorrectWrite(String, usize),
     #[error("Unable to find a version of python installed on the system. It may not be installed or in the PATH.")]
@@ -278,6 +276,7 @@ fn main() {
             rename_language,
             get_words_added,
             get_started,
+            get_url_contents,
         ])
         .on_window_event(handle_window_event)
         .run(tauri::generate_context!())

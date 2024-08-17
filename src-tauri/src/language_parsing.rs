@@ -1,5 +1,5 @@
 use std::{
-    collections::{HashMap, HashSet},
+    collections::HashMap,
     io::{BufRead, BufReader, Read, Write},
     process,
     sync::Arc,
@@ -31,9 +31,30 @@ enum SectionContents {
 }
 
 #[tauri::command]
-pub async fn parse_url(url: &str, state: State<'_, KalbaState>) -> Result<ParsedWords, KalbaError> {
+pub async fn get_url_contents(url: &str) -> Result<String, KalbaError> {
+    Ok(reqwest::get(url)
+        .await?
+        .text()
+        .await
+        .expect("to get valid bytes"))
+}
+
+struct SectionDetails {
+    sections: Vec<SectionContents>,
+    text: String,
+    last_subtitle: Option<String>,
+}
+
+#[tauri::command]
+pub async fn parse_url(
+    url: &str,
+    contents: &str,
+    title: &str,
+    state: State<'_, KalbaState>,
+) -> Result<ParsedWords, KalbaError> {
     let parsed_url = Url::parse(url).unwrap();
-    let root_url = parsed_url.host_str().unwrap().strip_prefix("www.").unwrap();
+    let url = parsed_url.host_str().unwrap();
+    let root_url = url.strip_prefix("www.").unwrap_or(url);
 
     let site_config = {
         let locked_state = state.0.lock().await;
@@ -42,169 +63,139 @@ pub async fn parse_url(url: &str, state: State<'_, KalbaState>) -> Result<Parsed
             "Site configurations: {:?}",
             locked_state.settings.site_configurations
         );
-        let mut site_config = Err(KalbaError::MissingSiteConfig(root_url.to_owned()));
+        let mut site_config = None;
         for possible_site in locked_state.settings.site_configurations.values() {
             if possible_site.sites.contains(&root_url.to_owned()) {
-                site_config = Ok(possible_site.to_owned());
+                site_config = Some(possible_site.to_owned());
                 break;
             }
         }
         site_config
-    }?;
+    };
 
-    let response = reqwest::get(url)
-        .await?
-        .text()
-        .await
-        .expect("to get valid bytes");
-
-    let sections = Arc::new(Mutex::new((HashSet::new(), Vec::new(), String::new())));
+    let sections = Arc::new(Mutex::new(SectionDetails {
+        sections: vec![SectionContents::Title(title.chars().count())],
+        text: format!("{title}\n"),
+        last_subtitle: None,
+    }));
     let state = Arc::new(state);
 
     let section_handlers = vec![
-        text!(
-            format!(
-                "{} {}",
-                site_config.main_section, site_config.title_selector
-            ),
-            |text| {
-                if text.as_str().trim().is_empty() {
-                    return Ok(());
-                }
-                let title_sections = Arc::clone(&sections);
-                let handle = Handle::current();
-                task::block_in_place(|| {
-                    handle.block_on(async move {
-                        let mut sections = title_sections.lock().await;
-                        sections.2.push_str(text.as_str());
-                        sections.2.push('\n');
-                        sections.1.push(SectionContents::Title(
-                            text.as_str().trim_start().chars().count(),
-                        ));
-                        Ok::<(), KalbaError>(())
-                    })
-                })?;
-                Ok(())
+        text!("h1", |text| {
+            if text.as_str().trim().is_empty() {
+                return Ok(());
             }
-        ),
-        text!(
-            format!(
-                "{} {}",
-                site_config.main_section, site_config.subtitle_selector
-            ),
-            |text| {
-                if text.as_str().trim().is_empty() {
-                    return Ok(());
-                }
-                log::info!("Subtitle text: {}", text.as_str());
-                let subtitle_sections = Arc::clone(&sections);
-                let handle = Handle::current();
-                task::block_in_place(|| {
-                    handle.block_on(async move {
-                        let mut section_details = subtitle_sections.lock().await;
-                        section_details.0.insert(text.as_str().to_owned());
-                        section_details.2.push_str(text.as_str());
-                        section_details.2.push('\n');
-                        section_details.1.push(SectionContents::Subtitle(
-                            text.as_str().trim_start().chars().count(),
-                        ));
-                        Ok::<(), KalbaError>(())
-                    })
-                })?;
-                Ok(())
+            let title_sections = Arc::clone(&sections);
+            let handle = Handle::current();
+            task::block_in_place(|| {
+                handle.block_on(async move {
+                    let mut sections = title_sections.lock().await;
+                    sections.text.push_str(text.as_str());
+                    sections.text.push('\n');
+                    sections.sections.push(SectionContents::Title(
+                        text.as_str().trim_start().chars().count(),
+                    ));
+                    Ok::<(), KalbaError>(())
+                })
+            })?;
+            Ok(())
+        }),
+        text!("p > strong, h2 > strong", |text| {
+            if text.as_str().trim().is_empty() {
+                return Ok(());
             }
-        ),
-        text!(
-            format!(
-                "{} {}",
-                site_config.main_section, site_config.caption_selector,
-            ),
-            |text| {
-                if text.as_str().trim().is_empty() {
-                    return Ok(());
-                }
-                let text = if let Some(separator) = site_config.caption_separator.as_ref() {
-                    if let Some((main_caption, _)) = text.as_str().split_once(separator) {
-                        main_caption.trim()
-                    } else {
-                        text.as_str()
-                    }
+            log::info!("Subtitle text: {}", text.as_str());
+            let subtitle_sections = Arc::clone(&sections);
+            let handle = Handle::current();
+            task::block_in_place(|| {
+                handle.block_on(async move {
+                    let mut section_details = subtitle_sections.lock().await;
+                    section_details.text.push_str(text.as_str());
+                    section_details.text.push('\n');
+                    section_details.sections.push(SectionContents::Subtitle(
+                        text.as_str().trim_start().chars().count(),
+                    ));
+                    section_details.last_subtitle = Some(text.as_str().to_owned());
+                })
+            });
+            Ok(())
+        }),
+        text!("figcaption p", |text| {
+            if text.as_str().trim().is_empty() {
+                return Ok(());
+            }
+            let text = if let Some(separator) = site_config
+                .as_ref()
+                .and_then(|c| c.caption_separator.as_ref())
+            {
+                if let Some((main_caption, _)) = text.as_str().split_once(separator) {
+                    main_caption.trim()
                 } else {
                     text.as_str()
-                };
-                let sections = Arc::clone(&sections);
-                let handle = Handle::current();
-                task::block_in_place(|| {
-                    handle.block_on(async move {
-                        let mut section_details = sections.lock().await;
-                        section_details.2.push_str(text);
-                        section_details.2.push('\n');
-                        section_details
-                            .1
-                            .push(SectionContents::Caption(text.chars().count()));
-                        Ok::<(), KalbaError>(())
-                    })
-                })?;
-                Ok(())
-            }
-        ),
-        text!(
-            format!(
-                "{} {}",
-                site_config.main_section, site_config.paragraph_selector
-            ),
-            |text| {
-                if text.as_str().trim().is_empty() {
-                    return Ok(());
                 }
-                let paragraph_sections = Arc::clone(&sections);
-                let handle = Handle::current();
-                task::block_in_place(|| {
-                    handle.block_on(async move {
-                        let mut section_details = paragraph_sections.lock().await;
-                        if section_details.0.contains(text.as_str()) {
-                            return Ok::<(), KalbaError>(());
-                        }
-                        section_details.2.push_str(text.as_str());
-                        section_details.2.push('\n');
-                        section_details.1.push(SectionContents::Paragraph(
-                            text.as_str().trim_start().chars().count(),
-                        ));
-                        Ok::<(), KalbaError>(())
-                    })
-                })?;
-                Ok(())
+            } else {
+                text.as_str()
+            };
+            let sections = Arc::clone(&sections);
+            let handle = Handle::current();
+            task::block_in_place(|| {
+                handle.block_on(async move {
+                    let mut section_details = sections.lock().await;
+                    section_details.text.push_str(text);
+                    section_details.text.push('\n');
+                    section_details
+                        .sections
+                        .push(SectionContents::Caption(text.chars().count()));
+                })
+            });
+            Ok(())
+        }),
+        text!("p", |text| {
+            if text.as_str().trim().is_empty() {
+                return Ok(());
             }
-        ),
-        element!(
-            format!(
-                "{} {}",
-                site_config.main_section, site_config.image_selector
-            ),
-            |el| {
-                let image_sections = Arc::clone(&sections);
-                let handle = Handle::current();
-                task::block_in_place(|| {
-                    handle.block_on(async move {
-                        if let Some(src) = el.get_attribute("src") {
-                            let sections = &mut image_sections.lock().await.1;
-                            sections.push(SectionContents::SpecificSection(Section::Image(
-                                if src.starts_with("http") {
-                                    src.to_owned()
-                                } else {
-                                    format!("https://www.{root_url}/{src}")
-                                },
-                            )));
+            let paragraph_sections = Arc::clone(&sections);
+            let handle = Handle::current();
+            task::block_in_place(|| {
+                handle.block_on(async move {
+                    let mut section_details = paragraph_sections.lock().await;
+                    if let Some(last) = std::mem::take(&mut section_details.last_subtitle) {
+                        if last == text.as_str() {
+                            return;
                         }
-                    })
-                });
-                Ok(())
-            }
-        ),
+                    }
+                    section_details.text.push_str(text.as_str());
+                    section_details.text.push('\n');
+                    section_details.sections.push(SectionContents::Paragraph(
+                        text.as_str().trim_start().chars().count(),
+                    ));
+                })
+            });
+            Ok(())
+        }),
+        element!("img", |el| {
+            let image_sections = Arc::clone(&sections);
+            let handle = Handle::current();
+            task::block_in_place(|| {
+                handle.block_on(async move {
+                    if let Some(src) = el.get_attribute("src") {
+                        let sections = &mut image_sections.lock().await.sections;
+                        sections.push(SectionContents::SpecificSection(Section::Image(
+                            if src.starts_with("http") {
+                                src.to_owned()
+                            } else {
+                                format!("https://www.{root_url}/{src}")
+                            },
+                        )));
+                    }
+                })
+            });
+            Ok(())
+        }),
     ];
 
     lol_html::rewrite_str(
-        &response,
+        contents,
         RewriteStrSettings {
             element_content_handlers: section_handlers,
             ..Default::default()
@@ -215,7 +206,7 @@ pub async fn parse_url(url: &str, state: State<'_, KalbaState>) -> Result<Parsed
 
     let owned_sections = Arc::into_inner(sections).unwrap();
     let owned_details = owned_sections.into_inner();
-    let (sentences, all_words) = words_from_string(&owned_details.2, state).await?;
+    let (sentences, all_words) = words_from_string(&owned_details.text, state).await?;
 
     let mut all_words = all_words.into_iter().peekable();
 
@@ -239,7 +230,7 @@ pub async fn parse_url(url: &str, state: State<'_, KalbaState>) -> Result<Parsed
     };
 
     let mut sections = Vec::new();
-    for section_content in owned_details.1 {
+    for section_content in owned_details.sections {
         let section = match section_content {
             SectionContents::Paragraph(length) => Section::Paragraph(get_words(length)),
             SectionContents::Title(length) => Section::Title(get_words(length)),
