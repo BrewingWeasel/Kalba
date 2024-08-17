@@ -337,11 +337,20 @@ pub async fn start_stanza(state: State<'_, KalbaState>, window: Window) -> Resul
         .ok_or_else(|| KalbaError::MissingDir("data".to_owned()))?
         .join("kalba")
         .join("stanza");
-    let mut process = process::Command::new(stanza_path.join(".venv").join("bin").join("python3"))
-        .arg(stanza_path.join("run.py"))
-        .stdin(process::Stdio::piped())
-        .stdout(process::Stdio::piped())
-        .spawn()?;
+    let mut process = process::Command::new(
+        stanza_path
+            .join(".venv")
+            .join(if cfg!(target_os = "windows") {
+                "Scripts"
+            } else {
+                "bin"
+            })
+            .join("python3"),
+    )
+    .arg(stanza_path.join("run.py"))
+    .stdin(process::Stdio::piped())
+    .stdout(process::Stdio::piped())
+    .spawn()?;
     log::info!("Started stanza");
 
     let language = state

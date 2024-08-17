@@ -90,11 +90,20 @@ pub async fn setup_stanza(state: State<'_, KalbaState>, window: Window) -> Resul
             message: Some("Downloading stanza (this may take a while)"),
         },
     )?;
-    Command::new(data_dir.join(".venv").join("bin").join("pip"))
-        .current_dir(&data_dir)
-        .args(["install", "stanza"])
-        .spawn()?
-        .wait()?;
+    Command::new(
+        data_dir
+            .join(".venv")
+            .join(if cfg!(target_os = "windows") {
+                "Scripts"
+            } else {
+                "bin"
+            })
+            .join("pip"),
+    )
+    .current_dir(&data_dir)
+    .args(["install", "stanza"])
+    .spawn()?
+    .wait()?;
 
     state.to_save.installing_stanza = false;
     Ok(())
