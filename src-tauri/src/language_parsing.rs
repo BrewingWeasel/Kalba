@@ -101,7 +101,11 @@ pub async fn parse_url(
             Ok(())
         }),
         text!("p > strong, h2 > strong", |text| {
-            if text.as_str().trim().is_empty() {
+            if text.as_str().trim().is_empty()
+                || site_config
+                    .as_ref()
+                    .is_some_and(|v| v.ignore_strings.contains(&text.as_str().to_owned()))
+            {
                 return Ok(());
             }
             log::info!("Subtitle text: {}", text.as_str());
@@ -151,7 +155,11 @@ pub async fn parse_url(
             Ok(())
         }),
         text!("p", |text| {
-            if text.as_str().trim().is_empty() {
+            if text.as_str().trim().is_empty()
+                || site_config
+                    .as_ref()
+                    .is_some_and(|v| v.ignore_strings.contains(&text.as_str().to_owned()))
+            {
                 return Ok(());
             }
             let paragraph_sections = Arc::clone(&sections);

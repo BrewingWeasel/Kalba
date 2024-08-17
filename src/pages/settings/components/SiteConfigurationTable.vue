@@ -47,12 +47,7 @@ for (const site in sites) {
 function newSite() {
   sites.value["New site"] = {
     sites: [],
-    main_section: "main",
-    title_selector: "",
-    subtitle_selector: "",
-    image_selector: "img",
-    caption_selector: "",
-    paragraph_selector: "",
+    ignore_strings: [],
   };
   siteConfigOpen.value["New site"] = true;
 }
@@ -114,28 +109,18 @@ function newSite() {
               </TagsInput>
 
               <div>
-                <Label for="main-section">Main section</Label>
-                <Input v-model="sites[site].main_section" id="main-section" />
-                <Label for="title-selector">Title Selector</Label>
-                <Input
-                  v-model="sites[site].title_selector"
-                  id="title-selector"
-                />
-                <Label for="subtitle-selector">Subtitle Selector</Label>
-                <Input
-                  v-model="sites[site].subtitle_selector"
-                  id="subtitle-selector"
-                />
-                <Label for="caption-selector">Caption Selector</Label>
-                <Input
-                  v-model="sites[site].caption_selector"
-                  id="caption-selector"
-                />
-                <Label for="image-selector">Image Selector</Label>
-                <Input
-                  v-model="sites[site].image_selector"
-                  id="image-selector"
-                />
+                <Label for="main-section">Ignore Text</Label>
+                <TagsInput v-model="sites[site].ignore_strings">
+                  <TagsInputItem
+                    v-for="item in sites[site].ignore_strings"
+                    :key="item"
+                    :value="item"
+                  >
+                    <TagsInputItemText />
+                    <TagsInputItemDelete />
+                  </TagsInputItem>
+                  <TagsInputInput placeholder="Ignored Text" />
+                </TagsInput>
               </div>
 
               <AlertDialogFooter>

@@ -43,13 +43,8 @@ export interface Settings {
 
 export interface SiteConfiguration {
   sites: string[];
-  main_section: string;
-  title_selector: string;
-  subtitle_selector: string;
-  image_selector: string;
-  caption_selector: string;
+  ignore_strings: string[];
   caption_separator?: string;
-  paragraph_selector: string;
 }
 
 export interface LanguageSettings {

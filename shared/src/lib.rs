@@ -124,14 +124,9 @@ pub struct Note(
 
 #[derive(Deserialize, Serialize, Clone, Debug)]
 pub struct SiteConfiguration {
-    pub sites: Vec<String>,
-    pub main_section: String,
-    pub title_selector: String,
-    pub subtitle_selector: String,
-    pub image_selector: String,
-    pub caption_selector: String,
     pub caption_separator: Option<String>,
-    pub paragraph_selector: String,
+    pub sites: Vec<String>,
+    pub ignore_strings: Vec<String>,
 }
 
 #[derive(Deserialize, Serialize, Clone, Debug)]

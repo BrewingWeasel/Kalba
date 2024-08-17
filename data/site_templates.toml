@@ -1,19 +1,8 @@
 ["lrt"]
 sites = ["lrt.lt"]
-main_section = ".article-block"
-title_selector = ".title-block__heading"
-subtitle_selector = "p strong"
-image_selector = ".media-block__image"
-caption_selector = ".media-block__description"
 caption_separator = "/"
-paragraph_selector = ".article-content > p"
-
+ignore_strings = ["Taip pat skaitykite"]
 
 ["delfi"]
 sites = ["delfi.lt"]
-main_section = ".col-article"
-title_selector = ".article-info__title"
-subtitle_selector = "h3"
-image_selector = "img"
-caption_selector = ".media-block__description"
-paragraph_selector = ".fragment p"
+ignore_strings = []
