@@ -20,6 +20,23 @@ pub async fn check_stanza_installed(state: State<'_, KalbaState>) -> Result<bool
 pub async fn setup_stanza(state: State<'_, KalbaState>, window: Window) -> Result<(), KalbaError> {
     let mut state = state.0.lock().await;
 
+    let python_command = {
+        let mut current_command = Err(KalbaError::PythonNotFound);
+        for command in &["python", "python3"] {
+            let output = Command::new(command).spawn();
+            if let Err(e) = output {
+                if e.kind() == io::ErrorKind::NotFound {
+                    continue;
+                }
+                current_command = Err(e.into());
+            } else {
+                current_command = Ok(command);
+                break;
+            }
+        }
+        current_command
+    }?;
+
     let data_dir = dirs::data_dir()
         .ok_or_else(|| KalbaError::MissingDir(String::from("data")))?
         .join("kalba")
@@ -32,7 +49,7 @@ pub async fn setup_stanza(state: State<'_, KalbaState>, window: Window) -> Resul
 
     fs::create_dir_all(&data_dir)?;
 
-    let python_version_process = Command::new("python").arg("--version").output();
+    let python_version_process = Command::new(python_command).arg("--version").output();
     match python_version_process {
         Err(e) => {
             if e.kind() == io::ErrorKind::NotFound {
