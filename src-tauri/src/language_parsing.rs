@@ -6,6 +6,7 @@ use std::{
 };
 
 use crate::{
+    commands::new_command,
     spyglys_integration::{get_alternate_forms, handle_lemma, load_spyglys},
     KalbaError, KalbaState, LanguageParser, SharedInfo,
 };
@@ -392,7 +393,7 @@ pub async fn start_stanza(state: State<'_, KalbaState>, window: Window) -> Resul
         .ok_or_else(|| KalbaError::MissingDir("data".to_owned()))?
         .join("kalba")
         .join("stanza");
-    let mut process = process::Command::new(
+    let mut process = new_command(
         stanza_path
             .join(".venv")
             .join(if cfg!(target_os = "windows") {
