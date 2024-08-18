@@ -595,6 +595,9 @@ fn default_tokenizer(
 ) -> Result<(Vec<String>, Vec<Word>), KalbaError> {
     let mut words = Vec::new();
     let mut sentences = Vec::new();
+    if sent.is_empty() {
+        return Ok((sentences, words));
+    }
     let mut current_sentence = String::new();
 
     let mut currently_building = String::new();
@@ -664,6 +667,35 @@ fn default_tokenizer(
                 sentences.push(std::mem::take(&mut current_sentence));
             }
         }
+    }
+
+    if !currently_building.is_empty() {
+        let word = std::mem::take(&mut currently_building);
+        let rating = state
+            .to_save
+            .language_specific
+            .get_mut(&language)
+            .expect("language to be chosen")
+            .words
+            .entry(word.clone())
+            .or_insert(crate::WordInfo {
+                rating: 0,
+                method: crate::Method::FromSeen,
+                history: vec![(chrono::Utc::now(), crate::Method::FromSeen, 0)],
+            })
+            .rating;
+
+        words.push(Word {
+            text: word.clone(),
+            clickable: true,
+            lemma: word.clone(),
+            rating,
+            morph: HashMap::new(),
+            other_forms: get_alternate_forms(&word, interpreter, state)?,
+            length: word.chars().count(),
+            whitespace_after: true,
+            sentence_index: sentences.len(),
+        })
     }
     if !current_sentence.is_empty() {
         sentences.push(current_sentence);
