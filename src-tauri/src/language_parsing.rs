@@ -400,7 +400,7 @@ pub async fn start_stanza(state: State<'_, KalbaState>, window: Window) -> Resul
             } else {
                 "bin"
             })
-            .join("python3"),
+            .join("python"),
     )
     .arg(stanza_path.join("run.py"))
     .stdin(process::Stdio::piped())
