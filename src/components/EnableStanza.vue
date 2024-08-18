@@ -24,6 +24,8 @@ const enabled = defineModel<boolean>("enabled", { required: true });
 const installMessage = ref("Downloading...");
 const finishedInstall = ref(false);
 
+const errored = ref(false);
+
 await listen<{ message: string }>("stanzaDownloadUpdate", (event) => {
   installMessage.value = event.payload.message;
 });
@@ -31,8 +33,11 @@ await listen<{ message: string }>("stanzaDownloadUpdate", (event) => {
 async function installStanza() {
   await invoke("setup_stanza").catch((e) => {
     toast.error(e);
+    errored.value = true;
   });
-  installMessage.value = "Installation complete.";
+  installMessage.value = errored.value
+    ? "Installation failed."
+    : "Installation complete.";
   finishedInstall.value = true;
 }
 </script>
@@ -55,8 +60,10 @@ async function installStanza() {
         <AlertDialogFooter>
           <AlertDialogAction
             @click="
-              isInstalled = true;
-              enabled = true;
+              if (!errored) {
+                isInstalled = true;
+                enabled = true;
+              }
             "
             v-if="finishedInstall"
             >Continue</AlertDialogAction
