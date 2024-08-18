@@ -333,6 +333,9 @@ onMounted(async () => {
           <div
             class="py-6 px-10 flex flex-col items-center w-full h-[calc(100vh-3.25rem)] overflow-auto"
           >
+            <div v-if="!sections">
+              <Loader2 class="animate-spin" />
+            </div>
             <div
               v-for="(section, sectionIndex) in sections"
               class="max-w-[500px] w-[500px] min-w-[350px]"
