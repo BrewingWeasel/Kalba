@@ -16,6 +16,19 @@ pub async fn check_stanza_installed(state: State<'_, KalbaState>) -> Result<bool
     Ok(data_dir.exists() && !state.to_save.installing_stanza)
 }
 
+fn new_command<S>(executable: S) -> Command
+where
+    S: AsRef<std::ffi::OsStr>,
+{
+    let cmd = Command::new(executable);
+    #[cfg(windows)]
+    {
+        use std::os::windows::process::CommandExt;
+        cmd.creation_flags(0x08000000); // CREATE_NO_WINDOW constant
+    }
+    cmd
+}
+
 #[tauri::command]
 pub async fn setup_stanza(state: State<'_, KalbaState>, window: Window) -> Result<(), KalbaError> {
     let mut state = state.0.lock().await;
@@ -23,7 +36,7 @@ pub async fn setup_stanza(state: State<'_, KalbaState>, window: Window) -> Resul
     let python_command = {
         let mut current_command = Err(KalbaError::PythonNotFound);
         for command in &["python", "python3"] {
-            let output = Command::new(command).spawn();
+            let output = new_command(command).spawn();
             if let Err(e) = output {
                 if e.kind() == io::ErrorKind::NotFound {
                     continue;
@@ -49,7 +62,7 @@ pub async fn setup_stanza(state: State<'_, KalbaState>, window: Window) -> Resul
 
     fs::create_dir_all(&data_dir)?;
 
-    let python_version_process = Command::new(python_command).arg("--version").output();
+    let python_version_process = new_command(python_command).arg("--version").output();
     match python_version_process {
         Err(e) => {
             if e.kind() == io::ErrorKind::NotFound {
@@ -81,7 +94,7 @@ pub async fn setup_stanza(state: State<'_, KalbaState>, window: Window) -> Resul
             message: Some("Creating virtual environment"),
         },
     )?;
-    Command::new("python")
+    new_command("python")
         .current_dir(&data_dir)
         .args(["-m", "venv", ".venv"])
         .spawn()?
@@ -107,7 +120,7 @@ pub async fn setup_stanza(state: State<'_, KalbaState>, window: Window) -> Resul
             message: Some("Downloading stanza (this may take a while)"),
         },
     )?;
-    Command::new(
+    new_command(
         data_dir
             .join(".venv")
             .join(if cfg!(target_os = "windows") {
