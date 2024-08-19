@@ -1,6 +1,6 @@
 use std::{
     collections::HashMap,
-    io::{BufRead, BufReader, Read, Write},
+    io::{BufRead, BufReader, Write},
     process,
     sync::Arc,
 };
@@ -443,10 +443,10 @@ pub async fn start_stanza(state: State<'_, KalbaState>, window: Window) -> Resul
         }),
     )?;
 
-    let mut buf = [0; 5];
-    stdout.read_exact(&mut buf)?;
-    if buf != "done\n".as_bytes() {
-        panic!("Starting stanza failed {}", String::from_utf8_lossy(&buf))
+    let mut buf = String::new();
+    stdout.read_line(&mut buf)?;
+    if buf.trim_end() != "done" {
+        panic!("Starting stanza failed {buf}");
     }
     log::info!("Stanza model loaded");
     window.emit("stanza_loading", Some(ToasterPayload { message: None }))?;
@@ -484,7 +484,7 @@ fn stanza_parser(
             .stdout
             .read_line(&mut specific_contents)
             .is_err()
-            || specific_contents == "done\n"
+            || specific_contents.trim_end() == "done"
         {
             break;
         }
