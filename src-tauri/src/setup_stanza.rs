@@ -101,6 +101,15 @@ pub async fn setup_stanza(state: State<'_, KalbaState>, window: Window) -> Resul
             .await?;
     fs::write(data_dir.join("run.py"), script)?;
 
+    let requirements = reqwest::get(
+        "https://raw.githubusercontent.com/brewingweasel/kalba/master/stanza/requirements.txt",
+    )
+    .await?
+    .error_for_status()?
+    .text()
+    .await?;
+    fs::write(data_dir.join("requirements.txt"), requirements)?;
+
     window.emit(
         "stanzaDownloadUpdate",
         ToasterPayload {
@@ -118,7 +127,7 @@ pub async fn setup_stanza(state: State<'_, KalbaState>, window: Window) -> Resul
             .join("pip"),
     )
     .current_dir(&data_dir)
-    .args(["install", "stanza"])
+    .args(["install", "-r", "requirements.txt"])
     .spawn()?
     .wait()?;
 
