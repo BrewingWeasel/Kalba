@@ -1,5 +1,7 @@
 # Exporting
 
+![exporting](https://github.com/user-attachments/assets/127d81f1-804d-4160-9f37-16505f2762f3)
+
 Kalba can be configured to export words to Anki.
 To do so, the user needs to select the deck and note model they wish to use for exports.
 
