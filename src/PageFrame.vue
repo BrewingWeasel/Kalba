@@ -31,7 +31,7 @@ import {
   Settings2,
 } from "lucide-vue-next";
 import { Ref, computed, onMounted, ref } from "vue";
-import { invoke } from "@tauri-apps/api/tauri";
+import { invoke } from "@tauri-apps/api/core";
 import { Toaster } from "@/components/ui/sonner";
 import { listen } from "@tauri-apps/api/event";
 import { toast } from "vue-sonner";

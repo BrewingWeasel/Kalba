@@ -13,7 +13,7 @@ import Dictionaries from "./components/Dictionaries.vue";
 import Exporting from "@/components/ExportingConfiguration.vue";
 import SettingsMenu from "./components/SettingsMenu.vue";
 import type { SettingsSection } from "./components/SettingsMenu.vue";
-import { invoke } from "@tauri-apps/api/tauri";
+import { invoke } from "@tauri-apps/api/core";
 import { type Ref, ref, watch, reactive, nextTick } from "vue";
 import { Label } from "@/components/ui/label";
 import { Input } from "@/components/ui/input";

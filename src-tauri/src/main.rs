@@ -19,7 +19,7 @@ use simple_logger::SimpleLogger;
 use spyglys_integration::{format_spyglys, get_spyglys_functions};
 use stats::{get_words_added, get_words_known_at_levels, time_spent};
 use std::{collections::HashMap, fs, io::BufReader, process, sync::Arc, time::Duration};
-use tauri::{async_runtime::block_on, GlobalWindowEvent, Manager, State, Window, WindowEvent};
+use tauri::{async_runtime::block_on, Emitter, Manager, State, Window, WindowEvent};
 
 mod add_to_anki;
 mod ankiconnect;
@@ -243,6 +243,10 @@ fn main() {
         .unwrap();
     let _ = fix_path_env::fix();
     tauri::Builder::default()
+        .plugin(tauri_plugin_clipboard_manager::init())
+        .plugin(tauri_plugin_shell::init())
+        .plugin(tauri_plugin_dialog::init())
+        .plugin(tauri_plugin_fs::init())
         .manage(KalbaState(Default::default()))
         .invoke_handler(tauri::generate_handler![
             parse_text,
@@ -391,12 +395,12 @@ async fn set_word_knowledge_from_anki(
     Ok(())
 }
 
-fn handle_window_event(event: GlobalWindowEvent) {
+fn handle_window_event(window: &Window, event: &WindowEvent) {
     block_on(async move {
         #[allow(clippy::single_match)] // Will probably be expanded in the future
-        match event.event() {
-            &WindowEvent::Destroyed => {
-                let state: State<'_, KalbaState> = event.window().state();
+        match event {
+            WindowEvent::Destroyed => {
+                let state: State<'_, KalbaState> = window.state();
                 let mut locked_state = state.0.lock().await;
                 if locked_state.can_save {
                     log::info!("saving details");

@@ -4,7 +4,7 @@ import GrammarDetails from "@/components/GrammarDetails.vue";
 import DefinitionView from "@/components/DefinitionView.vue";
 import { Input } from "@/components/ui/input";
 import ExportButton from "@/components/ExportButton.vue";
-import { invoke } from "@tauri-apps/api/tauri";
+import { invoke } from "@tauri-apps/api/core";
 import {
   ExportDetails,
   type Definition,

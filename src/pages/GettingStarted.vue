@@ -20,7 +20,7 @@ import {
 } from "lucide-vue-next";
 import { computed, ref } from "vue";
 import WordKnowledge from "./settings/components/WordKnowledge.vue";
-import { invoke } from "@tauri-apps/api/tauri";
+import { invoke } from "@tauri-apps/api/core";
 import EnableStanza from "@/components/EnableStanza.vue";
 import { Deck } from "@/types";
 import { toast } from "vue-sonner";

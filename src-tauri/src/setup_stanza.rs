@@ -2,7 +2,7 @@ use std::{fs, io};
 
 use crate::{commands::new_command, KalbaError, KalbaState};
 use shared::ToasterPayload;
-use tauri::{State, Window};
+use tauri::{Emitter, State, Window};
 
 #[tauri::command]
 pub async fn check_stanza_installed(state: State<'_, KalbaState>) -> Result<bool, KalbaError> {

@@ -12,7 +12,11 @@
   "dependencies": {
     "@mozilla/readability": "^0.5.0",
     "@radix-icons/vue": "^1.0.0",
-    "@tauri-apps/api": "^1.6.0",
+    "@tauri-apps/api": "2.0.0-rc.2",
+    "@tauri-apps/plugin-clipboard-manager": "2.0.0-rc.0",
+    "@tauri-apps/plugin-dialog": "2.0.0-rc.0",
+    "@tauri-apps/plugin-fs": "github:tauri-apps/tauri-plugin-fs#v2",
+    "@tauri-apps/plugin-shell": "2.0.0-rc.0",
     "@unovis/ts": "^1.4.4",
     "@unovis/vue": "^1.4.4",
     "@vueuse/core": "^10.11.1",
@@ -30,7 +34,7 @@
   },
   "devDependencies": {
     "@biomejs/biome": "1.8.2",
-    "@tauri-apps/cli": "^1.6.0",
+    "@tauri-apps/cli": "2.0.0-rc.6",
     "@types/dompurify": "^3.0.5",
     "@types/node": "^20.15.0",
     "@vitejs/plugin-vue": "^4.6.2",

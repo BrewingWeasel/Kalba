@@ -4,10 +4,10 @@ import { Textarea } from "@/components/ui/textarea";
 import ReaderView from "./Reader.vue";
 import ButtonDialog from "@/components/ButtonDialog.vue";
 import FilePicker from "@/components/FilePicker.vue";
-import { readTextFile } from "@tauri-apps/api/fs";
+import { readTextFile } from "@tauri-apps/plugin-fs";
 import { useRouter } from "vue-router";
 import { InputType } from "@/types";
-import { readText } from "@tauri-apps/api/clipboard";
+import { readText } from "@tauri-apps/plugin-clipboard-manager";
 
 const currentInput = ref("");
 const inputText = ref("");

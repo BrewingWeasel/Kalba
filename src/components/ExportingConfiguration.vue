@@ -5,7 +5,7 @@ import { Input } from "@/components/ui/input";
 import { computedAsync } from "@vueuse/core";
 import StyledCombobox from "@/components/StyledCombobox.vue";
 import { ref, watch } from "vue";
-import { invoke } from "@tauri-apps/api/tauri";
+import { invoke } from "@tauri-apps/api/core";
 import { CircleDot, Info } from "lucide-vue-next";
 import {
   HoverCard,

@@ -2,7 +2,7 @@
 import { StartupState } from "./types";
 import GettingStarted from "./pages/GettingStarted.vue";
 import { ref } from "vue";
-import { invoke } from "@tauri-apps/api/tauri";
+import { invoke } from "@tauri-apps/api/core";
 import PageFrame from "./PageFrame.vue";
 import { Toaster } from "@/components/ui/sonner";
 

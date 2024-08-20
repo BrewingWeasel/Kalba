@@ -19,7 +19,7 @@ import {
 } from "@/components/ui/alert-dialog";
 
 import { Button } from "@/components/ui/button";
-import { invoke } from "@tauri-apps/api/tauri";
+import { invoke } from "@tauri-apps/api/core";
 import { toast } from "vue-sonner";
 import StyledCombobox from "@/components/StyledCombobox.vue";
 import { ref } from "vue";

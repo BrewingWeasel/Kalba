@@ -3,7 +3,7 @@ use reqwest::Client;
 use serde_json::json;
 use shared::{Definition, ExportStyling, ToasterPayload};
 use std::{borrow::Cow, collections::HashMap};
-use tauri::{State, Window};
+use tauri::{Emitter, State, Window};
 
 use crate::{ankiconnect::AnkiResult, KalbaError, KalbaState};
 

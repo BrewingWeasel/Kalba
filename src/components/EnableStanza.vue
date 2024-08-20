@@ -11,7 +11,7 @@ import {
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 import { Info } from "lucide-vue-next";
 import Button from "@/components/ui/button/Button.vue";
-import { invoke } from "@tauri-apps/api/tauri";
+import { invoke } from "@tauri-apps/api/core";
 import { ref } from "vue";
 import { listen } from "@tauri-apps/api/event";
 import { toast } from "vue-sonner";

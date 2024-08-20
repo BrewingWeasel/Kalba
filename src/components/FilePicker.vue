@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { open } from "@tauri-apps/api/dialog";
+import { open } from "@tauri-apps/plugin-dialog";
 import { Label } from "@/components/ui/label";
 import { Upload } from "lucide-vue-next";
 

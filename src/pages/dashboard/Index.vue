@@ -12,7 +12,7 @@ import { BarChart } from "@/components/ui/chart-bar";
 import { DonutChart } from "@/components/ui/chart-donut";
 import { GithubLogoIcon } from "@radix-icons/vue";
 
-import { invoke } from "@tauri-apps/api";
+import { invoke } from "@tauri-apps/api/core";
 import { BookText, ClipboardPaste, File, Link, Pencil } from "lucide-vue-next";
 import { ref, watch } from "vue";
 

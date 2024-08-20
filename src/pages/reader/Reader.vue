@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import { type Ref, computed, onMounted, ref, watch } from "vue";
-import { invoke } from "@tauri-apps/api/tauri";
+import { invoke } from "@tauri-apps/api/core";
 import IndividualWord from "@/components/Word.vue";
 import SelectedWordView from "@/components/SelectedWordView.vue";
 import type {
@@ -24,7 +24,7 @@ import { useMagicKeys, whenever } from "@vueuse/core";
 import { Button } from "@/components/ui/button";
 import { Separator } from "@/components/ui/separator";
 import BetterTooltip from "@/components/BetterTooltip.vue";
-import { readText } from "@tauri-apps/api/clipboard";
+import { readText } from "@tauri-apps/plugin-clipboard-manager";
 import { Readability } from "@mozilla/readability";
 import DOMPurify from "dompurify";
 

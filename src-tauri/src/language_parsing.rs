@@ -14,7 +14,7 @@ use log::{info, trace};
 use lol_html::{element, text, RewriteStrSettings};
 use shared::*;
 use spyglys::interpreter::Interpreter;
-use tauri::{State, Window};
+use tauri::{Emitter, State, Window};
 use tokio::{
     runtime::Handle,
     sync::{Mutex, MutexGuard},

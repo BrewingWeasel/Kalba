@@ -1,6 +1,7 @@
 target
 dist
 /dicts
+src-tauri/gen/schemas
 
 # Logs
 logs
