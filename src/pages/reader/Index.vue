@@ -27,10 +27,10 @@ function set_sentence() {
   <div v-if="props.currentLanguage" class="h-full">
     <div
       v-if="inputText.length == 0"
-      class="flex flex-wrap py-4 px-10 space-x-5 basis-auto"
+      class="flex flex-wrap py-4 px-10 gap-x-2 basis-auto"
     >
       <ButtonDialog
-        class="flex-1 my-2 max-w-md"
+        class="my-2 min-w-64 flex-1"
         title="User Input"
         @submitted="
           router.replace('/reader/custom');
@@ -41,7 +41,7 @@ function set_sentence() {
         <Textarea placeholder="Enter text to analyze" v-model="currentInput" />
       </ButtonDialog>
       <ButtonDialog
-        class="flex-1 my-2 max-w-md"
+        class="my-2 min-w-64 flex-1"
         title="File Input"
         button-name="Select file"
         @submitted="
@@ -55,7 +55,7 @@ function set_sentence() {
         <FilePicker v-model="currentInput" />
       </ButtonDialog>
       <ButtonDialog
-        class="flex-1 my-2 max-w-md"
+        class="my-2 min-w-64 flex-1"
         title="Url"
         @submitted="
           router.replace('/reader/url');
@@ -67,7 +67,7 @@ function set_sentence() {
         <Textarea placeholder="Enter url to use" v-model="currentInput" />
       </ButtonDialog>
       <ButtonDialog
-        class="flex-1 my-2 max-w-md"
+        class="my-2 min-w-64 flex-1"
         title="Clipboard"
         @submitted="
           async () => {
