@@ -1,4 +1,5 @@
 # Word Knowledge Settings
+![word_knowledge_settings](https://github.com/user-attachments/assets/0f5cbd07-495d-4fd2-8df1-1e508e2cf98e)
 
 ## Frequency
 
@@ -23,6 +24,8 @@ To get started, click the plus button to add a deck, and select the deck you use
 You can add as many decks as needed.
 
 #### Parsers
+
+![edit_anki_parsing](https://github.com/user-attachments/assets/1d9dd76e-470c-417b-bd65-6ed97fa73dae)
 
 Each deck should include one note parser for each type of note in the deck.
 For example, if a deck includes notes with a note type of `Basic`, `Basic (and reversed)`, and a user defined note type, these should all have their own parser.
