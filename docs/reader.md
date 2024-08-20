@@ -6,6 +6,8 @@ The reader is the most important page in Kalba and can be accessed with the book
 
 The reader view can be used in several different modes:
 
+![input_methods](https://github.com/user-attachments/assets/cf974fec-dfbc-4a0d-81d2-8e27ad40e278)
+
 ##### File
 
 Kalba can use the contents of a file as the basis for the reader, though this currently only supports raw text files.
@@ -27,6 +29,8 @@ This can be very useful in conjunction with other tools such as ASB player.
 ---
 
 ## Sections
+
+![reader](https://github.com/user-attachments/assets/7ff767c8-925f-4690-b820-b3c3fcf7adb1)
 
 The reader view itself is composed of three main parts:
 
