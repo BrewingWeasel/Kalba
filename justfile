@@ -22,12 +22,15 @@ test:
   cargo test
 
 rust-check: test lint
+ts-check: 
+  pnpm vue-tsc
 
 ci-check:
   actionlint
 
 check: 
   rust-check
+  ts-check
 
 pre-commit:
   #!/usr/bin/env sh
@@ -35,6 +38,9 @@ pre-commit:
   newfiles=$(git status --porcelain | awk '{ print $2 }')
   if (echo $newfiles | grep ".rs" ); then
     just rust-check
+  fi
+  if (echo $newfiles | grep ".vue" ); then
+    just ts-check
   fi
   if (echo $newfiles | grep ".github" ); then
     just ci-check
