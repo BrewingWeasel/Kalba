@@ -35,7 +35,18 @@ pub fn handle_lemma(
         log::trace!("Response: {:?} with function {modifier}", response);
         if let Value::Str(s) = response {
             if s != lemma {
-                return Ok(s);
+                if let Some(new_lemma) = state
+                    .to_save
+                    .language_specific
+                    .get(language)
+                    .expect("language to exist")
+                    .lemmas_to_replace
+                    .get(&s)
+                {
+                    return Ok(new_lemma.clone());
+                } else {
+                    return Ok(s);
+                }
             }
         }
     }
