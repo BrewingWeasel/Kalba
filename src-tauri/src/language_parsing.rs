@@ -1,5 +1,7 @@
 use std::{
     collections::HashMap,
+    env,
+    fs::read_to_string,
     io::{BufRead, BufReader, Write},
     process,
     sync::Arc,
@@ -486,6 +488,10 @@ fn stanza_parser(
             .is_err()
             || specific_contents.trim_end() == "done"
         {
+            if cfg!(target_os = "windows") {
+                let response = read_to_string(env::temp_dir().join("kalba_stanza"))?;
+                contents.push_str(&response);
+            }
             break;
         }
         contents.push_str(&specific_contents);
