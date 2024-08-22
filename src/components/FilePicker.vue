@@ -8,7 +8,7 @@ const file = defineModel<string>({ required: true });
 async function getFile() {
   const selected = await open({ multiple: false });
   if (selected && !Array.isArray(selected)) {
-    file.value = selected;
+    file.value = selected.path;
   }
 }
 console.log(file);
