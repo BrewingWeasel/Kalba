@@ -21,16 +21,14 @@ fix: && format
 test:
   cargo test
 
-rust-check: test lint
+rust-check: lint
 ts-check: 
   pnpm vue-tsc
 
 ci-check:
   actionlint
 
-check: 
-  rust-check
-  ts-check
+check: rust-check ts-check
 
 pre-commit:
   #!/usr/bin/env sh

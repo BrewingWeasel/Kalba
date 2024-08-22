@@ -17,10 +17,24 @@ jobs:
       - name: install just
         uses: extractions/setup-just@v1
 
-      - name: setup
+      - name: install dependencies
         run: |
           sudo apt-get update
           sudo apt-get install -y libgtk-3-dev libwebkit2gtk-4.1-dev librsvg2-dev glibc-source libc6
+
+      - name: setup pnpm
+        uses: pnpm/action-setup@v2
+        with:
+          version: 9
+
+      - name: setup node
+        uses: actions/setup-node@v4
+        with:
+          node-version: lts/*
+          cache: "pnpm" # Set this to npm, yarn or pnpm.
+
+      - name: install frontend dependencies
+        run: pnpm install
 
       - name: Rust setup
         uses: dtolnay/rust-toolchain@nightly
@@ -34,4 +48,4 @@ jobs:
         run: just test
 
       - name: Run lints
-        run: just test
+        run: just check
