@@ -2,40 +2,36 @@ name: Rust
 
 on:
   push:
-    branches: [ "main" ]
+    branches: ["main"]
   pull_request:
-    branches: [ "main" ]
+    branches: ["main"]
 
 env:
   CARGO_TERM_COLOR: always
 
 jobs:
   test:
-
     runs-on: ubuntu-latest
 
     steps:
-    - name: install just
-      uses: extractions/setup-just@v1
+      - name: install just
+        uses: extractions/setup-just@v1
 
-    - name: setup
-      run: |
-       sudo apt-get update
-       sudo apt-get install -y libgtk-3-dev libwebkit2gtk-4.0-dev librsvg2-dev glibc-source libc6
+      - name: setup
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y libgtk-3-dev libwebkit2gtk-4.1-dev librsvg2-dev glibc-source libc6
 
-    - name: Rust setup
-      uses: dtolnay/rust-toolchain@nightly
-      with:
-        components: rustfmt, clippy
+      - name: Rust setup
+        uses: dtolnay/rust-toolchain@nightly
+        with:
+          components: rustfmt, clippy
 
-    - name: Install leptosfmt
-      run: cargo install leptosfmt
+      - name: Checkout source code
+        uses: actions/checkout@v3
 
-    - name: Checkout source code
-      uses: actions/checkout@v3
+      - name: Runs tests
+        run: just test
 
-    - name: Runs tests
-      run: just test
-
-    - name: Run lints
-      run: just test
+      - name: Run lints
+        run: just test
