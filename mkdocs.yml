@@ -1,6 +1,9 @@
 site_name: Kalba
 nav:
   - Home: "index.md"
+  - Installation:
+      - Linux: "installation_linux.md"
+      - "Building from source": "installation_building.md"
   - Concepts:
       - "Word Knowledge": "word_knowledge.md"
       - Stanza: "stanza.md"
