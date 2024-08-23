@@ -24,7 +24,7 @@ while True:
         line = input()
         # windows piping bs
         if platform.system() == "Windows":
-            line = input().encode("cp1252").decode("utf-8")
+            line = line.encode("cp1252").decode("utf-8")
 
         if line == "":
             break
