@@ -20,6 +20,7 @@ use spyglys_integration::{format_spyglys, get_spyglys_functions};
 use stats::{get_words_added, get_words_known_at_levels, time_spent};
 use std::{collections::HashMap, fs, io::BufReader, process, sync::Arc, time::Duration};
 use tauri::{async_runtime::block_on, Emitter, Manager, State, Window, WindowEvent};
+use tokio::sync::MutexGuard;
 
 mod add_to_anki;
 mod ankiconnect;
@@ -404,6 +405,30 @@ async fn set_word_knowledge_from_anki(
     Ok(())
 }
 
+fn save_state(locked_state: &mut MutexGuard<SharedInfo>) -> Result<(), KalbaError> {
+    if locked_state.can_save {
+        log::info!("saving details");
+        let saved_state_file = dirs::data_dir()
+            .unwrap()
+            .join("kalba")
+            .join("saved_data.toml");
+        locked_state.to_save.last_language = locked_state.current_language.clone();
+        if locked_state.in_reader {
+            locked_state.in_reader = false;
+            let session = locked_state
+                .to_save
+                .sessions
+                .last_mut()
+                .expect("sessions should exist");
+            session.1 = TimeDelta::to_std(&(Utc::now() - session.0)).expect("time should be valid");
+            log::info!("saved session");
+        }
+        let conts = toml::to_string(&locked_state.to_save)?;
+        fs::write(saved_state_file, conts)?;
+    }
+    Ok(())
+}
+
 fn handle_window_event(window: &Window, event: &WindowEvent) {
     block_on(async move {
         #[allow(clippy::single_match)] // Will probably be expanded in the future
@@ -411,26 +436,7 @@ fn handle_window_event(window: &Window, event: &WindowEvent) {
             WindowEvent::Destroyed => {
                 let state: State<'_, KalbaState> = window.state();
                 let mut locked_state = state.0.lock().await;
-                if locked_state.can_save {
-                    log::info!("saving details");
-                    let saved_state_file = dirs::data_dir()
-                        .unwrap()
-                        .join("kalba")
-                        .join("saved_data.toml");
-                    locked_state.to_save.last_language = locked_state.current_language.clone();
-                    if locked_state.in_reader {
-                        let session = locked_state
-                            .to_save
-                            .sessions
-                            .last_mut()
-                            .expect("sessions should exist");
-                        session.1 = TimeDelta::to_std(&(Utc::now() - session.0))
-                            .expect("time should be valid");
-                    }
-                    let conts =
-                        toml::to_string(&locked_state.to_save).expect("Error serializing to toml");
-                    fs::write(saved_state_file, conts).expect("error writing to file");
-                }
+                let _ = save_state(&mut locked_state);
                 let cache_file = dirs::cache_dir()
                     .expect("cache dir does not exist")
                     .join("kalba")
@@ -632,17 +638,10 @@ async fn always_change_lemma(
 }
 
 #[tauri::command]
-async fn switch_page(state: State<'_, KalbaState>) -> Result<(), String> {
+async fn switch_page(state: State<'_, KalbaState>) -> Result<(), KalbaError> {
     let mut state = state.0.lock().await;
     if state.in_reader {
-        state.in_reader = false;
-        let session = state
-            .to_save
-            .sessions
-            .last_mut()
-            .expect("sessions should exist");
-        session.1 = TimeDelta::to_std(&(Utc::now() - session.0)).expect("time should be valid");
-        log::info!("saving session");
+        save_state(&mut state)?;
     }
     Ok(())
 }
