@@ -196,6 +196,8 @@ pub struct LanguageSettings {
     pub grammar_parser: String,
     pub run_on_lemmas: Vec<String>,
     pub suggest_on_lemmas: Vec<String>,
+    #[serde(default)]
+    pub derived_from_template: bool,
 }
 
 impl Default for Settings {
@@ -231,6 +233,7 @@ impl Default for LanguageSettings {
             grammar_parser: String::new(),
             suggest_on_lemmas: Vec::new(),
             run_on_lemmas: Vec::new(),
+            derived_from_template: false,
         }
     }
 }

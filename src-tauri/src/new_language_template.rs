@@ -116,6 +116,7 @@ pub async fn use_language_template(
         grammar_parser,
         run_on_lemmas: details.run_on_lemmas,
         suggest_on_lemmas: details.suggest_on_lemmas,
+        derived_from_template: true,
         ..Default::default()
     };
     state
