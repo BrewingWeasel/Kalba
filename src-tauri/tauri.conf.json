@@ -16,7 +16,7 @@
       "icons/icon.ico"
     ]
   },
-  "productName": "kalba",
+  "productName": "Kalba",
   "version": "0.3.0",
   "identifier": "com.kalbareader.kalba",
   "plugins": {},
@@ -36,3 +36,4 @@
     }
   }
 }
+
