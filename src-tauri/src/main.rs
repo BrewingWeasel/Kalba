@@ -103,6 +103,10 @@ struct LanguageParser {
     stdout: BufReader<process::ChildStdout>,
 }
 
+fn default_version() -> String {
+    format!("v{}", env!("CARGO_PKG_VERSION"))
+}
+
 #[derive(Serialize, Deserialize, Default)]
 struct ToSave {
     installing_stanza: bool,
@@ -111,6 +115,8 @@ struct ToSave {
     decks_checked: Vec<String>,
     language_specific: HashMap<String, LanguageSpecificToSave>,
     sessions: Vec<(DateTime<Utc>, Duration)>,
+    #[serde(default = "default_version")]
+    kalba_version: String,
 }
 
 #[derive(Serialize, Deserialize, Default)]
@@ -284,6 +290,7 @@ fn main() {
             get_started,
             get_url_contents,
             switch_page,
+            check_version,
         ])
         .on_window_event(handle_window_event)
         .run(tauri::generate_context!())
@@ -638,4 +645,17 @@ async fn switch_page(state: State<'_, KalbaState>) -> Result<(), String> {
         log::info!("saving session");
     }
     Ok(())
+}
+
+#[tauri::command]
+async fn check_version(
+    state: State<'_, KalbaState>,
+    potentially_new_version: String,
+) -> Result<bool, String> {
+    let mut state = state.0.lock().await;
+    let is_new = state.to_save.kalba_version != potentially_new_version;
+    if is_new {
+        state.to_save.kalba_version = potentially_new_version;
+    }
+    Ok(is_new)
 }
