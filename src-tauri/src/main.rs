@@ -90,6 +90,7 @@ struct SharedInfo {
     errors: Vec<KalbaError>,
     can_save: bool,
     language_cached_data: HashMap<String, CachedData>,
+    in_reader: bool,
 }
 
 #[derive(Debug, Deserialize, Serialize, Default)]
@@ -200,7 +201,6 @@ impl Default for SharedInfo {
             .last_language
             .clone()
             .or_else(|| settings.languages.keys().next().cloned());
-        to_save.sessions.push((Utc::now(), Duration::new(0, 0)));
         for err in &errors {
             log::warn!("{}", err);
             log::warn!("{:?}", err);
@@ -215,6 +215,7 @@ impl Default for SharedInfo {
             dict_info: Default::default(),
             can_save,
             language_cached_data,
+            in_reader: false,
         }
     }
 }
@@ -282,6 +283,7 @@ fn main() {
             get_words_added,
             get_started,
             get_url_contents,
+            switch_page,
         ])
         .on_window_event(handle_window_event)
         .run(tauri::generate_context!())
@@ -409,13 +411,15 @@ fn handle_window_event(window: &Window, event: &WindowEvent) {
                         .join("kalba")
                         .join("saved_data.toml");
                     locked_state.to_save.last_language = locked_state.current_language.clone();
-                    let session = locked_state
-                        .to_save
-                        .sessions
-                        .last_mut()
-                        .expect("sessions should exist");
-                    session.1 =
-                        TimeDelta::to_std(&(Utc::now() - session.0)).expect("time should be valid");
+                    if locked_state.in_reader {
+                        let session = locked_state
+                            .to_save
+                            .sessions
+                            .last_mut()
+                            .expect("sessions should exist");
+                        session.1 = TimeDelta::to_std(&(Utc::now() - session.0))
+                            .expect("time should be valid");
+                    }
                     let conts =
                         toml::to_string(&locked_state.to_save).expect("Error serializing to toml");
                     fs::write(saved_state_file, conts).expect("error writing to file");
@@ -617,5 +621,21 @@ async fn always_change_lemma(
         .expect("language should exist")
         .lemmas_to_replace
         .insert(lemma, updated_lemma);
+    Ok(())
+}
+
+#[tauri::command]
+async fn switch_page(state: State<'_, KalbaState>) -> Result<(), String> {
+    let mut state = state.0.lock().await;
+    if state.in_reader {
+        state.in_reader = false;
+        let session = state
+            .to_save
+            .sessions
+            .last_mut()
+            .expect("sessions should exist");
+        session.1 = TimeDelta::to_std(&(Utc::now() - session.0)).expect("time should be valid");
+        log::info!("saving session");
+    }
     Ok(())
 }

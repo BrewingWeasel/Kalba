@@ -5,6 +5,7 @@ use std::{
     io::{BufRead, BufReader, Write},
     process,
     sync::Arc,
+    time::Duration,
 };
 
 use crate::{
@@ -12,6 +13,7 @@ use crate::{
     spyglys_integration::{get_alternate_forms, handle_lemma, load_spyglys},
     KalbaError, KalbaState, LanguageParser, SharedInfo,
 };
+use chrono::Utc;
 use log::{info, trace};
 use lol_html::{element, text, RewriteStrSettings};
 use shared::*;
@@ -363,6 +365,12 @@ pub async fn words_from_string(
             chrono::Utc::now(),
             words.iter().filter(|v| v.clickable).count(),
         ));
+    state.in_reader = true;
+    state
+        .to_save
+        .sessions
+        .push((Utc::now(), Duration::new(0, 0)));
+    log::info!("starting new session");
     Ok((sentences, words))
 }
 

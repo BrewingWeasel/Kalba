@@ -8,6 +8,7 @@ import Reader from "./pages/reader/Index.vue";
 import Dashboard from "./pages/dashboard/Index.vue";
 import ComingSoon from "./pages/ComingSoon.vue";
 import "./styles.css";
+import { invoke } from "@tauri-apps/api/core";
 
 const router = createRouter({
   history: createWebHistory(),
@@ -27,6 +28,11 @@ const router = createRouter({
       alias: ["/browse", "/stats"],
     },
   ],
+});
+
+router.afterEach(async (_to, _from) => {
+  await invoke("switch_page");
+  return true;
 });
 
 const SyncApp = {
