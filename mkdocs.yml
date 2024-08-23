@@ -19,4 +19,5 @@ nav:
       - Stanza: "stanza_settings.md"
   - "Advanced Configuration":
       - "Writing a spyglys parser": "spyglys_parser.md"
+      - Backups: "backups.md"
 theme: readthedocs
