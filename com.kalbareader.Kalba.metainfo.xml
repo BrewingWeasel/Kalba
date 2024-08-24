@@ -1,0 +1,68 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<component type="desktop-application">
+  <id>com.kalbareader.Kalba</id>
+  <metadata_license>CC0-1.0</metadata_license>
+  <project_license>GPL-3.0-only</project_license>
+  <name>Kalba</name>
+  <branding>
+    <color type="primary" scheme_preference="light">#75aee4</color>
+    <color type="primary" scheme_preference="dark">#373e67</color>
+  </branding>
+  <summary>Seamlessly integrate media consumption, getting definitions, and adding flashcards for language learning</summary>
+  <developer id="io.github.brewingweasel">
+    <name>BrewingWeasel</name>
+  </developer>
+  <description>
+    <p>Kalba is a language learning tool based around the idea of sentence mining. It has the following features:</p>
+    <ul>
+      <li>Use websites, files or the clipboard as input</li>
+      <li>Automatically fetch definitions (with prebuilt and custom dictionaries)</li>
+      <li>Automatically export words to Anki</li>
+      <li>Automatically detect words known based on Anki ratings</li>
+      <li>Automatically parse grammar details</li>
+    </ul>
+    <p>
+      Kalba is designed to be extensible so that users can configure it for any language. 
+      However, it also comes with out of the box support for several languages, with more planned.
+    </p>
+  </description>
+  <content_rating type="oars-1.1" />
+  <launchable type="desktop-id">com.kalbareader.Kalba.desktop</launchable>
+  <url type="bugtracker">https://github.com/BrewingWeasel/Kalba/issues</url>
+  <url type="homepage">http://kalbareader.com</url>
+  <url type="donation">https://github.com/sponsors/BrewingWeasel</url>
+  <url type="contribute">https://github.com/BrewingWeasel/Kalba</url>
+  <url type="vcs-browser">https://github.com/BrewingWeasel/Kalba</url>
+  <screenshots>
+    <screenshot type="default">
+      <image>https://github.com/user-attachments/assets/a065f25e-c5fc-48f4-b337-fa98b9fa3221</image>
+      <caption>The reader view</caption>
+    </screenshot>
+    <screenshot>
+      <image>https://github.com/user-attachments/assets/265ccb11-8da5-49fc-8a56-91c1bbf756ba</image>
+      <caption>The dashboard</caption>
+    </screenshot>
+  </screenshots>
+  <releases>
+    <release version="0.3.1" date="2024-08-24">
+      <url type="details">https://github.com/BrewingWeasel/Kalba/blob/main/CHANGELOG.md#031---2024-08-24</url>
+      <description>
+        <p>Added button to uninstall stanza</p>
+        <p>Fixed some issues with installing stanza and some minor visual problems</p>
+      </description>
+    </release>
+    <release version="0.3.0" date="2024-08-23">
+      <url type="details">https://github.com/BrewingWeasel/Kalba/blob/main/CHANGELOG.md#030---2024-08-23</url>
+      <description>
+        <p>Initial release</p>
+        <p>Added support for:</p>
+        <ul>
+          <li>Dictionaries</li>
+          <li>Word Knowledge</li>
+          <li>Anki Exporting</li>
+          <li>Grammar Parsing</li>
+        </ul>
+      </description>
+    </release>
+  </releases>
+</component>
