@@ -45,7 +45,12 @@ import { Separator } from "@/components/ui/separator";
 const isDark = useDark();
 const router = useRouter();
 
-const installed = await invoke<boolean>("check_stanza_installed");
+const installed = await invoke<boolean>("check_stanza_installed").catch(
+  (error) => {
+    toast.error(error);
+    return false;
+  },
+);
 const settings = reactive<Settings>(await invoke("get_settings"));
 
 const models = await invoke<string[]>("get_all_note_names").catch((error) => {

@@ -134,3 +134,14 @@ pub async fn setup_stanza(state: State<'_, KalbaState>, window: Window) -> Resul
     state.to_save.installing_stanza = false;
     Ok(())
 }
+
+#[tauri::command]
+pub async fn uninstall_stanza() -> Result<(), KalbaError> {
+    let data_dir = dirs::data_dir()
+        .ok_or_else(|| KalbaError::MissingDir(String::from("data")))?
+        .join("kalba")
+        .join("stanza");
+
+    std::fs::remove_dir_all(data_dir)?;
+    Ok(())
+}

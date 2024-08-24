@@ -30,10 +30,10 @@ import {
   Settings,
   Settings2,
 } from "lucide-vue-next";
-import { Ref, computed, onMounted, ref } from "vue";
+import { Ref, computed, onBeforeUnmount, onMounted, ref } from "vue";
 import { invoke } from "@tauri-apps/api/core";
 import { Toaster } from "@/components/ui/sonner";
-import { listen } from "@tauri-apps/api/event";
+import { listen, UnlistenFn } from "@tauri-apps/api/event";
 import { toast } from "vue-sonner";
 import {
   Tooltip,
@@ -80,6 +80,7 @@ const toasters: Ref<Map<string, number | null>> = ref(
 );
 
 const props = defineProps<{ startup: StartupState }>();
+let listeners: UnlistenFn[] = [];
 
 onMounted(async () => {
   console.log(props.startup.errors);
@@ -95,21 +96,29 @@ onMounted(async () => {
   }
 
   for (const toasterEvent of toasters.value.keys()) {
-    listen<{ message: string | null }>(toasterEvent, (event) => {
-      if (event.payload.message) {
-        const startedToaster = toast.info(event.payload.message, {
-          duration: 0,
-        });
-        if (typeof startedToaster == "number") {
-          toasters.value.set(toasterEvent, startedToaster);
+    listeners.push(
+      await listen<{ message: string | null }>(toasterEvent, (event) => {
+        if (event.payload.message) {
+          const startedToaster = toast.info(event.payload.message, {
+            duration: 0,
+          });
+          if (typeof startedToaster == "number") {
+            toasters.value.set(toasterEvent, startedToaster);
+          }
+        } else {
+          const toasterId = toasters.value.get(toasterEvent);
+          if (toasterId) {
+            Toaster.close(toasterId);
+          }
         }
-      } else {
-        const toasterId = toasters.value.get(toasterEvent);
-        if (toasterId) {
-          Toaster.close(toasterId);
-        }
-      }
-    });
+      }),
+    );
+  }
+});
+
+onBeforeUnmount(() => {
+  for (const unlistener of listeners) {
+    unlistener();
   }
 });
 

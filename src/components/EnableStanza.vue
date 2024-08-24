@@ -10,13 +10,13 @@ import {
 } from "@/components/ui/alert-dialog";
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 import { Info } from "lucide-vue-next";
-import Button from "@/components/ui/button/Button.vue";
 import { invoke } from "@tauri-apps/api/core";
 import { ref } from "vue";
 import { listen } from "@tauri-apps/api/event";
 import { toast } from "vue-sonner";
 import { Label } from "@/components/ui/label";
 import { Switch } from "@/components/ui/switch";
+import { Button } from "@/components/ui/button";
 
 const isInstalled = defineModel<boolean>("installed", { required: true });
 const enabled = defineModel<boolean>("enabled", { required: true });
@@ -40,12 +40,23 @@ async function installStanza() {
     : "Installation complete.";
   finishedInstall.value = true;
 }
+
+async function uninstallStanza() {
+  await invoke("uninstall_stanza").catch((e) => {
+    toast.error(e);
+  });
+  isInstalled.value = false;
+  finishedInstall.value = false;
+  toast.info("Stanza uninstalled.");
+}
 </script>
 
 <template>
   <div v-if="isInstalled">
     <Label for="stanza-enabled">Enable Stanza</Label>
     <Switch id="stanza-enabled" v-model:checked="enabled" />
+    <br />
+    <Button class="mt-2" @click="uninstallStanza">Uninstall stanza</Button>
   </div>
   <div v-else>
     <AlertDialog>

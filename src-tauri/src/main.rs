@@ -7,7 +7,7 @@ use crate::{
     dictionary::{get_definition_on_demand, get_defs, DictionaryInfo},
     language_parsing::{get_url_contents, parse_text, parse_url, start_stanza},
     new_language_template::new_language_from_template,
-    setup_stanza::{check_stanza_installed, setup_stanza},
+    setup_stanza::{check_stanza_installed, setup_stanza, uninstall_stanza},
 };
 use ankiconnect::get_anki_card_statuses;
 use chrono::{DateTime, TimeDelta, Utc};
@@ -292,6 +292,7 @@ fn main() {
             get_url_contents,
             switch_page,
             check_version,
+            uninstall_stanza
         ])
         .on_window_event(handle_window_event)
         .run(tauri::generate_context!())
