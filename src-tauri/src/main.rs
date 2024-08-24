@@ -66,6 +66,8 @@ enum KalbaError {
     IncorrectWrite(String, usize),
     #[error("Unable to find a version of python installed on the system. It may not be installed or in the PATH.")]
     PythonNotFound,
+    #[error("Pip install failed. Maybe you ran out of space?")]
+    PipInstallFailed,
     #[error("Python version ({0}) does not match. Version 3.8 or later is required for stanza")]
     WrongPythonVersion(String),
 }

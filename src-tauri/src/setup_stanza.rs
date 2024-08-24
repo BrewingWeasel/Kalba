@@ -116,7 +116,7 @@ pub async fn setup_stanza(state: State<'_, KalbaState>, window: Window) -> Resul
             message: Some("Downloading stanza (this may take a while)"),
         },
     )?;
-    new_command(
+    let exit_status = new_command(
         data_dir
             .join(".venv")
             .join(if cfg!(target_os = "windows") {
@@ -130,6 +130,10 @@ pub async fn setup_stanza(state: State<'_, KalbaState>, window: Window) -> Resul
     .args(["install", "-r", "requirements.txt"])
     .spawn()?
     .wait()?;
+
+    if !exit_status.success() {
+        return Err(KalbaError::PipInstallFailed);
+    }
 
     state.to_save.installing_stanza = false;
     Ok(())
