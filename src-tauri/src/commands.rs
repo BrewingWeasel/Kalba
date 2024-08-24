@@ -20,7 +20,18 @@ where
     cmd.creation_flags(0x08000000); // CREATE_NO_WINDOW constant
     cmd
 }
-#[cfg(not(target_os = "windows"))]
+
+#[cfg(target_os = "linux")]
+pub fn new_command<S>(executable: S) -> Command
+where
+    S: AsRef<std::ffi::OsStr>,
+{
+    let mut cmd = Command::new(executable);
+    cmd.env("TMPDIR", "/var/tmp");
+    cmd
+}
+
+#[cfg(not(any(target_os = "windows", target_os = "linux")))]
 pub fn new_command<S>(executable: S) -> Command
 where
     S: AsRef<std::ffi::OsStr>,
