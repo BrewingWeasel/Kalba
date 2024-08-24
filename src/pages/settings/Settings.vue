@@ -204,7 +204,7 @@ async function newLanguage(language: string) {
         </CollapsibleContent>
       </Collapsible>
     </div>
-    <div class="w-full lg:pr-1/3">
+    <div class="w-full lg:pr-1/3 pr-6 overflow-auto h-[calc(100vh-3.25rem)]">
       <template v-if="section == 'Appearance'">
         <Heading
           title_id="appearance"
