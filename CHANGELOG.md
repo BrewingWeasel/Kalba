@@ -1,3 +1,17 @@
+## 0.3.1 - 2024-08-24
+
+### Added
+
+- Button to uninstall stanza
+- Up to date README documentation, photos etc
+
+### Fixed
+
+- Issue with receiving events in the debug version
+- Not giving an error when pip install fails
+- Issues with running out of space in flatpak (hopefully)
+- Scrolling looking ugly on grammar page
+
 ## 0.3.0 - 2024-08-23
 
 ### Added

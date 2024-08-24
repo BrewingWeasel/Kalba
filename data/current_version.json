@@ -1,5 +1,5 @@
 {
-  "version": "0.3.0",
+  "version": "0.3.1",
   "link": "https://github.com/BrewingWeasel/Kalba",
-  "blurb": "This version completeley redesigns the UI, dictionary system and input methods."
+  "blurb": "This version adds a way of removing stanza and fixes a few minor problems."
 }
