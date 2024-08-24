@@ -5,9 +5,6 @@ import sys
 import platform
 import tempfile
 
-if platform.system() == "Linux" && os.path.isdir("/var/tmp"):
-    os.environ["TMPDIR"] = "/var/tmp"
-
 language = input()
 script_dir = os.path.dirname(os.path.realpath(__file__))
 
