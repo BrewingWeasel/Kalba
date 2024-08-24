@@ -17,6 +17,13 @@
     ],
     "macOS": {
       "signingIdentity": "-"
+    },
+    "linux": {
+      "deb": {
+        "files": {
+          "/usr/share/metainfo/com.kalbareader.Kalba.metainfo.xml": "../com.kalbareader.Kalba.metainfo.xml"
+        }
+      }
     }
   },
   "productName": "Kalba",
