@@ -1,3 +1,9 @@
+## 0.3.2 - 2024-08-24
+
+### Fixed
+
+- Not being able to open on ARM mac
+
 ## 0.3.1 - 2024-08-24
 
 ### Added
