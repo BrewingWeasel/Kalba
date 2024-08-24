@@ -1,3 +1,16 @@
+## 0.3.0 - 2024-08-23
+
+### Added
+
+- More control with dictionaries and a variety of types
+- Better exporting support
+- More input types
+
+### Changed
+
+- Completely reworked the UI (switched to vue)
+- Switched to Stanza from SpaCy
+
 ## [0.1.0] - 2023-10-28
 
 ### Added
