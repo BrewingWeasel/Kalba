@@ -199,6 +199,7 @@ pub async fn parse_url(
             }
             let paragraph_sections = Arc::clone(&sections);
             let handle = Handle::current();
+            log::trace!("found text: {}", text.as_str());
             task::block_in_place(|| {
                 handle.block_on(async move {
                     let mut section_details = paragraph_sections.lock().await;
@@ -275,6 +276,7 @@ pub async fn parse_url(
     let owned_sections = Arc::into_inner(sections).unwrap();
     let owned_details = owned_sections.into_inner();
     let (sentences, all_words) = words_from_string(&owned_details.text, state).await?;
+    log::debug!("Parsed words from text: {:?}", all_words);
 
     let mut all_words = all_words.into_iter().peekable();
 
@@ -347,7 +349,7 @@ pub async fn words_from_string(
     let (sentences, words) = if state.language_parser.is_some() && state.settings.stanza_enabled {
         log::trace!("Sending to stanza parser");
         stanza_parser(
-            &format!("{sent}\n"),
+            &format!("{}\n", sent.trim_start()),
             &mut state,
             language.clone(),
             &interpreter,
