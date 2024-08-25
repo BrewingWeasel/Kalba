@@ -1,0 +1,24 @@
+model = "ar"
+frequency_list = true
+spyglys_details = false
+run_on_lemmas = []
+suggest_on_lemmas = []
+
+[[dicts]]
+name = "Main"
+fetch_by_default = true
+
+[dicts.specific_settings]
+t = "WordReference"
+c = ["en", "ar"]
+
+[[dicts]]
+name = "Wiktionary"
+fetch_by_default = false
+
+[dicts.specific_settings]
+t = "Wiktionary"
+c = ["en", "Arabic"]
+
+# Stanza gets these wrong for some reason
+[replace_lemmas]

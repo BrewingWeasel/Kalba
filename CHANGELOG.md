@@ -4,6 +4,7 @@
 
 - Ability to customize ankiconnect port
 - German template
+- Arabic template
 
 ### Fixed
 
