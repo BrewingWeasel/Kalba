@@ -28,6 +28,7 @@ const props = defineProps<{
   models: string[];
   deckNames: string[];
   language: string;
+  ankiEnabled: boolean;
 }>();
 
 const deck = defineModel<string>("deck", { required: true });
@@ -39,11 +40,13 @@ const fields = defineModel<{ [key: string]: string }>("fields", {
 const openSelectors = ref<boolean[]>([]);
 
 const fieldNames = computedAsync(async () => {
-  const fields = await invoke<string[]>("get_note_field_names", {
-    model: model.value,
-  }).catch((error) => {
-    toast.error(error);
-  });
+  const fields = props.ankiEnabled
+    ? await invoke<string[]>("get_note_field_names", {
+        model: model.value,
+      }).catch((error) => {
+        toast.error(error);
+      })
+    : [];
   if (fields) {
     openSelectors.value = new Array(fields.length).fill(false);
   }
@@ -78,6 +81,7 @@ const definitionVariables = await invoke<string[]>("get_export_variables", {
     v-model="deck"
     item-being-selected="deck"
     id="deckselection"
+    :disabled="!props.ankiEnabled"
   />
   <br />
   <Label for="modelselection">Anki model to use for exporting:</Label>
@@ -86,6 +90,7 @@ const definitionVariables = await invoke<string[]>("get_export_variables", {
     v-model="model"
     item-being-selected="model"
     id="modelselection"
+    :disabled="!props.ankiEnabled"
   />
   <HoverCard v-if="model">
     <div class="flex items-center">
@@ -111,7 +116,12 @@ const definitionVariables = await invoke<string[]>("get_export_variables", {
   <template v-for="(field, index) in fieldNames">
     <Label :for="index.toString()">{{ field }}</Label>
     <div class="flex gap-2">
-      <Input class="w-96" :id="index.toString()" v-model="fields[field]" />
+      <Input
+        class="w-96"
+        :id="index.toString()"
+        v-model="fields[field]"
+        :disabled="!props.ankiEnabled"
+      />
       <Button variant="secondary" @click="handleOpenChange(index)"
         ><CircleDot :size="16"
       /></Button>

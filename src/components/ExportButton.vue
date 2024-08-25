@@ -38,17 +38,17 @@ const settings: Settings | undefined = await invoke<Settings>(
   return undefined;
 });
 
-const models: string[] = await invoke<string[]>("get_all_note_names").catch(
-  (e) => {
-    toast.error(e);
-    return [];
-  },
-);
-const deckNames: string[] = await invoke<string[]>("get_all_deck_names").catch(
-  (_) => {
-    return [];
-  },
-);
+const models: string[] = settings?.anki_enabled
+  ? await invoke<string[]>("get_all_note_names").catch((e) => {
+      toast.error(e);
+      return [];
+    })
+  : [];
+const deckNames: string[] = settings?.anki_enabled
+  ? await invoke<string[]>("get_all_deck_names").catch((_) => {
+      return [];
+    })
+  : [];
 
 const emit = defineEmits(["change-rating"]);
 
@@ -165,6 +165,7 @@ whenever(keys.ctrl_shift_e, async () => {
                   :models
                   :deckNames
                   :language="props.currentLanguage"
+                  :ankiEnabled="settings?.anki_enabled ?? false"
                   v-model:deck="exportDetails.deck"
                   v-model:model="exportDetails.model"
                   v-model:fields="exportDetails.fields"

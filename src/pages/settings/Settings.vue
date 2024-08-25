@@ -54,7 +54,9 @@ const installed = await invoke<boolean>("check_stanza_installed").catch(
 const settings = reactive<Settings>(await invoke("get_settings"));
 
 const models = await invoke<string[]>("get_all_note_names").catch((error) => {
-  toast.error(error);
+  if (settings.anki_enabled) {
+    toast.error(error);
+  }
   return [];
 });
 const deckNames = await invoke<string[]>("get_all_deck_names").catch((_) => {
@@ -332,6 +334,7 @@ async function newLanguage(language: string) {
           :deckNames
           :models
           :language="selectedLang"
+          :ankiEnabled="settings.anki_enabled"
           v-model:deck="settings.languages[selectedLang].deck"
           v-model:model="settings.languages[selectedLang].note_type"
           v-model:fields="settings.languages[selectedLang].note_fields"
