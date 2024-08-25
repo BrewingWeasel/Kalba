@@ -332,6 +332,7 @@ onMounted(async () => {
         <ResizablePanel :min-size="20">
           <div
             class="py-6 px-10 flex flex-col items-center w-full h-[calc(100vh-3.25rem)] overflow-auto"
+            dir="auto"
           >
             <div v-if="!sections">
               <Loader2 class="animate-spin" />
