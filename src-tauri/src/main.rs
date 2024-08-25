@@ -360,6 +360,7 @@ async fn get_started(
     state.settings.stanza_enabled = starting.stanza_enabled;
     state.to_save.last_language = Some(name.clone());
     state.current_language = Some(name);
+    save_state(&mut state)?;
     Ok(())
 }
 
