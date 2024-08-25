@@ -96,7 +96,8 @@ async function uninstallStanza() {
     <AlertTitle>Stanza Usage</AlertTitle>
     <AlertDescription>
       Stanza can be used to automatically parse grammar and determine the root
-      word for over 70 languages.</AlertDescription
-    >
+      word for over 70 languages. Some languages with writing systems that less
+      closely match the Latin script (ex: Japanese) require stanza.
+    </AlertDescription>
   </Alert>
 </template>

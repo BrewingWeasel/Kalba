@@ -5,6 +5,7 @@
 - Ability to customize ankiconnect port
 - German template
 - Arabic template
+- Docs about when stanza is required
 
 ### Fixed
 

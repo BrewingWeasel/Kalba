@@ -4,6 +4,8 @@ Kalba comes with builtin Stanza integration.
 The primary feature that Stanza provides is intelligent grammatical parsing of the text.
 This parsing offers several benefits for [all of Stanza's supported languages](https://stanfordnlp.github.io/stanza/performance.html):
 
+Some languages with writing systems that less closely match the Latin script (ex: Japanese) require stanza.
+
 - automatic identification of lemmas/root words
 - grammar information (this can be seen in the [reader view](reader.md))
 - automatic identification of proper nouns (names, places, etc)
