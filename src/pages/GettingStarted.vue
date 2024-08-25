@@ -167,7 +167,7 @@ async function finishWizard() {
       <template v-if="stepIndex === 3">
         <h1 class="text-xl font-semibold">Customize Word Knowledge</h1>
         <template v-if="models && deckNames">
-          <WordKnowledge :models :deckNames :decks />
+          <WordKnowledge :models :deckNames :decks :refreshButtons="false" />
         </template>
         <div v-else class="flex items-center flex-col mt-3">
           <h2>Anki is not available</h2>

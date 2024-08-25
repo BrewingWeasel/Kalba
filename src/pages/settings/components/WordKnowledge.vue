@@ -32,6 +32,7 @@ const props = defineProps<{
   decks: Deck[];
   models: string[];
   deckNames: string[];
+  refreshButtons: boolean;
 }>();
 
 const notesOpen = ref<boolean[][]>([]);
@@ -86,7 +87,7 @@ async function refreshAnki(forceAll: boolean) {
       </AlertDialogFooter>
     </AlertDialogContent>
   </AlertDialog>
-  <div class="py-2">
+  <div class="py-2" v-if="props.refreshButtons">
     <Button variant="outline" class="mr-2" @click="refreshAnki(false)"
       >Refresh Anki knowledge</Button
     >

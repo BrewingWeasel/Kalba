@@ -382,6 +382,7 @@ async function newLanguage(language: string) {
           <WordKnowledge
             :decks="settings.languages[selectedLang].anki_parser"
             :models
+            :refreshButtons="true"
             :deckNames
           />
         </Suspense>
