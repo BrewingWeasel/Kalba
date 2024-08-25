@@ -1,6 +1,6 @@
 [package]
 name = "kalba"
-version = "0.3.3"
+version = "0.3.4"
 description = "Kalba Reader"
 authors = ["Finnian Brewer"]
 license = "GPL-3.0"

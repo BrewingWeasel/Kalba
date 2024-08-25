@@ -1,5 +1,5 @@
 {
-  "version": "0.3.3",
+  "version": "0.3.4",
   "link": "https://github.com/BrewingWeasel/Kalba",
   "blurb": "This version fixes problems with RTL languages and allows further configuration over ankiconnect."
 }

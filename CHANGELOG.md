@@ -1,5 +1,17 @@
 ## Unreleased
 
+## 0.3.4 - 2024-08-25
+
+### Fixed
+
+- Menu to tell when syncing word knowledge with anki is complete
+
+### Fixed
+
+- Typo in wizard
+- Changes made in wizard not always being saved
+- Showing word knowledge refresh buttons when they won't work
+
 ## 0.3.3 - 2024-08-25
 
 ### Added
