@@ -149,7 +149,7 @@ async function finishWizard() {
           They can always be modified later.
         </p>
         <p>
-          Languages that do not have a tempalte can still be used by editing the
+          Languages that do not have a template can still be used by editing the
           custom template to include dictionaries and grammar information
         </p>
         <LanguageList
