@@ -121,8 +121,9 @@ pub async fn add_to_anki(
     let selected_word = export_details.word;
     let args = get_json(export_details, &state.settings.export_styling);
     let client = Client::new();
+    let url = format!("http://localhost:{}/", state.settings.anki_port);
     let response = client
-        .post("http://localhost:8765/")
+        .post(url)
         .json(&args)
         .send()
         .await

@@ -169,6 +169,14 @@ impl Default for ExportStyling {
     }
 }
 
+const fn default_anki_port() -> u16 {
+    8765
+}
+
+const fn default_anki_enabled() -> bool {
+    true
+}
+
 #[derive(Deserialize, Serialize, Clone)]
 pub struct Settings {
     pub to_run: Option<Vec<String>>,
@@ -180,6 +188,10 @@ pub struct Settings {
     pub site_configurations: HashMap<String, SiteConfiguration>,
     pub languages: HashMap<String, LanguageSettings>,
     pub stanza_enabled: bool,
+    #[serde(default = "default_anki_port")]
+    pub anki_port: u16,
+    #[serde(default = "default_anki_enabled")]
+    pub anki_enabled: bool,
 }
 
 #[derive(Deserialize, Serialize, Clone)]
@@ -212,6 +224,8 @@ impl Default for Settings {
             languages: HashMap::new(),
             site_configurations,
             stanza_enabled: false,
+            anki_port: default_anki_port(),
+            anki_enabled: default_anki_enabled(),
         }
     }
 }

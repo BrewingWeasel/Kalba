@@ -196,6 +196,7 @@ impl Default for SharedInfo {
             &mut to_save,
             &settings.languages,
             false,
+            settings.anki_port,
         )) {
             errors.push(e);
         }
@@ -317,8 +318,9 @@ async fn refresh_anki(
         .unwrap();
     let mut state = state.0.lock().await;
     let languages = state.settings.languages.clone();
+    let anki_port = state.settings.anki_port;
 
-    set_word_knowledge_from_anki(&mut state.to_save, &languages, force_all).await?;
+    set_word_knowledge_from_anki(&mut state.to_save, &languages, force_all, anki_port).await?;
     log::trace!("Anki data loaded [forced: {force_all}]");
     window.emit("refresh_anki", ToasterPayload { message: None })?;
     Ok(())
@@ -365,6 +367,7 @@ async fn set_word_knowledge_from_anki(
     to_save: &mut ToSave,
     languages: &HashMap<String, LanguageSettings>,
     force_all: bool,
+    port: u16,
 ) -> Result<(), KalbaError> {
     let new_time = Utc::now();
     let days_passed = new_time
@@ -387,6 +390,7 @@ async fn set_word_knowledge_from_anki(
                 // checked, so we should check every card and not just the ones recently
                 // updated
                 force_all || !to_save.decks_checked.contains(deck),
+                port,
             )
             .await?;
             to_save.decks_checked.push(deck.to_owned());

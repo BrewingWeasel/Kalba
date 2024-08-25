@@ -2218,7 +2218,7 @@ dependencies = [
 
 [[package]]
 name = "kalba"
-version = "0.3.1"
+version = "0.3.2"
 dependencies = [
  "chrono",
  "dirs",
@@ -4012,7 +4012,7 @@ dependencies = [
 
 [[package]]
 name = "shared"
-version = "0.3.1"
+version = "0.3.2"
 dependencies = [
  "rusty-hook",
  "serde",

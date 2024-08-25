@@ -39,6 +39,8 @@ export interface Settings {
   definition_styling: DefinitionStyling;
   export_styling: ExportStyling;
   stanza_enabled: boolean;
+  anki_port: number;
+  anki_enabled: boolean;
 }
 
 export interface SiteConfiguration {

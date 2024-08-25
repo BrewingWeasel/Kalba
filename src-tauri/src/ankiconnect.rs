@@ -33,6 +33,7 @@ pub async fn get_anki_card_statuses(
     original_words: &mut HashMap<String, WordInfo>,
     days_passed: i64,
     first_time_run: bool,
+    port: u16,
 ) -> Result<(), KalbaError> {
     log::info!("getting anki card statuses");
     let client = reqwest::Client::new();
@@ -47,12 +48,17 @@ pub async fn get_anki_card_statuses(
             handler.search_params
         );
         log::info!("Using query: {find_notes_query}");
-        let notes =
-            get_card_or_note_vals("findNotes", json!({ "query": find_notes_query }), &client)
-                .await?;
+        let notes = get_card_or_note_vals(
+            "findNotes",
+            json!({ "query": find_notes_query }),
+            &client,
+            port,
+        )
+        .await?;
 
         let notes_info_res =
-            generic_anki_connect_action("notesInfo", json!({ "notes": notes }), &client).await?;
+            generic_anki_connect_action("notesInfo", json!({ "notes": notes }), &client, port)
+                .await?;
         let notes_info = Into::<Result<Vec<NoteInfo>, KalbaError>>::into(
             notes_info_res
                 .json::<AnkiResult<Vec<NoteInfo>>>()
@@ -62,9 +68,13 @@ pub async fn get_anki_card_statuses(
         for note in &notes_info {
             let word = get_word_from_note(note, handler).await;
 
-            let intervals =
-                get_card_or_note_vals("getIntervals", json!({ "cards": note.cards }), &client)
-                    .await?;
+            let intervals = get_card_or_note_vals(
+                "getIntervals",
+                json!({ "cards": note.cards }),
+                &client,
+                port,
+            )
+            .await?;
             let selected_interval = intervals.iter().max().copied().unwrap_or_default();
             log::trace!("found word {word} with interval {selected_interval}");
 
@@ -114,6 +124,7 @@ async fn generic_anki_connect_action(
     action: &str,
     data: Value,
     client: &reqwest::Client,
+    port: u16,
 ) -> Result<Response, KalbaError> {
     let request = if data == Value::Null {
         json!({
@@ -128,18 +139,15 @@ async fn generic_anki_connect_action(
         })
     };
 
-    match client
-        .post("http://127.0.0.1:8765")
-        .json(&request)
-        .send()
-        .await
-    {
+    let url = format!("http://127.0.0.1:{port}");
+
+    match client.post(&url).json(&request).send().await {
         Ok(r) => Ok(r),
         Err(_) => {
             // try again after a short delay
             tokio::time::sleep(Duration::from_millis(300)).await;
             client
-                .post("http://127.0.0.1:8765")
+                .post(url)
                 .json(&request)
                 .send()
                 .await
@@ -152,8 +160,9 @@ async fn get_card_or_note_vals(
     action: &str,
     data: Value,
     client: &reqwest::Client,
+    port: u16,
 ) -> Result<Vec<isize>, KalbaError> {
-    let res = generic_anki_connect_action(action, data, client).await?;
+    let res = generic_anki_connect_action(action, data, client, port).await?;
     res.json::<AnkiResult<Vec<isize>>>().await.unwrap().into()
 }
 
@@ -194,9 +203,10 @@ fn get_word_from_field(selected_field: &str, handler: &NoteToWordHandling) -> St
 }
 
 #[tauri::command]
-pub async fn get_all_deck_names() -> Result<Vec<String>, KalbaError> {
-    let res =
-        generic_anki_connect_action("deckNames", Value::Null, &reqwest::Client::new()).await?;
+pub async fn get_all_deck_names(state: State<'_, KalbaState>) -> Result<Vec<String>, KalbaError> {
+    let port = state.0.lock().await.settings.anki_port;
+    let res = generic_anki_connect_action("deckNames", Value::Null, &reqwest::Client::new(), port)
+        .await?;
     res.json::<AnkiResult<Vec<String>>>()
         .await
         .expect("Valid json from anki")
@@ -204,9 +214,10 @@ pub async fn get_all_deck_names() -> Result<Vec<String>, KalbaError> {
 }
 
 #[tauri::command]
-pub async fn get_all_note_names() -> Result<Vec<String>, KalbaError> {
-    let res =
-        generic_anki_connect_action("modelNames", Value::Null, &reqwest::Client::new()).await?;
+pub async fn get_all_note_names(state: State<'_, KalbaState>) -> Result<Vec<String>, KalbaError> {
+    let port = state.0.lock().await.settings.anki_port;
+    let res = generic_anki_connect_action("modelNames", Value::Null, &reqwest::Client::new(), port)
+        .await?;
     res.json::<AnkiResult<Vec<String>>>()
         .await
         .expect("Valid json from anki")
@@ -214,11 +225,16 @@ pub async fn get_all_note_names() -> Result<Vec<String>, KalbaError> {
 }
 
 #[tauri::command]
-pub async fn get_note_field_names(model: &str) -> Result<Vec<String>, KalbaError> {
+pub async fn get_note_field_names(
+    state: State<'_, KalbaState>,
+    model: &str,
+) -> Result<Vec<String>, KalbaError> {
+    let port = state.0.lock().await.settings.anki_port;
     let res = generic_anki_connect_action(
         "modelFieldNames",
         json!({ "modelName": model }),
         &reqwest::Client::new(),
+        port,
     )
     .await?;
     res.json::<AnkiResult<Vec<String>>>()

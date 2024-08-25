@@ -10,6 +10,7 @@ export type SettingsSection =
   | "Dictionaries"
   | "Input"
   | "Grammar"
+  | "Anki"
   | "Stanza";
 
 const section = defineModel<SettingsSection>({ required: true });

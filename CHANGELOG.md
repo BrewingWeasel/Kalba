@@ -1,3 +1,9 @@
+## Unreleased
+
+## Added
+
+- Ability to customize ankiconnect port
+
 ## 0.3.2 - 2024-08-24
 
 ### Fixed

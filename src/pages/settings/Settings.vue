@@ -126,6 +126,7 @@ async function newLanguage(language: string) {
       />
       <SettingsMenu v-model="section" section="Input" :rightLanguage="true" />
       <SettingsMenu v-model="section" section="Stanza" :rightLanguage="true" />
+      <SettingsMenu v-model="section" section="Anki" :rightLanguage="true" />
       <Collapsible class="px-4" v-model:open="allLanguageMenuOpen">
         <div class="flex justify-between items-center">
           <h4 class="font-semibold">Profiles</h4>
@@ -264,6 +265,30 @@ async function newLanguage(language: string) {
           v-model:installed="installed"
           v-model:enabled="settings.stanza_enabled"
         />
+      </template>
+
+      <template v-if="section == 'Anki'">
+        <Heading
+          title_id="anki"
+          title="Anki"
+          description="Configure AnkiConnect settings"
+        />
+        <Label for="anki-enabled">Enable Anki</Label>
+        <Switch id="anki-enabled" v-model:checked="settings.anki_enabled" />
+        <Label for="anki-port">AnkiConnect port</Label>
+        <NumberField
+          id="anki-port"
+          v-model="settings.anki_port"
+          class="w-48"
+          :disabled="!settings.anki_enabled"
+          :format-options="{
+            useGrouping: false,
+          }"
+        >
+          <NumberFieldContent>
+            <NumberFieldInput />
+          </NumberFieldContent>
+        </NumberField>
       </template>
 
       <template v-else-if="section == 'General' && selectedLang != null">
