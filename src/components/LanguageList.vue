@@ -13,7 +13,9 @@ const tagColors = new Map<string, string>([
   ["Indo-European", "bg-rose-500"],
   ["Baltic", "bg-pink-500"],
   ["Romance", "bg-blue-400"],
+  ["Germanic", "bg-red-600"],
   ["Full Template", "bg-emerald-500"],
+  ["Basic Template", "bg-yellow-400"],
 ]);
 
 interface TemplateDetails {
