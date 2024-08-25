@@ -23,7 +23,7 @@ import { invoke } from "@tauri-apps/api/core";
 import { toast } from "vue-sonner";
 import StyledCombobox from "@/components/StyledCombobox.vue";
 import { ref } from "vue";
-import { Pencil, Plus, X } from "lucide-vue-next";
+import { Loader2, Pencil, Plus, X } from "lucide-vue-next";
 import Notes from "./Notes.vue";
 import { Deck } from "@/types";
 import BetterTooltip from "@/components/BetterTooltip.vue";
@@ -60,14 +60,32 @@ function addNote(deck_index: number) {
   notesOpen.value[deck_index].push(true);
 }
 
-function refreshAnki(forceAll: boolean) {
-  invoke("refresh_anki", { forceAll }).catch((e) => {
+const isRefreshing = ref(false);
+const canClose = ref(false);
+
+async function refreshAnki(forceAll: boolean) {
+  isRefreshing.value = true;
+  await invoke("refresh_anki", { forceAll }).catch((e) => {
     toast.error(e);
   });
+  canClose.value = true;
 }
 </script>
 
 <template>
+  <AlertDialog v-model:open="isRefreshing">
+    <AlertDialogContent>
+      <AlertDialogHeader>
+        <AlertDialogTitle>Refresh Anki</AlertDialogTitle>
+      </AlertDialogHeader>
+      <div v-if="!canClose">
+        <Loader2 class="animate-spin" />
+      </div>
+      <AlertDialogFooter>
+        <AlertDialogAction v-if="canClose">Continue</AlertDialogAction>
+      </AlertDialogFooter>
+    </AlertDialogContent>
+  </AlertDialog>
   <div class="py-2">
     <Button variant="outline" class="mr-2" @click="refreshAnki(false)"
       >Refresh Anki knowledge</Button
