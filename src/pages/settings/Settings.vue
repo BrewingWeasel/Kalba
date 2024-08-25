@@ -311,13 +311,16 @@ async function newLanguage(language: string) {
               settings.languages[newName] = settings.languages[selectedLang];
               delete settings.languages[selectedLang];
               languageNameChanges[newName] = newName;
-              if (selectedLang === props.currentLanguage) {
-                await invoke('rename_language', {
-                  originalName: selectedLang,
-                  newName,
-                });
+              const newSelectedLanguage =
+                selectedLang === props.currentLanguage;
+              await invoke('rename_language', {
+                originalName: selectedLang,
+                newName,
+                newSelectedLanguage,
+              });
+              if (newSelectedLanguage) {
+                $emit('newCurrentLanguage', newName);
               }
-              $emit('newCurrentLanguage', newName);
               selectedLang = newName;
             }
           "

@@ -543,9 +543,12 @@ async fn rename_language(
     state: State<'_, KalbaState>,
     original_name: String,
     new_name: String,
+    new_selected_language: bool,
 ) -> Result<(), String> {
     let mut state = state.0.lock().await;
+    log::info!("renaming template {original_name} to {new_name}");
     if let Some(old) = state.to_save.language_specific.remove(&original_name) {
+        log::info!("moving saved state from {original_name} to {new_name}");
         state
             .to_save
             .language_specific
@@ -554,7 +557,9 @@ async fn rename_language(
     if let Some(old) = state.language_cached_data.remove(&original_name) {
         state.language_cached_data.insert(new_name.clone(), old);
     }
-    state.current_language = Some(new_name);
+    if new_selected_language {
+        state.current_language = Some(new_name);
+    }
     Ok(())
 }
 

@@ -1,8 +1,13 @@
 ## Unreleased
 
-## Added
+### Added
 
 - Ability to customize ankiconnect port
+- German template
+
+### Fixed
+
+- Changing template's name sometimes causing problems
 
 ## 0.3.2 - 2024-08-24
 
