@@ -637,6 +637,7 @@ fn stanza_parser(
         sentences.push(sentence.sentence);
         let mut tokens = sentence.words.into_iter().peekable();
         let mut last_end = 0;
+        let mut last_whitespace_after = true;
         while let Some(token) = tokens.next() {
             let lemma = handle_lemma(&token.lemma, interpreter, state)?;
             let rating = if ["PUNCT", "SYM", "NUM"].contains(&token.upos.as_str()) {
@@ -711,17 +712,28 @@ fn stanza_parser(
 
             last_end = end_char;
 
-            words.push(Word {
-                text,
-                lemma: lemma.clone(),
-                rating,
-                morph,
-                sentence_index,
-                clickable: !["PUNCT", "SYM", "NUM"].contains(&token.upos.as_str()),
-                other_forms: get_alternate_forms(&lemma, interpreter, state)?,
-                length: end_char - start_char,
-                whitespace_after,
-            })
+            if last_whitespace_after {
+                words.push(Word {
+                    display_text: text.clone(),
+                    text,
+                    lemma: lemma.clone(),
+                    rating,
+                    morph,
+                    sentence_index,
+                    clickable: !["PUNCT", "SYM", "NUM"].contains(&token.upos.as_str()),
+                    other_forms: get_alternate_forms(&lemma, interpreter, state)?,
+                    length: end_char - start_char,
+                    whitespace_after,
+                });
+            } else {
+                log::debug!("combining words");
+                let last_word: &mut Word = words.last_mut().unwrap();
+                last_word.whitespace_after = whitespace_after;
+                last_word.display_text.push_str(&text);
+                last_word.length += end_char - start_char;
+            }
+
+            last_whitespace_after = whitespace_after;
         }
     }
     Ok((sentences, words))
@@ -767,6 +779,7 @@ fn default_tokenizer(
                 let whitespace_after = c.is_whitespace();
 
                 words.push(Word {
+                    display_text: word.clone(),
                     text: word.clone(),
                     clickable: true,
                     lemma: word.clone(),
@@ -791,7 +804,9 @@ fn default_tokenizer(
                 continue;
             }
 
+            // TODO: update display text of last word instead
             words.push(Word {
+                display_text: c.to_string(),
                 text: c.to_string(),
                 clickable: false,
                 lemma: c.to_string(),
@@ -826,6 +841,7 @@ fn default_tokenizer(
             .rating;
 
         words.push(Word {
+            display_text: word.clone(),
             text: word.clone(),
             clickable: true,
             lemma: word.clone(),

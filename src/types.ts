@@ -64,6 +64,7 @@ export interface LanguageSettings {
 }
 
 export interface Word {
+  display_text: string;
   text: string;
   lemma: string;
   morph: { [key: string]: string };

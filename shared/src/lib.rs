@@ -33,6 +33,7 @@ pub struct ToasterPayload<'a> {
 
 #[derive(Clone, Serialize, Deserialize, Debug)]
 pub struct Word {
+    pub display_text: String,
     pub text: String,
     pub lemma: String,
     pub rating: i8,

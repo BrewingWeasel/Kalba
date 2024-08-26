@@ -58,7 +58,7 @@ function set_selected() {
         }
       "
     >
-      <HoverCardTrigger>{{ props.word.text }}</HoverCardTrigger>
+      <HoverCardTrigger>{{ props.word.display_text }}</HoverCardTrigger>
       <HoverCardContent>
         <h1 class="text-center font-semibold text-lg" :class="rating">
           {{ props.word.lemma }}
