@@ -673,7 +673,7 @@ fn stanza_parser(
                 .unwrap_or_default();
 
             let mut end_char = token.end_char.unwrap_or(sent_formatted.len());
-            let start_char = token.start_char.unwrap_or(last_end);
+            let mut start_char = token.start_char.unwrap_or(last_end);
             let mut text = token.text;
 
             // mwt
@@ -705,6 +705,9 @@ fn stanza_parser(
             } else {
                 false
             };
+            let original_count = text.chars().count();
+            text = text.trim_start().to_owned();
+            start_char += original_count - text.chars().count();
 
             last_end = end_char;
 
