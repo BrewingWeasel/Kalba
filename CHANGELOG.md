@@ -1,5 +1,16 @@
 ## Unreleased
 
+## 0.3.5 - 2024-08-26
+
+### Added
+
+- Basic support for epub files
+
+### Fixed
+
+- problems with mwt tokens
+- some problems with weird line breaks in the reader (still more to solve though)
+
 ## 0.3.4 - 2024-08-25
 
 ### Added
