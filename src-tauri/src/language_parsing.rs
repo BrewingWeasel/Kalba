@@ -1,8 +1,9 @@
 use std::{
     collections::HashMap,
     env,
-    fs::read_to_string,
-    io::{BufRead, BufReader, Write},
+    fs::{self, read_to_string, File},
+    io::{BufRead, BufReader, Cursor, Read, Write},
+    path::PathBuf,
     process,
     sync::Arc,
     time::Duration,
@@ -14,6 +15,7 @@ use crate::{
     KalbaError, KalbaState, LanguageParser, SharedInfo,
 };
 use chrono::Utc;
+use epub::doc::EpubDoc;
 use log::{info, trace};
 use lol_html::{element, text, RewriteStrSettings};
 use shared::*;
@@ -44,6 +46,92 @@ pub async fn get_url_contents(url: &str) -> Result<String, KalbaError> {
         .expect("to get valid bytes"))
 }
 
+enum FileType {
+    RawText,
+    Epub,
+}
+
+#[tauri::command]
+pub async fn read_file(
+    state: State<'_, KalbaState>,
+    file_path: &str,
+) -> Result<ParsedWords, KalbaError> {
+    let filetype = match PathBuf::from(file_path).extension().as_ref() {
+        None => FileType::RawText,
+        Some(v) => match v.to_str() {
+            Some("epub") => FileType::Epub,
+            Some("txt") | Some("text") => FileType::RawText,
+            _ => return Err(KalbaError::InvalidFileType(file_path.to_owned())),
+        },
+    };
+    match filetype {
+        FileType::RawText => {
+            let contents = fs::read_to_string(file_path)?;
+            let (sentences, words) = words_from_string(&contents, Arc::new(state)).await?;
+            Ok(ParsedWords {
+                sentences,
+                sections: vec![Section::Paragraph(words)],
+            })
+        }
+        FileType::Epub => read_epub(state, file_path).await,
+    }
+}
+
+// #[derive(Clone, serde::Serialize)]
+// struct PageSelector {
+//     total_pages: usize,
+// }
+//
+// #[derive(Clone, serde::Serialize)]
+// struct PagesSelected {
+//     start: usize,
+//     end: usize,
+// }
+
+async fn read_epub(
+    state: State<'_, KalbaState>,
+    file_path: &str,
+) -> Result<ParsedWords, KalbaError> {
+    let mut file = File::open(file_path).unwrap();
+    let mut buffer = Vec::new();
+    file.read_to_end(&mut buffer).unwrap();
+
+    let cursor = Cursor::new(buffer);
+    let mut doc = EpubDoc::from_reader(cursor).unwrap();
+    // window.emit(
+    //     "epub_page_selector",
+    //     PageSelector {
+    //         total_pages: doc.get_num_pages(),
+    //     },
+    // );
+    // window.once("epub_pages_selected", |e| {
+    //     if let Ok(payload) = serde_json::from_str(e.payload()) {
+    //     }
+    // })
+    log::info!("Pages: {}", doc.get_num_pages());
+    let min_page = 0;
+    let mut current_page = 0;
+
+    let mut epub_contents = String::new();
+    while let Some((v, _mime)) = doc.get_current_str() {
+        current_page += 1;
+        if current_page < min_page {
+            doc.go_next();
+            continue;
+        }
+        epub_contents.push_str(&v);
+        if !doc.go_next() {
+            break;
+        }
+    }
+    let title = if let Some(title) = doc.metadata.get("title") {
+        title[0].to_owned()
+    } else {
+        String::new()
+    };
+    parse_url(None, &epub_contents, &title, state).await
+}
+
 struct SectionDetails {
     sections: Vec<SectionContents>,
     text: String,
@@ -54,30 +142,36 @@ struct SectionDetails {
 
 #[tauri::command]
 pub async fn parse_url(
-    url: &str,
+    url: Option<&str>,
     contents: &str,
     title: &str,
     state: State<'_, KalbaState>,
 ) -> Result<ParsedWords, KalbaError> {
-    let parsed_url = Url::parse(url).unwrap();
-    let url = parsed_url.host_str().unwrap();
-    let root_url = url.strip_prefix("www.").unwrap_or(url);
+    let root_url = url.map(|url| {
+        let parsed_url = Url::parse(url).unwrap();
+        let url = parsed_url.host_str().unwrap();
+        url.strip_prefix("www.").unwrap_or(url).to_owned()
+    });
 
     let site_config = {
-        let locked_state = state.0.lock().await;
-        info!("Root url: {}", root_url);
-        trace!(
-            "Site configurations: {:?}",
-            locked_state.settings.site_configurations
-        );
-        let mut site_config = None;
-        for possible_site in locked_state.settings.site_configurations.values() {
-            if possible_site.sites.contains(&root_url.to_owned()) {
-                site_config = Some(possible_site.to_owned());
-                break;
+        if let Some(url) = &root_url {
+            let locked_state = state.0.lock().await;
+            info!("Root url: {}", url);
+            trace!(
+                "Site configurations: {:?}",
+                locked_state.settings.site_configurations
+            );
+            let mut site_config = None;
+            for possible_site in locked_state.settings.site_configurations.values() {
+                if possible_site.sites.contains(&(*url).to_owned()) {
+                    site_config = Some(possible_site.to_owned());
+                    break;
+                }
             }
+            site_config
+        } else {
+            None
         }
-        site_config
     };
 
     let sections = Arc::new(Mutex::new(SectionDetails {
@@ -245,6 +339,7 @@ pub async fn parse_url(
         element!("img", |el| {
             let image_sections = Arc::clone(&sections);
             let handle = Handle::current();
+            let cloned_root_url = root_url.clone();
             task::block_in_place(|| {
                 handle.block_on(async move {
                     if let Some(src) = el.get_attribute("src") {
@@ -252,8 +347,10 @@ pub async fn parse_url(
                         sections.push(SectionContents::SpecificSection(Section::Image(
                             if src.starts_with("http") {
                                 src.to_owned()
+                            } else if let Some(url) = cloned_root_url {
+                                format!("https://www.{}/{src}", url)
                             } else {
-                                format!("https://www.{root_url}/{src}")
+                                String::new()
                             },
                         )));
                     }
@@ -467,6 +564,25 @@ pub async fn start_stanza(state: State<'_, KalbaState>, window: Window) -> Resul
     Ok(())
 }
 
+fn normalize_newlines(text: &str) -> String {
+    let mut result = String::new();
+    let mut last_was_newline = false;
+
+    for c in text.chars() {
+        if c == '\n' {
+            if !last_was_newline {
+                result.push(c);
+                last_was_newline = true;
+            }
+        } else {
+            result.push(c);
+            last_was_newline = false;
+        }
+    }
+
+    result
+}
+
 fn stanza_parser(
     sent: &str,
     state: &mut MutexGuard<SharedInfo>,
@@ -478,7 +594,7 @@ fn stanza_parser(
         .as_mut()
         .expect("language parser to be started");
 
-    let sent_formatted = format!("{}\n", sent.replace("\n\n", "\n"));
+    let sent_formatted = format!("{}\n", normalize_newlines(sent));
     let bytes_written = language_parser
         .stdin
         .write(sent_formatted.as_bytes())

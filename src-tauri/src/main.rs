@@ -5,7 +5,7 @@ use crate::{
     add_to_anki::{add_to_anki, get_export_variables},
     ankiconnect::{get_all_deck_names, get_all_note_names, get_note_field_names, remove_deck},
     dictionary::{get_definition_on_demand, get_defs, DictionaryInfo},
-    language_parsing::{get_url_contents, parse_text, parse_url, start_stanza},
+    language_parsing::{get_url_contents, parse_text, parse_url, read_file, start_stanza},
     new_language_template::new_language_from_template,
     setup_stanza::{check_stanza_installed, setup_stanza, uninstall_stanza},
 };
@@ -70,6 +70,8 @@ enum KalbaError {
     PipInstallFailed,
     #[error("Python version ({0}) does not match. Version 3.8 or later is required for stanza")]
     WrongPythonVersion(String),
+    #[error("File {0} is not a valid file type. See the docs for more.")]
+    InvalidFileType(String),
 }
 
 // we must manually implement serde::Serialize
@@ -284,6 +286,7 @@ fn main() {
             get_words_known_at_levels,
             get_startup_state,
             parse_url,
+            read_file,
             get_definition_on_demand,
             always_change_lemma,
             setup_stanza,

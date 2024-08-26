@@ -1,5 +1,5 @@
 export type HistoryItem = string | number;
-export type InputType = "url" | "clipboard" | "normal";
+export type InputType = "url" | "clipboard" | "normal" | "file";
 
 export interface StartupState {
   errors: string[];

@@ -49,9 +49,7 @@ const sentence = computed(() => {
 });
 
 async function setWords() {
-  const isUrl = props.inputType === "url";
-
-  if (isUrl) {
+  if (props.inputType === "url") {
     const response = await invoke<string>("get_url_contents", {
       url: inputText.value,
     });
@@ -75,12 +73,18 @@ async function setWords() {
     sections.value = parsedWords.sections;
     sentences.value = parsedWords.sentences;
   } else {
-    const parsedWords = await invoke<ParsedWords>("parse_text", {
-      sent: inputText.value,
-    }).catch((error) => {
-      toast.error(error);
-      return { sections: [], sentences: [] };
-    });
+    const args =
+      props.inputType === "file"
+        ? { filePath: inputText.value }
+        : { sent: inputText.value };
+    const readingFunction =
+      props.inputType === "file" ? "read_file" : "parse_text";
+    const parsedWords = await invoke<ParsedWords>(readingFunction, args).catch(
+      (error) => {
+        toast.error(error);
+        return { sections: [], sentences: [] };
+      },
+    );
 
     sections.value = parsedWords.sections;
     sentences.value = parsedWords.sentences;

@@ -4,7 +4,6 @@ import { Textarea } from "@/components/ui/textarea";
 import ReaderView from "./Reader.vue";
 import ButtonDialog from "@/components/ButtonDialog.vue";
 import FilePicker from "@/components/FilePicker.vue";
-import { readTextFile } from "@tauri-apps/plugin-fs";
 import { useRouter } from "vue-router";
 import { InputType } from "@/types";
 import { readText } from "@tauri-apps/plugin-clipboard-manager";
@@ -46,8 +45,11 @@ function set_sentence() {
         button-name="Select file"
         @submitted="
           async () => {
-            router.replace(`/reader/file/${currentInput}`);
-            currentInput = await readTextFile(currentInput);
+            const fileName = currentInput.includes('/')
+              ? currentInput.split('/').pop()
+              : currentInput.split('\\').pop();
+            router.replace(`/reader/file/${fileName}`);
+            inputType = 'file';
             set_sentence();
           }
         "
