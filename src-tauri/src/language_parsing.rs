@@ -26,6 +26,7 @@ use tokio::{
     sync::{Mutex, MutexGuard},
     task,
 };
+use unicode_normalization::UnicodeNormalization;
 use url::Url;
 
 #[derive(Debug, Clone)]
@@ -564,11 +565,14 @@ pub async fn start_stanza(state: State<'_, KalbaState>, window: Window) -> Resul
     Ok(())
 }
 
-fn normalize_newlines(text: &str) -> String {
+fn normalize(text: &str) -> String {
     let mut result = String::new();
     let mut last_was_newline = false;
+    // matches what stanza does so there aren't disagreements about where characters start and end
+    // (fixes problems with mwt)
+    let chars = text.nfd();
 
-    for c in text.chars() {
+    for c in chars {
         if c == '\n' {
             if !last_was_newline {
                 result.push(c);
@@ -594,7 +598,7 @@ fn stanza_parser(
         .as_mut()
         .expect("language parser to be started");
 
-    let sent_formatted = format!("{}\n", normalize_newlines(sent));
+    let sent_formatted = format!("{}\n", normalize(sent));
     let bytes_written = language_parser
         .stdin
         .write(sent_formatted.as_bytes())
@@ -668,7 +672,7 @@ fn stanza_parser(
                 })
                 .unwrap_or_default();
 
-            let mut end_char = token.end_char.unwrap_or(sent.len());
+            let mut end_char = token.end_char.unwrap_or(sent_formatted.len());
             let start_char = token.start_char.unwrap_or(last_end);
             let mut text = token.text;
 
@@ -681,7 +685,7 @@ fn stanza_parser(
                     }
                     tokens.next();
                 }
-                text = sent
+                text = sent_formatted
                     .chars()
                     .skip(start_char)
                     .take(end_char - start_char)
