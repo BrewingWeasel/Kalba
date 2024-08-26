@@ -11,6 +11,7 @@ The reader view can be used in several different modes:
 ##### File
 
 Kalba can use the contents of a file as the basis for the reader, though this currently only supports raw text files.
+EPub support is experimental.
 
 ##### Manual
 
