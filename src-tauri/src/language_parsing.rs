@@ -68,7 +68,8 @@ pub async fn read_file(
     match filetype {
         FileType::RawText => {
             let contents = fs::read_to_string(file_path)?;
-            let (sentences, words) = words_from_string(&contents, Arc::new(state)).await?;
+            let nfd_contents = contents.nfd().collect::<String>();
+            let (sentences, words) = words_from_string(&nfd_contents, Arc::new(state)).await?;
             Ok(ParsedWords {
                 sentences,
                 sections: vec![Section::Paragraph(words)],
@@ -148,6 +149,7 @@ pub async fn parse_url(
     title: &str,
     state: State<'_, KalbaState>,
 ) -> Result<ParsedWords, KalbaError> {
+    let contents = contents.nfd().collect::<String>();
     let root_url = url.map(|url| {
         let parsed_url = Url::parse(url).unwrap();
         let url = parsed_url.host_str().unwrap();
@@ -362,7 +364,7 @@ pub async fn parse_url(
     ];
 
     lol_html::rewrite_str(
-        contents,
+        &contents,
         RewriteStrSettings {
             element_content_handlers: section_handlers,
             ..Default::default()
@@ -420,7 +422,8 @@ pub async fn parse_text(
     sent: &str,
     state: State<'_, KalbaState>,
 ) -> Result<ParsedWords, KalbaError> {
-    let (sentences, words) = words_from_string(sent, Arc::new(state)).await?;
+    let contents = sent.nfd().collect::<String>();
+    let (sentences, words) = words_from_string(&contents, Arc::new(state)).await?;
     Ok(ParsedWords {
         sentences,
         sections: vec![Section::Paragraph(words)],
@@ -565,14 +568,11 @@ pub async fn start_stanza(state: State<'_, KalbaState>, window: Window) -> Resul
     Ok(())
 }
 
-fn normalize(text: &str) -> String {
+fn normalize_newlines(text: &str) -> String {
     let mut result = String::new();
     let mut last_was_newline = false;
-    // matches what stanza does so there aren't disagreements about where characters start and end
-    // (fixes problems with mwt)
-    let chars = text.nfd();
 
-    for c in chars {
+    for c in text.chars() {
         if c == '\n' {
             if !last_was_newline {
                 result.push(c);
@@ -598,7 +598,7 @@ fn stanza_parser(
         .as_mut()
         .expect("language parser to be started");
 
-    let sent_formatted = format!("{}\n", normalize(sent));
+    let sent_formatted = format!("{}\n", normalize_newlines(sent));
     let bytes_written = language_parser
         .stdin
         .write(sent_formatted.as_bytes())
