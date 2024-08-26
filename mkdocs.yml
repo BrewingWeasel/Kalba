@@ -2,6 +2,7 @@ site_name: Kalba
 nav:
   - Home: "index.md"
   - Installation:
+      - Requirements: "requirements.md"
       - Linux: "installation_linux.md"
       - Windows: "installation_windows.md"
       - Mac: "installation_mac.md"
