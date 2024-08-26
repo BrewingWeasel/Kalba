@@ -2,7 +2,7 @@
 
 ## 0.3.4 - 2024-08-25
 
-### Fixed
+### Added
 
 - Menu to tell when syncing word knowledge with anki is complete
 
