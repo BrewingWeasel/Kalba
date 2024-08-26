@@ -7,6 +7,10 @@ nav:
       - Windows: "installation_windows.md"
       - Mac: "installation_mac.md"
       - "Building from source": "installation_building.md"
+  - Setup:
+      - "Getting Started": "getting_started.md"
+      - "Setting up a new language": "new_language.md"
+      - "Next Steps": "next_steps.md"
   - Concepts:
       - "Word Knowledge": "word_knowledge.md"
       - Stanza: "stanza.md"
