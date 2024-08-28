@@ -1,7 +1,14 @@
 # Installation (Linux)
 
-A flatpak of Kalba will eventually be provided, and that will be the recommended way of installing Kalba.
-In the mean time, you can use one of the alternate installation methods for Linux.
+## Flathub
+
+The recommended installation method for linux is to use [the flatpak](https://flathub.org/apps/com.kalbareader.Kalba).
+
+```sh
+flatpak run com.kalbareader.Kalba
+```
+
+Note: the flatpak _should_ just work, but if you run into problems, try building from source or using one of the other installation methods to see if the problem persists.
 
 ## Deb (Debian, Ubuntu, etc.)
 
