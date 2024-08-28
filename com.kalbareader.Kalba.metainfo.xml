@@ -44,6 +44,32 @@
     </screenshot>
   </screenshots>
   <releases>
+    <release version="0.3.5" date="2024-08-26">
+      <url type="details">https://github.com/BrewingWeasel/Kalba/blob/main/CHANGELOG.md#035---2024-08-26</url>
+      <description>
+        <p>Added basic epub support</p>
+        <p>Fixed some issues mwt tokens for spanish and line breaks in articles</p>
+      </description>
+    </release>
+    <release version="0.3.4" date="2024-08-25">
+      <url type="details">https://github.com/BrewingWeasel/Kalba/blob/main/CHANGELOG.md#034---2024-08-25</url>
+      <description>
+        <p>Added menu to tell when syncing word knowledge is completed</p>
+      </description>
+    </release>
+    <release version="0.3.3" date="2024-08-25">
+      <url type="details">https://github.com/BrewingWeasel/Kalba/blob/main/CHANGELOG.md#033---2024-08-25</url>
+      <description>
+        <p>Added ability to disable ankiconnect and customize its port</p>
+        <p>Added Arabic and German templates</p>
+      </description>
+    </release>
+    <release version="0.3.2" date="2024-08-24">
+      <url type="details">https://github.com/BrewingWeasel/Kalba/blob/main/CHANGELOG.md#032---2024-08-24</url>
+      <description>
+        <p>Problem with opening on ARM mac</p>
+      </description>
+    </release>
     <release version="0.3.1" date="2024-08-24">
       <url type="details">https://github.com/BrewingWeasel/Kalba/blob/main/CHANGELOG.md#031---2024-08-24</url>
       <description>
