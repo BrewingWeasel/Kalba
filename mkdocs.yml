@@ -27,4 +27,6 @@ nav:
   - "Advanced Configuration":
       - "Writing a spyglys parser": "spyglys_parser.md"
       - Backups: "backups.md"
+  - "Help":
+      - "Common Problems": "common_problems.md"
 theme: readthedocs
