@@ -187,8 +187,8 @@ pub async fn parse_url(
 
     let section_handlers = vec![
         text!("h1", |text| {
-            let formatted_text = text.as_str().replace("&nbsp;", " ");
-            if formatted_text.trim_start().is_empty() {
+            let formatted_text = text.as_str().trim_start().replace("&nbsp;", " ");
+            if formatted_text.is_empty() {
                 return Ok(());
             }
             let title_sections = Arc::clone(&sections);
@@ -198,17 +198,17 @@ pub async fn parse_url(
                     let mut sections = title_sections.lock().await;
                     sections.text.push_str(&formatted_text);
                     sections.text.push('\n');
-                    sections.sections.push(SectionContents::Title(
-                        formatted_text.trim_start().nfd().count(),
-                    ));
+                    sections
+                        .sections
+                        .push(SectionContents::Title(formatted_text.chars().count()));
                     Ok::<(), KalbaError>(())
                 })
             })?;
             Ok(())
         }),
         text!("p > strong, h2 > strong", |text| {
-            let formatted_text = text.as_str().replace("&nbsp;", " ");
-            if formatted_text.trim_start().is_empty()
+            let formatted_text = text.as_str().trim_start().replace("&nbsp;", " ");
+            if formatted_text.is_empty()
                 || site_config
                     .as_ref()
                     .is_some_and(|v| v.ignore_strings.contains(&text.as_str().to_owned()))
@@ -223,17 +223,17 @@ pub async fn parse_url(
                     let mut section_details = subtitle_sections.lock().await;
                     section_details.text.push_str(&formatted_text);
                     section_details.text.push('\n');
-                    section_details.sections.push(SectionContents::Subtitle(
-                        formatted_text.trim_start().nfd().count(),
-                    ));
+                    section_details
+                        .sections
+                        .push(SectionContents::Subtitle(formatted_text.chars().count()));
                     section_details.last_subtitle = Some(formatted_text);
                 })
             });
             Ok(())
         }),
         text!("figcaption p", |text| {
-            let formatted_text = text.as_str().replace("&nbsp;", " ");
-            if formatted_text.trim_start().is_empty() {
+            let formatted_text = text.as_str().trim_start().replace("&nbsp;", " ");
+            if formatted_text.is_empty() {
                 return Ok(());
             }
             let text = if let Some(separator) = site_config
@@ -257,7 +257,7 @@ pub async fn parse_url(
                     section_details.text.push('\n');
                     section_details
                         .sections
-                        .push(SectionContents::Caption(text.nfd().count()));
+                        .push(SectionContents::Caption(text.chars().count()));
                 })
             });
             Ok(())
@@ -282,7 +282,7 @@ pub async fn parse_url(
                     section_details.text.push_str(&formatted_text);
                     if let Some(SectionContents::Paragraph(v)) = section_details.sections.last_mut()
                     {
-                        *v += formatted_text.trim_start().nfd().count() + 1;
+                        *v += formatted_text.chars().count() + 1;
                     }
                     section_details.last_subtitle = Some(formatted_text);
                 })
@@ -290,8 +290,8 @@ pub async fn parse_url(
             Ok(())
         }),
         text!("p", |text| {
-            let formatted_text = text.as_str().replace("&nbsp;", " ");
-            if formatted_text.trim_start().is_empty()
+            let formatted_text = text.as_str().trim_start().replace("&nbsp;", " ");
+            if formatted_text.is_empty()
                 || site_config
                     .as_ref()
                     .is_some_and(|v| v.ignore_strings.contains(&formatted_text))
@@ -332,12 +332,12 @@ pub async fn parse_url(
                         if let Some(SectionContents::Paragraph(v)) =
                             section_details.sections.last_mut()
                         {
-                            *v += formatted_text.trim_start().nfd().count();
+                            *v += formatted_text.chars().count();
                         }
                     } else {
-                        section_details.sections.push(SectionContents::Paragraph(
-                            formatted_text.trim_start().nfd().count(),
-                        ));
+                        section_details
+                            .sections
+                            .push(SectionContents::Paragraph(formatted_text.chars().count()));
                     }
                 })
             });
@@ -575,7 +575,7 @@ fn normalize_newlines(text: &str) -> String {
     let mut result = String::new();
     let mut last_was_newline = false;
 
-    for c in text.chars() {
+    for c in text.nfc() {
         if c == '\n' {
             if !last_was_newline {
                 result.push(c);
