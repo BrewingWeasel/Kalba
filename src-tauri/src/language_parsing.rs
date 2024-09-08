@@ -714,6 +714,7 @@ fn stanza_parser(
             start_char += original_count - text.chars().count();
 
             last_end = end_char;
+            let clickable = !["PUNCT", "SYM", "NUM"].contains(&token.upos.as_str());
 
             if last_whitespace_after {
                 words.push(Word {
@@ -723,8 +724,12 @@ fn stanza_parser(
                     rating,
                     morph,
                     sentence_index,
-                    clickable: !["PUNCT", "SYM", "NUM"].contains(&token.upos.as_str()),
-                    other_forms: get_alternate_forms(&lemma, interpreter, state)?,
+                    clickable,
+                    other_forms: if clickable {
+                        get_alternate_forms(&lemma, interpreter, state)?
+                    } else {
+                        Vec::new()
+                    },
                     length: end_char - start_char,
                     whitespace_after,
                 });
@@ -734,6 +739,18 @@ fn stanza_parser(
                 last_word.whitespace_after = whitespace_after;
                 last_word.display_text.push_str(&text);
                 last_word.length += end_char - start_char;
+                if !last_word.clickable {
+                    last_word.clickable = clickable;
+                    last_word.lemma = lemma.clone();
+                    last_word.text = text;
+                    last_word.rating = rating;
+                    last_word.morph = morph;
+                    last_word.other_forms = if clickable {
+                        get_alternate_forms(&lemma, interpreter, state)?
+                    } else {
+                        Vec::new()
+                    };
+                }
             }
 
             last_whitespace_after = whitespace_after;
