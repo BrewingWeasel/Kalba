@@ -1,5 +1,11 @@
 ## Unreleased
 
+### Added
+
+### Fixed
+
+- Stanza being able to correctly identify the lemma of words with diacritics in certain cases
+
 ## 0.3.5 - 2024-08-26
 
 ### Added

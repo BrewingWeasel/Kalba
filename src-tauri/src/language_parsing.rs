@@ -68,8 +68,7 @@ pub async fn read_file(
     match filetype {
         FileType::RawText => {
             let contents = fs::read_to_string(file_path)?;
-            let nfd_contents = contents.nfd().collect::<String>();
-            let (sentences, words) = words_from_string(&nfd_contents, Arc::new(state)).await?;
+            let (sentences, words) = words_from_string(&contents, Arc::new(state)).await?;
             Ok(ParsedWords {
                 sentences,
                 sections: vec![Section::Paragraph(words)],
@@ -149,7 +148,6 @@ pub async fn parse_url(
     title: &str,
     state: State<'_, KalbaState>,
 ) -> Result<ParsedWords, KalbaError> {
-    let contents = contents.nfd().collect::<String>();
     let root_url = url.map(|url| {
         let parsed_url = Url::parse(url).unwrap();
         let url = parsed_url.host_str().unwrap();
@@ -199,7 +197,7 @@ pub async fn parse_url(
                     sections.text.push_str(text.as_str());
                     sections.text.push('\n');
                     sections.sections.push(SectionContents::Title(
-                        text.as_str().trim_start().chars().count(),
+                        text.as_str().trim_start().nfd().count(),
                     ));
                     Ok::<(), KalbaError>(())
                 })
@@ -223,7 +221,7 @@ pub async fn parse_url(
                     section_details.text.push_str(text.as_str());
                     section_details.text.push('\n');
                     section_details.sections.push(SectionContents::Subtitle(
-                        text.as_str().trim_start().chars().count(),
+                        text.as_str().trim_start().nfd().count(),
                     ));
                     section_details.last_subtitle = Some(text.as_str().to_owned());
                 })
@@ -255,7 +253,7 @@ pub async fn parse_url(
                     section_details.text.push('\n');
                     section_details
                         .sections
-                        .push(SectionContents::Caption(text.chars().count()));
+                        .push(SectionContents::Caption(text.nfd().count()));
                 })
             });
             Ok(())
@@ -279,7 +277,7 @@ pub async fn parse_url(
                     section_details.text.push_str(text.as_str());
                     if let Some(SectionContents::Paragraph(v)) = section_details.sections.last_mut()
                     {
-                        *v += text.as_str().trim_start().chars().count() + 1;
+                        *v += text.as_str().trim_start().nfd().count() + 1;
                     }
                     section_details.last_subtitle = Some(text.as_str().to_owned());
                 })
@@ -328,11 +326,11 @@ pub async fn parse_url(
                         if let Some(SectionContents::Paragraph(v)) =
                             section_details.sections.last_mut()
                         {
-                            *v += text.as_str().trim_start().chars().count();
+                            *v += text.as_str().trim_start().nfd().count();
                         }
                     } else {
                         section_details.sections.push(SectionContents::Paragraph(
-                            text.as_str().trim_start().chars().count(),
+                            text.as_str().trim_start().nfd().count(),
                         ));
                     }
                 })
@@ -364,7 +362,7 @@ pub async fn parse_url(
     ];
 
     lol_html::rewrite_str(
-        &contents,
+        contents,
         RewriteStrSettings {
             element_content_handlers: section_handlers,
             ..Default::default()
@@ -422,8 +420,7 @@ pub async fn parse_text(
     sent: &str,
     state: State<'_, KalbaState>,
 ) -> Result<ParsedWords, KalbaError> {
-    let contents = sent.nfd().collect::<String>();
-    let (sentences, words) = words_from_string(&contents, Arc::new(state)).await?;
+    let (sentences, words) = words_from_string(sent, Arc::new(state)).await?;
     Ok(ParsedWords {
         sentences,
         sections: vec![Section::Paragraph(words)],
