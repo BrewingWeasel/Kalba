@@ -1,4 +1,5 @@
 use std::{
+    borrow::Cow,
     collections::HashMap,
     env,
     fs::{self, read_to_string, File},
@@ -186,7 +187,8 @@ pub async fn parse_url(
 
     let section_handlers = vec![
         text!("h1", |text| {
-            if text.as_str().trim().is_empty() {
+            let formatted_text = text.as_str().replace("&nbsp;", " ");
+            if formatted_text.trim_start().is_empty() {
                 return Ok(());
             }
             let title_sections = Arc::clone(&sections);
@@ -194,10 +196,10 @@ pub async fn parse_url(
             task::block_in_place(|| {
                 handle.block_on(async move {
                     let mut sections = title_sections.lock().await;
-                    sections.text.push_str(text.as_str());
+                    sections.text.push_str(&formatted_text);
                     sections.text.push('\n');
                     sections.sections.push(SectionContents::Title(
-                        text.as_str().trim_start().nfd().count(),
+                        formatted_text.trim_start().nfd().count(),
                     ));
                     Ok::<(), KalbaError>(())
                 })
@@ -205,51 +207,53 @@ pub async fn parse_url(
             Ok(())
         }),
         text!("p > strong, h2 > strong", |text| {
-            if text.as_str().trim().is_empty()
+            let formatted_text = text.as_str().replace("&nbsp;", " ");
+            if formatted_text.trim_start().is_empty()
                 || site_config
                     .as_ref()
                     .is_some_and(|v| v.ignore_strings.contains(&text.as_str().to_owned()))
             {
                 return Ok(());
             }
-            log::info!("Subtitle text: {}", text.as_str());
+            log::info!("Subtitle text: {}", formatted_text);
             let subtitle_sections = Arc::clone(&sections);
             let handle = Handle::current();
             task::block_in_place(|| {
                 handle.block_on(async move {
                     let mut section_details = subtitle_sections.lock().await;
-                    section_details.text.push_str(text.as_str());
+                    section_details.text.push_str(&formatted_text);
                     section_details.text.push('\n');
                     section_details.sections.push(SectionContents::Subtitle(
-                        text.as_str().trim_start().nfd().count(),
+                        formatted_text.trim_start().nfd().count(),
                     ));
-                    section_details.last_subtitle = Some(text.as_str().to_owned());
+                    section_details.last_subtitle = Some(formatted_text);
                 })
             });
             Ok(())
         }),
         text!("figcaption p", |text| {
-            if text.as_str().trim().is_empty() {
+            let formatted_text = text.as_str().replace("&nbsp;", " ");
+            if formatted_text.trim_start().is_empty() {
                 return Ok(());
             }
             let text = if let Some(separator) = site_config
                 .as_ref()
                 .and_then(|c| c.caption_separator.as_ref())
             {
-                if let Some((main_caption, _)) = text.as_str().split_once(separator) {
-                    main_caption.trim()
+                if let Some((main_caption, _)) = formatted_text.split_once(separator) {
+                    Cow::Borrowed(main_caption.trim())
                 } else {
-                    text.as_str()
+                    Cow::Owned(formatted_text)
                 }
             } else {
-                text.as_str()
+                Cow::Owned(formatted_text)
             };
             let sections = Arc::clone(&sections);
             let handle = Handle::current();
             task::block_in_place(|| {
                 handle.block_on(async move {
                     let mut section_details = sections.lock().await;
-                    section_details.text.push_str(text);
+                    section_details.text.push_str(text.as_ref());
                     section_details.text.push('\n');
                     section_details
                         .sections
@@ -259,10 +263,11 @@ pub async fn parse_url(
             Ok(())
         }),
         text!("p > a", |text| {
-            if text.as_str().trim().is_empty()
+            let formatted_text = text.as_str().replace("&nbsp;", " ");
+            if formatted_text.trim_start().is_empty()
                 || site_config
                     .as_ref()
-                    .is_some_and(|v| v.ignore_strings.contains(&text.as_str().to_owned()))
+                    .is_some_and(|v| v.ignore_strings.contains(&formatted_text))
             {
                 return Ok(());
             }
@@ -271,35 +276,36 @@ pub async fn parse_url(
             task::block_in_place(|| {
                 handle.block_on(async move {
                     let mut section_details = paragraph_sections.lock().await;
-                    log::info!("Found link {}", text.as_str());
+                    log::info!("Found link {}", formatted_text);
                     section_details.text = section_details.text.trim_end().to_owned();
                     section_details.text.push(' ');
-                    section_details.text.push_str(text.as_str());
+                    section_details.text.push_str(&formatted_text);
                     if let Some(SectionContents::Paragraph(v)) = section_details.sections.last_mut()
                     {
-                        *v += text.as_str().trim_start().nfd().count() + 1;
+                        *v += formatted_text.trim_start().nfd().count() + 1;
                     }
-                    section_details.last_subtitle = Some(text.as_str().to_owned());
+                    section_details.last_subtitle = Some(formatted_text);
                 })
             });
             Ok(())
         }),
         text!("p", |text| {
-            if text.as_str().trim().is_empty()
+            let formatted_text = text.as_str().replace("&nbsp;", " ");
+            if formatted_text.trim_start().is_empty()
                 || site_config
                     .as_ref()
-                    .is_some_and(|v| v.ignore_strings.contains(&text.as_str().to_owned()))
+                    .is_some_and(|v| v.ignore_strings.contains(&formatted_text))
             {
                 return Ok(());
             }
             let paragraph_sections = Arc::clone(&sections);
             let handle = Handle::current();
-            log::trace!("found text: {}", text.as_str());
+            log::trace!("found text: {}", formatted_text);
             task::block_in_place(|| {
                 handle.block_on(async move {
                     let mut section_details = paragraph_sections.lock().await;
                     if let Some(last) = std::mem::take(&mut section_details.last_subtitle) {
-                        if last == text.as_str() {
+                        if last == formatted_text {
                             return;
                         }
                     }
@@ -307,7 +313,7 @@ pub async fn parse_url(
                     if section_details
                         .last_link
                         .as_ref()
-                        .is_some_and(|l| l == text.as_str())
+                        .is_some_and(|l| l == &formatted_text)
                     {
                         section_details.last_link = None;
                         if text.last_in_text_node() {
@@ -319,18 +325,18 @@ pub async fn parse_url(
                         return;
                     }
 
-                    section_details.text.push_str(text.as_str());
+                    section_details.text.push_str(&formatted_text);
                     section_details.text.push('\n');
                     if section_details.was_just_link {
                         section_details.was_just_link = false;
                         if let Some(SectionContents::Paragraph(v)) =
                             section_details.sections.last_mut()
                         {
-                            *v += text.as_str().trim_start().nfd().count();
+                            *v += formatted_text.trim_start().nfd().count();
                         }
                     } else {
                         section_details.sections.push(SectionContents::Paragraph(
-                            text.as_str().trim_start().nfd().count(),
+                            formatted_text.trim_start().nfd().count(),
                         ));
                     }
                 })
