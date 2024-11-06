@@ -106,7 +106,7 @@ whenever(keys.ctrl_shift_e, async () => {
       "
     >
       <div class="flex bottom-0 justify-center py-3">
-        <Button variant="destructive"> Export </Button>
+        <Button> Export </Button>
       </div>
     </DialogTrigger>
     <DialogContent class="select-none">

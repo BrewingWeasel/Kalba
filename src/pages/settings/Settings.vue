@@ -18,7 +18,7 @@ import { type Ref, ref, watch, reactive, nextTick } from "vue";
 import { Label } from "@/components/ui/label";
 import { Input } from "@/components/ui/input";
 import type { Settings } from "@/types";
-import { useDark } from "@vueuse/core";
+import { useColorMode } from "@vueuse/core";
 import {
   Collapsible,
   CollapsibleContent,
@@ -41,8 +41,17 @@ import {
 } from "@/components/ui/number-field";
 import EnableStanza from "@/components/EnableStanza.vue";
 import { Separator } from "@/components/ui/separator";
+import StyledCombobox from "@/components/StyledCombobox.vue";
 
-const isDark = useDark();
+const mode = useColorMode({
+  modes: {
+    "Rose Pine Dawn": "rosePineDawn",
+    "Rose Pine Moon": "rosePineMoon",
+    "Rose Pine Dark": "rosePine",
+    "Simple Dark": "simpleDark",
+    "Simple Light": "simpleLight",
+  },
+});
 const router = useRouter();
 
 const installed = await invoke<boolean>("check_stanza_installed").catch(
@@ -214,7 +223,18 @@ async function newLanguage(language: string) {
           title="Appearance"
           description="Configure how Kalba looks"
         />
-        <Switch id="theme" v-model:checked="isDark" />
+        <StyledCombobox
+          id="theme"
+          v-model="mode"
+          item-being-selected="colorscheme"
+          :options="[
+            'Rose Pine Dawn',
+            'Rose Pine Moon',
+            'Rose Pine Dark',
+            'Simple Dark',
+            'Simple Light',
+          ]"
+        />
         <Label for="theme">Use dark mode</Label>
 
         <h2 class="mt-1">Definition styling</h2>

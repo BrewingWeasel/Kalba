@@ -3,6 +3,7 @@ import { StartupState } from "./types";
 import GettingStarted from "./pages/GettingStarted.vue";
 import { ref } from "vue";
 import { invoke } from "@tauri-apps/api/core";
+import { useColorMode } from "@vueuse/core";
 import PageFrame from "./PageFrame.vue";
 import { Toaster } from "@/components/ui/sonner";
 import {
@@ -33,6 +34,28 @@ const isNew = ref(
     potentiallyNewVersion: versionDetails.version,
   }),
 );
+
+let mode = useColorMode({
+  modes: {
+    "Rose Pine Dawn": "rosePineDawn",
+    "Rose Pine Moon": "rosePineMoon",
+    "Rose Pine Dark": "rosePine",
+    "Simple Dark": "simpleDark",
+    "Simple Light": "simpleLight",
+  },
+});
+console.log(mode.value);
+
+switch (mode.value) {
+  case "light":
+    mode.value = "Simple Light";
+    break;
+  case "dark":
+    mode.value = "Rose Pine Moon";
+    break;
+  case "auto":
+    mode.value = "Simple Light";
+}
 </script>
 
 <template>
