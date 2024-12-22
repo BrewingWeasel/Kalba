@@ -12,7 +12,7 @@ You can also make an issue and I will try to add that language at some later poi
 From there, if you are planning on using Anki, you can set up your Word Knowledge deck sources by clicking on the plus.
 If you see "Anki is not available", you may need to open Anki or make sure that AnkiConnect is actually installed. 
 You can hit the refresh button to make sure it is set up.
-See [Word Knowledge](word_knowledge.md) and [Word Knowledge Settings](word_knowledge_settings.md#Anki) for information on how to properly configure this.
+See [Word Knowledge](word_knowledge.md) and [Word Knowledge Settings](word_knowledge_settings.md#anki) for information on how to properly configure this.
 
 ![20240825_20h20m40s_grim](https://github.com/user-attachments/assets/04b4711f-1cb9-42fa-836a-791a7da42b79)
 Installing and setting up stanza is generally recommended. See [Stanza](stanza.md) for details on when you would want to set it up.
