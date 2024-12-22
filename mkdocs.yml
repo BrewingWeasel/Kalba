@@ -29,4 +29,5 @@ nav:
       - Backups: "backups.md"
   - "Help":
       - "Common Problems": "common_problems.md"
+      - "Alternatives": "alternatives.md"
 theme: readthedocs
