@@ -345,7 +345,7 @@ onMounted(async () => {
             </div>
             <div
               v-for="(section, sectionIndex) in sections"
-              class="max-w-[500px] w-[500px] min-w-[350px]"
+              class="max-w-[500px] w-[500px] min-w-[350px] pb-1"
             >
               <div v-if="section.t == 'Image' && typeof section.c == 'string'">
                 <img :src="section.c" class="mt-1" />
@@ -368,6 +368,7 @@ onMounted(async () => {
                 />
               </div>
             </div>
+            <br />
           </div>
         </ResizablePanel>
         <template v-if="selectedWord && sections && selectedWordPoppedOut">
