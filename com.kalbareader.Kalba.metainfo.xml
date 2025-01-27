@@ -44,6 +44,13 @@
     </screenshot>
   </screenshots>
   <releases>
+    <release version="0.3.6" date="2025-01-26">
+      <url type="details">https://github.com/BrewingWeasel/Kalba/blob/main/CHANGELOG.md#035---2024-08-26</url>
+      <description>
+        <p>Fixed issues with selecting context for exporting</p>
+        <p>Fixed some more issues with line breaks in articles</p>
+      </description>
+    </release>
     <release version="0.3.5" date="2024-08-26">
       <url type="details">https://github.com/BrewingWeasel/Kalba/blob/main/CHANGELOG.md#035---2024-08-26</url>
       <description>
