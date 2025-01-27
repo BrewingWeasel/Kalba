@@ -223,6 +223,7 @@ async function newLanguage(language: string) {
           title="Appearance"
           description="Configure how Kalba looks"
         />
+        <Label for="theme">Colorscheme</Label>
         <StyledCombobox
           id="theme"
           v-model="mode"
@@ -235,7 +236,6 @@ async function newLanguage(language: string) {
             'Simple Light',
           ]"
         />
-        <Label for="theme">Use dark mode</Label>
 
         <h2 class="mt-1">Definition styling</h2>
         <Separator class="mb-1" />
