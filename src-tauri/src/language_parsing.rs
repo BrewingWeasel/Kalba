@@ -544,7 +544,7 @@ pub async fn start_stanza(state: State<'_, KalbaState>, window: Window) -> Resul
 
     let model_formatted = format!("{model}\n");
     let bytes_written = stdin.write(model_formatted.as_bytes())?;
-    if bytes_written != model_formatted.as_bytes().len() {
+    if bytes_written != model_formatted.len() {
         return Err(KalbaError::IncorrectWrite(model_formatted, bytes_written));
     }
     log::info!("Loading stanza model {model} for language {language}");
@@ -606,7 +606,7 @@ fn stanza_parser(
         .stdin
         .write(sent_formatted.as_bytes())
         .expect("to write to stdin");
-    if bytes_written != sent_formatted.as_bytes().len() {
+    if bytes_written != sent_formatted.len() {
         return Err(KalbaError::IncorrectWrite(sent_formatted, bytes_written));
     }
 
