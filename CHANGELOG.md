@@ -4,10 +4,11 @@
 
 ### Fixed
 
-- Stanza being able to correctly identify the lemma of words with diacritics in certain cases
+- Stanza not being able to correctly identify the lemma of words with diacritics in certain cases
 - `&nbsp;` being displayed in the reader
 - Fixed a few more cases where the reader would display weird line breaks
 - Words directly after punctuation being interpreted as the punctuation
+- Selecting context for an export removing any context not selected
 
 ## 0.3.5 - 2024-08-26
 

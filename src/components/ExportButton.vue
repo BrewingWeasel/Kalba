@@ -12,7 +12,7 @@ import {
 import { Button } from "@/components/ui/button";
 import Exporting from "@/components/ExportingConfiguration.vue";
 import { invoke } from "@tauri-apps/api/core";
-import type { Settings, ExportDetails } from "@/types";
+import type { Settings, Definition } from "@/types";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import {
   Card,
@@ -51,6 +51,17 @@ const deckNames: string[] = settings?.anki_enabled
   : [];
 
 const emit = defineEmits(["change-rating"]);
+
+export interface ExportDetails {
+  word: string;
+  deck: string;
+  model: string;
+  sentence: string;
+  original_sentence: string;
+  defs: Map<string, Definition>;
+  fields: { [key: string]: string };
+  original_form: string;
+}
 
 const exportDetails = defineModel<ExportDetails>("exportDetails", {
   required: true,
@@ -145,7 +156,7 @@ whenever(keys.ctrl_shift_e, async () => {
                   id="sentence"
                   class="select-auto selection:bg-pink-300"
                 >
-                  {{ exportDetails.sentence }}
+                  {{ exportDetails.original_sentence }}
                 </p>
               </div>
             </CardContent>

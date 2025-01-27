@@ -8,7 +8,6 @@ import type {
   Section,
   Definition,
   HistoryItem,
-  ExportDetails,
   ParsedWords,
   InputType,
 } from "@/types";
@@ -27,6 +26,7 @@ import BetterTooltip from "@/components/BetterTooltip.vue";
 import { readText } from "@tauri-apps/plugin-clipboard-manager";
 import { Readability } from "@mozilla/readability";
 import DOMPurify from "dompurify";
+import { ExportDetails } from "@/components/ExportButton.vue";
 
 const inputText = defineModel<string>("inputText", { required: true });
 const props = defineProps<{
@@ -208,6 +208,7 @@ const exportDetails: Ref<ExportDetails> = ref({
   deck: "",
   model: "",
   sentence: "",
+  original_sentence: "",
   fields: {},
   original_form: selectedWord.value?.text ?? "",
 });
@@ -215,6 +216,7 @@ const exportDetails: Ref<ExportDetails> = ref({
 watch(sentence, (newSentence) => {
   if (newSentence) {
     exportDetails.value.sentence = newSentence;
+    exportDetails.value.original_sentence = newSentence;
   }
 });
 

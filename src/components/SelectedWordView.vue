@@ -3,14 +3,9 @@ import RatingButtons from "@/components/RatingButtons.vue";
 import GrammarDetails from "@/components/GrammarDetails.vue";
 import DefinitionView from "@/components/DefinitionView.vue";
 import { Input } from "@/components/ui/input";
-import ExportButton from "@/components/ExportButton.vue";
+import ExportButton, { ExportDetails } from "@/components/ExportButton.vue";
 import { invoke } from "@tauri-apps/api/core";
-import {
-  ExportDetails,
-  type Definition,
-  type HistoryItem,
-  type Word,
-} from "@/types";
+import { type Definition, type HistoryItem, type Word } from "@/types";
 import { Button } from "@/components/ui/button";
 import {
   CheckCircle2,

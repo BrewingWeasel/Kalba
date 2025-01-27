@@ -12,16 +12,6 @@ export interface Definition {
   c: undefined | string;
 }
 
-export interface ExportDetails {
-  word: string;
-  deck: string;
-  model: string;
-  sentence: string;
-  defs: Map<string, Definition>;
-  fields: { [key: string]: string };
-  original_form: string;
-}
-
 export interface DefinitionStyling {
   definition: string;
   info: string;
