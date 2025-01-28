@@ -54,7 +54,10 @@ watch(
 async function updateLemma() {
   history.value.push(updatingLemma.value);
   historyIndex.value++;
+
   word.value.lemma = updatingLemma.value;
+  exportDetails.value.word = updatingLemma.value;
+
   const rating: number = await invoke("get_rating", {
     lemma: word.value.lemma,
   });
