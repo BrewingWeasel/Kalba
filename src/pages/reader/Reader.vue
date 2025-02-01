@@ -225,7 +225,7 @@ watch(
   (newWord) => {
     if (newWord) {
       exportDetails.value.word = newWord.lemma;
-      exportDetails.value.original_form = newWord.text;
+      exportDetails.value.original_form = newWord.lemma;
     }
   },
 );

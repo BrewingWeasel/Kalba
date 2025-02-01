@@ -1,3 +1,11 @@
+## Unreleased
+
+### Added
+
+### Fixed
+
+- Exporting originally detected lemma even when the users manually specifies another one
+
 ## 0.3.6 - 2025-01-26
 
 ### Added
