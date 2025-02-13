@@ -30,4 +30,5 @@ nav:
   - "Help":
       - "Common Problems": "common_problems.md"
       - "Alternatives": "alternatives.md"
+      - "Manual Stanza Setup": "manual_stanza_setup.md"
 theme: readthedocs
